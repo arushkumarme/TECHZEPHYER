@@ -24,3 +24,14 @@ Newest entry last. Each entry records actual commands and results. See `IMPLEMEN
 - **Failures met:** schema-freshness test failed before the first export (expected red); mypy flagged a redundant cast and an untyped dict — fixed.
 - **Gates:** G1–G7 ✔ (G6: models used via the real `parse_message` JSON path; bus integration follows in M2).
 - **Next:** M2 message bus + SQLite log store.
+
+## M2 — Message bus + append-only log store · 2026-10-31 · VERIFIED
+
+- **Objective:** validated, logged, hub-and-spoke in-process transport; durable append-only log of messages and state transitions (foundation for replay and pause/resume).
+- **Requirements:** R-09, O-03 (T-PROTO-BUS-*, T-LOG-*).
+- **Files:** `src/netcoop/core/{bus,log_store}.py`, `tests/core/test_bus_log.py`; schema exporter now writes LF.
+- **Behaviour:** every request *and* reply is serialized → `parse_message` → logged → delivered. Invalid or misrouted messages are logged with `valid=0` and an error code (`MESSAGE_INVALID`, `MESSAGE_ROUTING_INVALID`) and raised. Replies must match the request's id, parties and incident. SQLite triggers make both tables append-only.
+- **Tests added:** 10. **Executed:** `uv run pytest -q` → 56 passed; ruff, format, mypy strict clean.
+- **Process note:** tests were written before the code, but the red run was not observed separately (the first file write failed and was redone after the implementation existed).
+- **Gates:** G1–G7 ✔ (G6: real SQLite file, reopen-persistence test).
+- **Next:** M3 ingestion.

@@ -53,7 +53,7 @@ These refine the design docs; each is mirrored into the relevant doc when its mi
 |---|---|---|---|---|
 | M0 | Foundation: repo, toolchain, package skeleton, vendored generator, field dictionary from OBSERVED data, config scaffold | R-14, R-17, R-19, P-06 | T-DOC-01, generator-vendoring test | VERIFIED |
 | M1 | Protocol models: envelope, payload building blocks, all message types, version rules, JSON Schema export | R-09, M-02 | T-PROTO-* (contract) | VERIFIED |
-| M2 | Message bus + append-only SQLite log store (messages, state transitions), replay reader | R-09, O-03 | T-PROTO-BUS-*, T-LOG-* | NOT_STARTED |
+| M2 | Message bus + append-only SQLite log store (messages, state transitions), replay reader | R-09, O-03 | T-PROTO-BUS-*, T-LOG-* | VERIFIED |
 | M3 | Ingestion: sim_source, parse, structure, field mapping/aliases, units, timestamps, plausibility, dedupe, data-quality note, bundle acceptance, error taxonomy | R-13, R-19, M-04, P-11 | T-ING-*, T-ERR-01..13 | NOT_STARTED |
 | M4 | Simulated topology + read-only tool layer (telemetry query, coverage, neighbours/path, what-if, data-quality) with call budget + records | R-02, R-20 | T-TOOL-*, T-SAFE-01 | NOT_STARTED |
 | M5 | Diagnosis knowledge: hypothesis catalog, evidence availability matrix, scoring, ceiling, margin, decision gate, conflict rules | R-01, R-04, R-05, R-07, R-16 | T-DIAG-*, property tests | NOT_STARTED |
