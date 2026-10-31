@@ -441,28 +441,34 @@ def score_hypotheses(
             out.append(_finish(cause, [], 0.0, 0.0, 0.0, set(), [], [], [], [], ctx, p))
             continue
         finished.sort(key=lambda t: (-t[1].base, t[1].entities))
-        best = finished[0][1]
-        group = [(es, h) for es, h in finished if best.base - h.base < p.gate.delta]
-        if len(group) == 1:
-            out.append(best)
-            continue
-        out.append(
-            best.model_copy(
-                update={
-                    "entities": sorted(es.entity for es, _ in group),
-                    "supporting_observation_ids": sorted(
-                        {i for _, h in group for i in h.supporting_observation_ids}
-                    ),
-                    "contradicting_observation_ids": sorted(
-                        {i for _, h in group for i in h.contradicting_observation_ids}
-                    ),
-                    "missing_expected_evidence": sorted(
-                        {i for _, h in group for i in h.missing_expected_evidence}
-                    ),
-                }
-            )
-        )
+        # Group devices whose scores are within delta of a group leader; every group is
+        # its own hypothesis, so a weaker same-cause problem elsewhere is never hidden.
+        remaining = [h for _, h in finished]
+        while remaining:
+            leader = remaining[0]
+            group = [h for h in remaining if leader.base - h.base < p.gate.delta]
+            remaining = [h for h in remaining if h not in group]
+            out.append(_merge(leader, group))
     return sorted(out, key=_rank_key)
+
+
+def _merge(leader: ScoredHypothesis, group: list[ScoredHypothesis]) -> ScoredHypothesis:
+    if len(group) == 1:
+        return leader
+    return leader.model_copy(
+        update={
+            "entities": sorted({e for h in group for e in h.entities}),
+            "supporting_observation_ids": sorted(
+                {i for h in group for i in h.supporting_observation_ids}
+            ),
+            "contradicting_observation_ids": sorted(
+                {i for h in group for i in h.contradicting_observation_ids}
+            ),
+            "missing_expected_evidence": sorted(
+                {i for h in group for i in h.missing_expected_evidence}
+            ),
+        }
+    )
 
 
 def telemetry_score(h: ScoredHypothesis) -> float:

@@ -59,7 +59,7 @@ These refine the design docs; each is mirrored into the relevant doc when its mi
 | M4 | Simulated topology + read-only tool layer (telemetry query, coverage, neighbours/path, what-if, data-quality) with call budget + records | R-02, R-20 | T-TOOL-*, T-SAFE-01 | VERIFIED |
 | M5 | Diagnosis knowledge: hypothesis catalog, evidence availability matrix, scoring, ceiling, margin, decision gate, conflict rules | R-01, R-04, R-05, R-07, R-16 | T-DIAG-*, property tests | VERIFIED |
 | M6 | Specialist agents: performance, infrastructure, connectivity (task → tool calls → finding) | R-02, R-08, R-11, P-08 | T-AGT-*, T-AGT-BEHAV-* | VERIFIED |
-| M7 | Correlation agent (incl. clarification requests) + reporting agent; report builder, schema validation, Markdown | R-03..R-06, R-12, R-15, P-09 | T-AGT-CORR-*, T-RPT-* | NOT_STARTED |
+| M7 | Correlation agent (incl. clarification requests) + reporting agent; report builder, schema validation, Markdown | R-03..R-06, R-12, R-15, P-09 | T-AGT-CORR-*, T-RPT-* | VERIFIED |
 | M8 | Orchestrator state machine: dispatch, collect, deadlines/retries, clarification loop, degraded operation, failure reports | R-10, M-01, M-03 | T-ORCH-*, T-ORCH-COLLAB-* | NOT_STARTED |
 | M9 | Scenario packages S-01..S-12 (generator + team-authored variants, labelled), CLI, end-to-end + reproducibility | R-14, R-18, M-05, M-06, DLV-3, DLV-5 | T-SCN-*, T-REPRO-*, T-DNS-* | NOT_STARTED |
 | M10 | Persistent workflow state: checkpoint per transition, pause at review, resume after restart, crash recovery | Component 10 | T-PERSIST-* | NOT_STARTED |

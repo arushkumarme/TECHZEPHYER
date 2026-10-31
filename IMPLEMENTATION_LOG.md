@@ -79,3 +79,16 @@ Newest entry last. Each entry records actual commands and results. See `IMPLEMEN
 - **Failures met:** lint/type only (lambda default-arg inference → `functools.partial`; loop-variable closure; long lines).
 - **Gates:** G1–G7 ✔ (G6: agents run on the real bus, real tool layer, real topology).
 - **Next:** M7 correlation + reporting agents, report builder.
+
+## M7 — Correlation + reporting agents, report contract · 2026-10-31 · VERIFIED
+
+- **Objective:** stateless correlation agent with bounded clarification; reporting agent; official report + extension block; validator; Markdown.
+- **Requirements:** R-03..R-06, R-12, R-15, M-05, P-09 (T-AGT-CORR-*, T-RPT-SCHEMA/EVID/ACT, doc 07 §8 rules).
+- **Files:** `src/netcoop/agents/{correlation,reporting}.py`, `src/netcoop/report/{builder,validate,markdown}.py`, `tests/agents/test_correlation_reporting.py`; docs 03 §5, 07 §9, 08 ID-16.
+- **Tests added:** 14 (hardware/spike/normal end-to-end through the real bus; narrow-margin clarification with a team-authored variant; round limit 0; missing specialist; official keys exact/typed; evidence traceability; actions adapt to uncertainty; forbidden wording; failure report; validator; separate issue not dropped).
+- **Executed:** `uv run pytest -q` → 166 passed; ruff, format, mypy strict clean (39 files).
+- **Real defects found by tests and fixed:** (1) my first clarification test only asserted an upper bound and passed with zero clarifications — replaced by a test that requires one, using a team-authored S-09 variant; (2) per-cause merge hid a separate same-cause fault on another device (ID-16); (3) report omitted unexplained anomalies on other devices → "possible separate issue" limitation; (4) clarification summaries were indistinguishable → now name device and metric.
+- **Process note:** the test file was written before the implementation, but its red run was not executed separately before the code existed.
+- **Observed outcomes on generator profiles (pipeline level):** `normal` → no_fault_detected; `latency_spike` → diagnosed link congestion (conf 0.66, medium); `hardware_failure` → diagnosed device/hardware failure (conf 0.95, margin 0.114 over overload/interface fault).
+- **Gates:** G1–G7 ✔.
+- **Next:** M8 orchestrator state machine.

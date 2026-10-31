@@ -129,3 +129,15 @@ Rendered from the JSON, never the other way round. Sections: header (incident, s
 - `status = insufficient_evidence` ⇒ `suspected_root_cause` must not assert a single established cause.
 - No community-sourced item inside the official keys.
 - The word "calibrated" appears nowhere unless the doc 08 §9 gate is recorded as met.
+
+## 9. Implementation (M7, 2026-10-31) — `IMPLEMENTED`, `TESTED`
+
+Code: `src/netcoop/report/{builder,validate,markdown}.py`; produced by `reporting_agent` (`src/netcoop/agents/reporting.py`), which validates every report before releasing it. Tests: `tests/agents/test_correlation_reporting.py`.
+
+- **Open conventions adopted** (owner defaults D-03/D-04/D-05): `status` ∈ `diagnosed` / `insufficient_evidence` / `no_fault_detected` / `failed`; confidence stays a number (capped at 0.40 when insufficient) plus `confidence_category`; `supporting_evidence[].value` is a number or a string (e.g. a probe outcome).
+- **Wording:** diagnosed → "Likely <cause> on <devices>"; insufficient → "Undetermined - leading candidates: …"; normal → "No fault detected: all assessed measurements are within expected ranges (N% assessed)"; failed → "No diagnosis was possible: <error>".
+- **Evidence:** up to 8 entries from the top hypothesis's supporting observations, key items first, critical first; `evidence_sources` = agents of those entries only. Each entry is traceable via `netcoop_extensions.evidence_trace` (observation id → normalized record ids).
+- **Recommendations adapt to the decision** (`recommendation_mode`): `corrective` (diagnosed), `monitoring` (no fault, plus "collect what could not be assessed"), `diagnostic_next_steps` (insufficient), `fix_input` (failed). Every action is listed in `recommendation_status` as `requires_human_approval: true`, `approval_state: pending`, `simulated: true`.
+- **Separate issues are never dropped silently:** when diagnosed, other devices with a strong hypothesis (score ≥ τ_diag) that the probable cause does not cover are listed in `limitations` as "possible separate issue".
+- **Extension block keys** (as of v1.0): `schema_version, mode, data_provenance, topology_provenance, confidence_method, confidence_category, decision_margin, gate_checks, data_quality, not_assessable, hypotheses, evidence_trace, agent_contributions, clarifications, conflicts, blast_radius, recommendation_mode, recommendation_status, community_signals, llm_assistance, top_cause_type, generated_at`.
+- **Validator** (`validate_report`) enforces §8, including the ban on the word "calibrated", and rejects `community_module` in `evidence_sources`.

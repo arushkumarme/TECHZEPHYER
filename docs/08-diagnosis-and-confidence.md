@@ -215,3 +215,5 @@ Code: `src/netcoop/diagnosis/` (`catalog`, `severity`, `evidence`, `scoring`, `p
 | ID-15 | **Community term excluded from ranking and from every gate condition**; `community_bonus` records the increment actually applied | A 0.05 bonus could lift a 0.50 score to the 0.55 threshold — violating "complaints can never alone produce diagnosed". Property test now asserts the decision *and* gate checks are identical with and without complaints |
 
 **Behaviour on the generator's own profiles (unit level, synthetic severities):** `normal` → `no_fault_detected`; `latency_spike` → link congestion is the top cause; `hardware_failure` → device/hardware failure, with interface fault among the alternatives. Weak Wi-Fi is never output (no wireless data); DNS/DHCP is diagnosable only when probe data is supplied.
+
+**ID-16 (M7).** Per-cause hypotheses are now *grouped*: devices whose scores are within δ of a group leader share one hypothesis, and every further group becomes its own hypothesis. Previously only the best group was kept, which hid a weaker same-cause problem on another device (found when a hardware failure on one device masked congestion on another).
