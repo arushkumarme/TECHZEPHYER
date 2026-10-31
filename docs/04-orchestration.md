@@ -88,3 +88,14 @@ Code: `src/netcoop/orchestrator/{states,workflow,faults}.py`; settings `[orchest
 - **Deviation from §5 (documented):** when all specialists are missing the orchestrator still runs the correlation agent (with no findings) instead of skipping to `DECIDED`; it deterministically yields `insufficient_evidence` with three `AGENT_MISSING` limitations, so the report explains itself.
 - **Persistence:** `incidents` and `reports` tables (append-only) join `messages` and `transitions` in the SQLite log (groundwork for M10 pause/resume).
 - **Fault injection** (`timeout`, `error`, `invalid`) exists only for scenario S-10 and tests; never active unless requested.
+
+## 10. Persistent workflow state, pause/resume and recovery (M10, 2026-10-31) — `IMPLEMENTED`, `TESTED`
+
+Official component 10 (`SRC-1 p3 §4`, optional) is now in scope by owner decision ID-01, superseding §7's "not promised".
+
+- **Checkpoints** (append-only SQLite table `checkpoints`): `input` (raw bytes, base64, plus options), `finding:<agent>` written **as each finding arrives**, `phase1` (missing agents), `clarification` (each question + answer), `decision`. Each is written *before* the transition that depends on it.
+- **Resume** (`Orchestrator.resume(incident)`, CLI `netcoop resume INC-…`): a new process reads the last state and the checkpoints, records a `resume` self-transition, re-derives the (deterministic) normalized bundle, and continues. Only work that never completed is re-dispatched (e.g. a crash while the third specialist worked re-runs only that specialist). Message numbering continues after the highest id already logged.
+- **Pause** (`run(..., pause_after=STATE)`, CLI `--pause-after STATE`): stops cleanly once STATE is entered; `netcoop incidents` lists incidents with their state and a `resumable` flag.
+- **Not resumable:** terminal states (`REJECTED`, `FAILED`, `COMPLETE`) and `AWAITING_REVIEW`, which waits for a human decision (M11).
+- **Crash simulation:** fault `crash` raises `SimulatedCrash` (a `BaseException`, so no handler can swallow it), modelling the process dying mid-incident.
+- **Evidence:** `tests/orchestrator/test_persistence.py` — pause at VALIDATING / COLLECTING / CORRELATING / DECIDED then resume in a fresh orchestrator gives the same status, cause, confidence, devices, evidence and actions as an uninterrupted run; crash during correlation (with clarification rounds) and during phase 1 are recovered; checkpoints are append-only; CLI pause → list → resume works.

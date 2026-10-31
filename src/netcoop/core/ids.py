@@ -47,6 +47,11 @@ class IdFactory:
             self._counters[prefix] += 1
             return f"{prefix}-{self._counters[prefix]:0{width}d}"
 
+    def seed(self, prefix: str, value: int) -> None:
+        """Continue numbering after ``value`` (used when resuming a stored incident)."""
+        with self._lock:
+            self._counters[prefix] = max(self._counters[prefix], value)
+
     def incident(self) -> str:
         return self.next("INC")
 

@@ -47,6 +47,15 @@ class IllegalTransition(RuntimeError):
     pass
 
 
-def check_transition(current: str | None, new: str) -> None:
+#: States a stored incident can be resumed from (not finished, not waiting for a human).
+RESUMABLE: frozenset[str] = frozenset(
+    s for s in ALLOWED if s is not None and s not in TERMINAL and s != "AWAITING_REVIEW"
+)
+
+
+def check_transition(current: str | None, new: str, *, resume: bool = False) -> None:
+    """``resume=True`` additionally allows a self-transition that records a restart."""
+    if resume and current == new and current in RESUMABLE:
+        return
     if new not in ALLOWED.get(current, frozenset()):
         raise IllegalTransition(f"{current} -> {new} is not an allowed transition")

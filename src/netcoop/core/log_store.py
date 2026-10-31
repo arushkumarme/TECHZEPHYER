@@ -56,11 +56,19 @@ CREATE TABLE IF NOT EXISTS reports (
     markdown    TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS ix_reports_incident ON reports(incident_id, seq);
+CREATE TABLE IF NOT EXISTS checkpoints (
+    seq         INTEGER PRIMARY KEY AUTOINCREMENT,
+    incident_id TEXT NOT NULL,
+    kind        TEXT NOT NULL,
+    created_at  TEXT NOT NULL,
+    data        TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ix_checkpoints_incident ON checkpoints(incident_id, seq);
 """
 _APPEND_ONLY = [
     f"CREATE TRIGGER IF NOT EXISTS {table}_no_{op.lower()} BEFORE {op} ON {table} "
     f"BEGIN SELECT RAISE(ABORT, '{table} is append-only'); END;"
-    for table in ("messages", "transitions", "incidents", "reports")
+    for table in ("messages", "transitions", "incidents", "reports", "checkpoints")
     for op in ("UPDATE", "DELETE")
 ]
 
@@ -275,6 +283,34 @@ class LogStore:
             return None
         report: dict[str, Any] = json.loads(row[0])
         return report, row[1]
+
+    def append_checkpoint(
+        self, incident_id: str, kind: str, data: dict[str, Any], *, at: datetime
+    ) -> None:
+        """Durable workflow state (component 10): what a restarted process resumes from."""
+        with self._lock:
+            self._conn.execute(
+                "INSERT INTO checkpoints (incident_id, kind, created_at, data) VALUES (?,?,?,?)",
+                (incident_id, kind, at.isoformat(), json.dumps(data, default=str)),
+            )
+
+    def checkpoints(self, incident_id: str) -> list[dict[str, Any]]:
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT kind, created_at, data FROM checkpoints WHERE incident_id=? ORDER BY seq",
+                (incident_id,),
+            ).fetchall()
+        return [{"kind": r[0], "at": r[1], "data": json.loads(r[2])} for r in rows]
+
+    def max_message_seq(self, incident_id: str) -> int:
+        """Highest request sequence number used by an incident (to continue after restart)."""
+        best = 0
+        for m in self.messages(incident_id):
+            mid = m.message_id or ""
+            tail = mid.rsplit("-MSG-", 1)[-1] if "-MSG-" in mid else ""
+            if tail.isdigit():
+                best = max(best, int(tail))
+        return best
 
     def execute_unsafe_for_tests(self, sql: str) -> None:
         """Run raw SQL (tests use it to prove the append-only triggers fire)."""

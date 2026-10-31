@@ -165,7 +165,7 @@ Never counted toward the mandatory rows. Disabled → core must still pass (`T-I
 | M-01..M-06 minimum acceptance | TESTED | `test_full_run`, protocol tests, `test_congestion_is_diagnosed_from_two_agents`, ingestion tests, report tests, CLI test |
 | O-01 MCP | NOT_STARTED (M12; owner scope change ID-01) | |
 | O-02 HITL | NOT_STARTED (M11) | |
-| O-03 persistent state / pause-resume | PARTIAL — durable append-only log (M2/M8); pause/resume is M10 | |
+| O-03 persistent state / pause-resume | TESTED | `tests/orchestrator/test_persistence.py` (pause/resume after restart, crash recovery, CLI) |
 | O-04 dashboard | NOT_STARTED (M14/M17) — CLI works | |
 | O-05 simulated remediation | NOT_STARTED (M11) | |
 | X-CSI-*, X-GEO-* | NOT_STARTED (M15–M17) | |

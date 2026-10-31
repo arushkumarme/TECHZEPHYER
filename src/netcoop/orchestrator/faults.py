@@ -5,7 +5,8 @@ real handler:
 
 * ``timeout`` — the agent answers only after ``delay_s`` (beyond its deadline);
 * ``error``   — the agent reports ``AGENT_FAILED`` via an ``agent_error`` reply;
-* ``invalid`` — the agent replies with a message that violates the protocol.
+* ``invalid`` — the agent replies with a message that violates the protocol;
+* ``crash``   — the whole process "dies" while this agent works (:class:`SimulatedCrash`).
 """
 
 from __future__ import annotations
@@ -16,8 +17,15 @@ from typing import Literal
 from netcoop.core.bus import Handler, MessageBus
 from netcoop.core.messages import AgentError, Envelope, ParsedMessage
 
-Fault = Literal["timeout", "error", "invalid"]
-FAULTS: tuple[str, ...] = ("timeout", "error", "invalid")
+Fault = Literal["timeout", "error", "invalid", "crash"]
+FAULTS: tuple[str, ...] = ("timeout", "error", "invalid", "crash")
+
+
+class SimulatedCrash(BaseException):
+    """Simulates the whole process dying mid-incident (component 10 recovery tests).
+
+    A ``BaseException`` so that no agent or orchestrator ``except Exception`` handler can
+    swallow it - exactly like a real crash, nothing after this point runs."""
 
 
 def inject(handler: Handler, fault: str, bus: MessageBus, *, delay_s: float) -> Handler:
@@ -28,6 +36,8 @@ def inject(handler: Handler, fault: str, bus: MessageBus, *, delay_s: float) -> 
         if fault == "timeout":
             time.sleep(delay_s)
             return handler(msg)
+        if fault == "crash":
+            raise SimulatedCrash(f"simulated process crash while {msg.envelope.recipient} worked")
         if fault == "error":
             return bus.reply(
                 msg,

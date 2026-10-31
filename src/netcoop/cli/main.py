@@ -22,7 +22,7 @@ from netcoop.config.settings import load_settings
 from netcoop.core.log_store import LogStore
 from netcoop.orchestrator.faults import FAULTS
 from netcoop.orchestrator.trace import render_trace
-from netcoop.orchestrator.workflow import Orchestrator
+from netcoop.orchestrator.workflow import IncidentResult, Orchestrator
 from netcoop.report.builder import strict_official
 from netcoop.report.validate import validate_report
 from netcoop.scenarios.generator import REPO_ROOT
@@ -57,26 +57,64 @@ def cmd_run(args: argparse.Namespace) -> int:
     store = LogStore(Path(args.db))
     settings = load_settings()
     faults = _faults(args.inject_fault or [])
+    orch = Orchestrator(store, settings=settings, fault_injection=faults)
     if args.scenario:
-        result = run_scenario(
-            load_scenario(args.scenario), store, settings=settings, extra_faults=faults
+        sc = load_scenario(args.scenario)
+        orch.fault_injection = {**sc.meta.get("run", {}).get("fault_injection", {}), **faults}
+        result = orch.run(
+            sc.input_bytes, source=f"scenario:{sc.id}", label=sc.id, pause_after=args.pause_after
         )
     else:
         raw = sys.stdin.buffer.read() if args.input == "-" else Path(args.input).read_bytes()
-        result = Orchestrator(store, settings=settings, fault_injection=faults).run(
-            raw, source="cli", label=args.input
-        )
-    report: dict[str, Any] = strict_official(result.report) if args.strict else result.report
-    text = json.dumps(report, indent=2) + "\n"
-    _write(args.json_out, text)
-    _write(args.md_out, result.markdown)
+        result = orch.run(raw, source="cli", label=args.input, pause_after=args.pause_after)
+    return _emit(args, store, result)
+
+
+def _emit(args: argparse.Namespace, store: LogStore, result: IncidentResult) -> int:
     print(BANNER, file=sys.stderr)
+    if result.paused:
+        print(
+            f"incident {result.incident_id}: PAUSED in state {result.final_state} "
+            f"(resume with: netcoop resume {result.incident_id})",
+            file=sys.stderr,
+        )
+        return 0
+    strict = getattr(args, "strict", False)
+    report: dict[str, Any] = strict_official(result.report) if strict else result.report
+    text = json.dumps(report, indent=2) + "\n"
+    json_out = getattr(args, "json_out", None)
+    _write(json_out, text)
+    _write(getattr(args, "md_out", None), result.markdown)
     print(f"incident {result.incident_id}: final state {result.final_state}", file=sys.stderr)
-    if args.trace:
+    if getattr(args, "trace", False):
         print(render_trace(store, result.incident_id), file=sys.stderr)
-    if not args.json_out:
+    if not json_out:
         print(text, end="")
-    return 0 if result.report["status"] != "failed" else 2
+    return 0 if result.report.get("status") != "failed" else 2
+
+
+def cmd_resume(args: argparse.Namespace) -> int:
+    store = LogStore(Path(args.db))
+    orch = Orchestrator(store, settings=load_settings())
+    try:
+        result = orch.resume(args.incident, pause_after=args.pause_after)
+    except KeyError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    return _emit(args, store, result)
+
+
+def cmd_incidents(args: argparse.Namespace) -> int:
+    store = LogStore(Path(args.db))
+    orch = Orchestrator(store, settings=load_settings())
+    resumable = set(orch.resumable())
+    for inc in store.list_incidents():
+        meta = store.incident_meta(inc) or {}
+        state = orch.state_of(inc) or "-"
+        label = meta.get("label") or meta.get("source", "")
+        flag = "resumable" if inc in resumable else ""
+        print(f"{inc}  {state:20} {label:30} {flag}")
+    return 0
 
 
 def cmd_scenarios(args: argparse.Namespace) -> int:
@@ -160,7 +198,22 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="AGENT:FAULT",
         help=f"simulate an agent fault ({', '.join(FAULTS)})",
     )
+    r.add_argument(
+        "--pause-after", metavar="STATE", help="stop once the incident enters STATE; resume later"
+    )
     r.set_defaults(func=cmd_run)
+
+    rs = sub.add_parser("resume", help="continue a paused or interrupted incident")
+    rs.add_argument("incident")
+    rs.add_argument("--pause-after", metavar="STATE")
+    rs.add_argument("--json-out")
+    rs.add_argument("--md-out")
+    rs.add_argument("--strict", action="store_true")
+    rs.add_argument("--trace", action="store_true")
+    rs.set_defaults(func=cmd_resume)
+
+    inc = sub.add_parser("incidents", help="list incidents with their current state")
+    inc.set_defaults(func=cmd_incidents)
 
     s = sub.add_parser("scenarios", help="list or run the scenario suite")
     s.add_argument("action", choices=["list", "run-all"])

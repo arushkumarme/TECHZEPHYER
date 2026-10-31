@@ -118,3 +118,13 @@ Newest entry last. Each entry records actual commands and results. See `IMPLEMEN
   5. Malformed agent replies without their own header were logged without an incident id and vanished from the trace. Bus now attributes them to the request they answer (+ test).
 - **Gates:** G1–G7 ✔ (G6: CLI subprocess against the real stack; G7: docs 13/09/01 updated with run commands and results).
 - **Next:** M10 persistent workflow state / pause-resume.
+
+## M10 — Persistent workflow state / pause-resume · 2026-10-31 · VERIFIED
+
+- **Objective:** official optional component 10: durable state, recovery, resumable sessions.
+- **Files:** `src/netcoop/orchestrator/workflow.py` (restructured into resumable stages with checkpoints), `states.py` (`RESUMABLE`, resume self-transition), `faults.py` (`crash`, `SimulatedCrash`), `core/log_store.py` (`checkpoints` table, `max_message_seq`), `core/ids.py` (`seed`), CLI `resume`, `incidents`, `--pause-after`; `tests/orchestrator/test_persistence.py`; doc 04 §10; doc 01 O-03.
+- **Tests added:** 11 (pause at 4 states + restart/resume equivalence, no re-run of completed findings, crash mid-correlation, crash mid-phase-1, non-resumable states, append-only checkpoints, unknown incident, CLI pause/list/resume).
+- **Executed:** red (ImportError: `SimulatedCrash`) → `uv run pytest -q` → 226 passed; ruff, format, mypy strict clean.
+- **Real defect found:** findings were checkpointed only after all three specialists replied, so a crash while waiting for the third lost the first two. Now each finding is made durable on arrival.
+- **Gates:** G1–G7 ✔ (G6: a separate Orchestrator instance on the same SQLite file = restart).
+- **Next:** M11 HITL review + simulated remediation.
