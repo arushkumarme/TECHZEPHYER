@@ -102,6 +102,7 @@ netcoop-ai/
 │   └── topology/            # simulated topology and campus layers (labelled)
 ├── src/netcoop/
 │   ├── core/                # messages (envelope, payloads), IDs, errors, log_store
+│   │   └── vocabulary/      # controlled-vocabulary registry over the term Literals
 │   ├── ingestion/           # sim_source, validate, normalize, data_quality
 │   ├── tools/               # read-only tools: telemetry, topology
 │   ├── agents/              # performance, infrastructure, connectivity, correlation, reporting
@@ -114,6 +115,7 @@ netcoop-ai/
 │   ├── api/                 # FastAPI
 │   └── cli/
 ├── dashboard/               # React + Leaflet
+├── conformance/             # protocol conformance kit: schemas, examples, manifest
 ├── scripts/
 └── tests/
 ```
