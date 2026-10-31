@@ -2,9 +2,9 @@
 
 **Multi-Agent Network Fault Diagnosis and Interoperability** — a project for the IIT Bhubaneswar Agentic AI Hackathon.
 
-> **Status (2026-10-31): the mandatory core is implemented and tested** (five agents, orchestrator, protocol, validation, diagnosis, report, CLI, 13 scenarios). Optional components and extensions are in progress — see [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md) and [`IMPLEMENTATION_LOG.md`](IMPLEMENTATION_LOG.md).
+> **Status (2026-10-31): all twelve official components and both extensions are implemented and verified on synthetic data** — 318 automated tests, 13/13 scenarios, clean-clone verification in [`docs/results/release-verification.md`](docs/results/release-verification.md). Not done: demo video, real LLM provider, Telegram channel (see the report's honest list).
 > Team size, roles and deadline are **TBD**.
-> The organizer's generator has been inspected and vendored; field names are `OBSERVED` ([`docs/06`](docs/06-field-dictionary.md)).
+> The organizer's generator was inspected and vendored; field names are `OBSERVED` ([`docs/06`](docs/06-field-dictionary.md)).
 
 ## What NetCoop AI is
 
@@ -74,6 +74,13 @@ uv sync                                    # Python 3.12 + locked dependencies
 uv run netcoop run --scenario S-02 --trace # diagnose the link-congestion scenario, show the agent trace
 uv run netcoop scenarios run-all           # all 13 scenarios with expected-outcome checks
 uv run pytest -q                           # full test suite
+```
+
+Dashboard (one process, extensions on):
+
+```bash
+npm --prefix dashboard ci && npm --prefix dashboard run build
+NETCOOP_ENABLE=community_signals,geospatial NETCOOP_DASHBOARD_DIST=dashboard/dist uv run fastapi run   # http://127.0.0.1:8000
 ```
 
 Full instructions: [`docs/13-setup-and-operations.md`](docs/13-setup-and-operations.md). Latest suite results: [`docs/results/scenario-results.md`](docs/results/scenario-results.md).

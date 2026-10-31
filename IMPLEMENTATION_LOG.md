@@ -204,3 +204,10 @@ Newest entry last. Each entry records actual commands and results. See `IMPLEMEN
 - **Process note:** the swimlane layout tests were written with the code, not run red first.
 - **Gates:** G1–G7 ✔.
 - **Next:** M18 release verification.
+
+## M18 — Release verification · 2026-10-31 · VERIFIED
+
+- Clean clone of `develop` (`111627c`) → documented install → all checks of brief §11. Report: `docs/results/release-verification.md`.
+- **Executed in the clean clone:** `uv sync`; `npm --prefix dashboard ci`; config load; `ruff check`, `ruff format --check`, `mypy` (66 files) clean; `uv run pytest -q` → 311 passed; `npm run build` (tsc + vite) ok; Vitest 4 passed; `uv run pytest -m ui` → 7 passed (Chromium); `netcoop scenarios run-all` → 13/13 PASS, table identical to the committed results.
+- **Not done (recorded, not claimed):** demo video (DLV-4), GitHub push (needs owner authorization), real LLM provider (KI-05), Telegram channel (KI-06).
+- README status, doc 14 deliverables and demo commands updated.

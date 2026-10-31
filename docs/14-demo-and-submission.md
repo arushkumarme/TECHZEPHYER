@@ -6,11 +6,11 @@
 
 | ID | Deliverable | Status |
 |---|---|---|
-| DLV-1 | GitHub repository: implementation, dependencies, setup instructions, test scripts | Not started |
-| DLV-2 | Architecture README: agent responsibilities, communication interfaces, orchestration, evidence correlation, error handling, workflow | Skeleton README + docs written (design only) |
-| DLV-3 | Sample data and test cases: normal operation and multiple fault scenarios | Not started — needs generator |
-| DLV-4 | Demo video, 3–5 minutes: end-to-end diagnosis, inter-agent communication, final report | Not started |
-| DLV-5 | Working prototype: CLI with optional dashboard demonstrating the complete workflow | Not started |
+| DLV-1 | GitHub repository: implementation, dependencies, setup instructions, test scripts | Local git repository complete (branch `develop`); **not pushed** — needs the owner to create/authorize the GitHub remote |
+| DLV-2 | Architecture README: agent responsibilities, communication interfaces, orchestration, evidence correlation, error handling, workflow | Done — README + docs 00–16 updated with implementation sections |
+| DLV-3 | Sample data and test cases: normal operation and multiple fault scenarios | Done — `sample_data/scenarios/` S-01..S-12 + S-06b, 318 tests |
+| DLV-4 | Demo video, 3–5 minutes: end-to-end diagnosis, inter-agent communication, final report | **Not started** — recording needs a person; every segment below is runnable |
+| DLV-5 | Working prototype: CLI with optional dashboard demonstrating the complete workflow | Done — CLI, API, dashboard, MCP server |
 
 ## 2. Demo script (target 4:30, limit 5:00)
 
@@ -61,3 +61,16 @@ The demo shows the mandatory workflow first; extensions come after. Every segmen
 | How are fake or duplicate complaints handled? | Distinct-reporter counting, rate limits, duplicate merging, and complaints can never alone produce a diagnosis (docs 08 §6, 10 §7). |
 | Why not WhatsApp? | It needs business verification and institutional authorization. The channel is an adapter; web form works now and WhatsApp is future scope (doc 10 §2). |
 | Does it fix problems automatically? | No. Recommendations need recorded human approval and remain simulated (doc 12 §3). |
+
+## 5. Commands for each demo segment (verified 2026-10-31)
+
+| Segment | Command / screen |
+|---|---|
+| Demo-1 | `uv run netcoop run --scenario S-01` (or dashboard → S-01) |
+| Demo-2 | `uv run netcoop run --scenario S-02 --trace`; dashboard swimlane for S-09 shows clarification rounds |
+| Demo-3/4 | S-07 (missing metrics), S-06 (renamed fields/units), S-06b (unsupported schema → rejected) |
+| Demo-5 | S-08 (insufficient evidence) |
+| Demo-6 | dashboard → Recommended actions → enter name → Approve → simulated outcome; or `netcoop approve INC-… 0 --reviewer NAME` |
+| Demo-7 | dashboard → User reports: two reports "Hostel A Wi-Fi is disconnecting." from different test reporters → Investigate against S-02 (corroborated) and S-01 (reported, not verified) |
+| Demo-8 | dashboard → Campus map → choose the community incident; click `SW_CAMPUS_2` for isolated vs degraded |
+| Extra | `--inject-fault performance_agent:timeout` (S-10 degraded run); `--pause-after COLLECTING` then `netcoop resume`; `uv run netcoop-mcp` |
