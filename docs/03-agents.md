@@ -102,3 +102,15 @@ All communication is **hub-and-spoke through the orchestrator**; agents never me
 - The loop always terminates: when the round limit is reached, A-CORR decides on what it has and records the unanswered question as a limitation.
 
 **What the demo shows** (doc 14): the ordered trace of task → tool calls → finding → clarification → decision, which is the visible evidence of items 1–8 in §1.
+
+## 4. Implementation status — specialists (M6, 2026-10-31) — `IMPLEMENTED`, `TESTED`
+
+Code: `src/netcoop/agents/{base,performance,infrastructure,connectivity}.py`; tests `tests/agents/test_specialists.py` (run stand-alone against real ingested generator records).
+
+| Agent | Items it observes (doc 06 names) | Investigation it chooses |
+|---|---|---|
+| `performance_agent` | `latency_ms`, `jitter_ms`, `packet_loss_pct`, `link_utilization_pct` | screen scope → coverage → deep-dive each anomalous device over the whole bundle (widened window): pattern `spike`/`sustained`/`rising`/`intermittent` and onset |
+| `infrastructure_agent` | `status`, `cpu_utilization_pct`, `queue_drops`, `interface_errors` | same loop; a device without status is observed as **status unknown** (`severity=unknown`, not assessable) |
+| `connectivity_agent` | topology facts + team-authored probe results (`probe_dns`/`probe_dhcp`) | topology info → own status/latency screen to find suspicious devices → **what-if first for suspicious devices** → upstream path per device → probes. Status/latency it reads stay in `facts` so one raw metric never counts twice |
+
+Checklist evidence (§1): goal/scope from the task (scope test); tools only through a budgeted session (budget test, tool-call records in every finding); adaptive path (a fault scenario makes more, targeted calls than a normal one); independent and reproducible findings; abstention (`jitter_ms` absent in generator `hardware_failure` → `not_assessable MISSING`); clarification answers (`recheck_metric`, `assess_additional_entities`, `widen_time_window`; `what_if_cause` only by connectivity; others decline with a reason); message-only coordination (bus enforces hub-and-spoke). Any exception inside an agent becomes an `agent_error` reply, never a crash.

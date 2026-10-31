@@ -58,7 +58,7 @@ These refine the design docs; each is mirrored into the relevant doc when its mi
 | M3 | Ingestion: sim_source, parse, structure, field mapping/aliases, units, timestamps, plausibility, dedupe, data-quality note, bundle acceptance, error taxonomy | R-13, R-19, M-04, P-11 | T-ING-*, T-ERR-01..13 | VERIFIED |
 | M4 | Simulated topology + read-only tool layer (telemetry query, coverage, neighbours/path, what-if, data-quality) with call budget + records | R-02, R-20 | T-TOOL-*, T-SAFE-01 | VERIFIED |
 | M5 | Diagnosis knowledge: hypothesis catalog, evidence availability matrix, scoring, ceiling, margin, decision gate, conflict rules | R-01, R-04, R-05, R-07, R-16 | T-DIAG-*, property tests | VERIFIED |
-| M6 | Specialist agents: performance, infrastructure, connectivity (task → tool calls → finding) | R-02, R-08, R-11, P-08 | T-AGT-*, T-AGT-BEHAV-* | NOT_STARTED |
+| M6 | Specialist agents: performance, infrastructure, connectivity (task → tool calls → finding) | R-02, R-08, R-11, P-08 | T-AGT-*, T-AGT-BEHAV-* | VERIFIED |
 | M7 | Correlation agent (incl. clarification requests) + reporting agent; report builder, schema validation, Markdown | R-03..R-06, R-12, R-15, P-09 | T-AGT-CORR-*, T-RPT-* | NOT_STARTED |
 | M8 | Orchestrator state machine: dispatch, collect, deadlines/retries, clarification loop, degraded operation, failure reports | R-10, M-01, M-03 | T-ORCH-*, T-ORCH-COLLAB-* | NOT_STARTED |
 | M9 | Scenario packages S-01..S-12 (generator + team-authored variants, labelled), CLI, end-to-end + reproducibility | R-14, R-18, M-05, M-06, DLV-3, DLV-5 | T-SCN-*, T-REPRO-*, T-DNS-* | NOT_STARTED |

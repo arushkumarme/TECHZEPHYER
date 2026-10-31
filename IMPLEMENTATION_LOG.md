@@ -67,3 +67,15 @@ Newest entry last. Each entry records actual commands and results. See `IMPLEMEN
 - **Process deviation:** scoring code was written before its tests in this milestone (TDD order broken). Mitigation: tests were written from doc 08's stated behaviour, and they caught 5 real design flaws (ID-11..ID-15) plus a float-rounding bug at the threshold — all fixed in code, not by relaxing tests. One test fixture (the "ambiguous" case) was replaced because the original fixture had a defensible single answer; the replacement is a true two-candidate tie.
 - **Gates:** G1–G7 ✔ (G6 integration with real agents comes in M6/M7).
 - **Next:** M6 specialist agents.
+
+## M6 — Specialist agents · 2026-10-31 · VERIFIED
+
+- **Objective:** performance, infrastructure and connectivity agents: task → budgeted tool calls → independent finding; clarification answers.
+- **Requirements:** R-02, R-08, R-11, P-08 (T-AGT-*, T-AGT-BEHAV-01/02/03/04/05, T-AGT-CONN-*).
+- **Skill used:** agent-workflow-designer — confirmed orchestrator + parallel fan-out + bounded evaluator loop; its scaffold generator was not used (would duplicate the typed contracts).
+- **Files:** `src/netcoop/agents/*.py`, `tests/agents/{conftest,test_specialists}.py`; `TopologyInfo.zones` added; doc 03 §4.
+- **Tests added:** 14, using real seeded generator records ingested through M3.
+- **Executed:** red (collection error) → `uv run pytest -q` → 153 passed; ruff, format, mypy strict clean (33 files).
+- **Failures met:** lint/type only (lambda default-arg inference → `functools.partial`; loop-variable closure; long lines).
+- **Gates:** G1–G7 ✔ (G6: agents run on the real bus, real tool layer, real topology).
+- **Next:** M7 correlation + reporting agents, report builder.

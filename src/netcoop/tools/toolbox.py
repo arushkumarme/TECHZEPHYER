@@ -90,6 +90,7 @@ class TopologyInfo(BaseModel):
     provenance: str | None = None
     entities_not_in_topology: list[str] = []
     core_nodes: list[str] = []
+    zones: dict[str, str] = {}
 
 
 class ToolBox:
@@ -253,6 +254,7 @@ class ToolSession:
                 provenance=t.provenance,
                 entities_not_in_topology=[e for e in self._bundle.entities if not t.has(e)],
                 core_nodes=list(t.core_nodes),
+                zones={e: z for e in self._bundle.entities if (z := t.zone_of(e)) is not None},
             )
 
         return self._call(
