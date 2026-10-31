@@ -1,0 +1,29 @@
+# Controlled vocabulary 'message_status'. Source of truth for its metadata; the term set
+# itself is enforced in code where `code_literal` is given (a test keeps them equal).
+name = "message_status"
+version = "1.0"
+extensible = false
+id_style = "snake"
+description = "Outcome flag carried by every envelope."
+code_literal = "netcoop.core.vocab:MessageStatus"
+
+[[terms]]
+id = "ok"
+label = "OK"
+definition = "The sender completed the work fully."
+status = "active"
+source = "doc 05 §2"
+
+[[terms]]
+id = "partial"
+label = "Partial"
+definition = "The sender completed part of the work, for example could not assess its whole scope."
+status = "active"
+source = "doc 05 §2"
+
+[[terms]]
+id = "error"
+label = "Error"
+definition = "The message reports a failure."
+status = "active"
+source = "doc 05 §2"

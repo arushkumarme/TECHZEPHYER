@@ -1,0 +1,71 @@
+# Controlled vocabulary 'agent'. Source of truth for its metadata; the term set
+# itself is enforced in code where `code_literal` is given (a test keeps them equal).
+name = "agent"
+version = "1.0"
+extensible = false
+id_style = "snake"
+description = "Participants that may send or receive protocol messages."
+code_literal = "netcoop.core.vocab:AgentId"
+
+[[terms]]
+id = "orchestrator"
+label = "Orchestrator"
+definition = "Deterministic coordinator that assigns tasks, enforces limits and records every transition; not an AI."
+status = "active"
+source = "doc 02 C-ORC"
+[terms.attributes]
+kind = "orchestrator"
+
+[[terms]]
+id = "performance_agent"
+label = "Performance agent"
+definition = "Specialist that grades latency, jitter, packet loss and link utilization."
+status = "active"
+source = "SRC-1 p2 §3; doc 03 §2.1"
+[terms.attributes]
+kind = "agent"
+
+[[terms]]
+id = "infrastructure_agent"
+label = "Infrastructure agent"
+definition = "Specialist that grades device status, CPU, egress queue drops and interface errors."
+status = "active"
+source = "SRC-1 p2 §3; doc 03 §2.2"
+[terms.attributes]
+kind = "agent"
+
+[[terms]]
+id = "connectivity_agent"
+label = "Connectivity agent"
+definition = "Specialist that establishes topology scope, upstream paths, blast radius and service-probe results."
+status = "active"
+source = "SRC-1 p2 §3; doc 03 §2.3"
+[terms.attributes]
+kind = "agent"
+
+[[terms]]
+id = "correlation_agent"
+label = "Correlation agent"
+definition = "Agent that scores competing explanations from all findings and decides diagnosed or insufficient evidence."
+status = "active"
+source = "SRC-1 p2 §3; doc 03 §2.4"
+[terms.attributes]
+kind = "agent"
+
+[[terms]]
+id = "reporting_agent"
+label = "Reporting agent"
+definition = "Agent that builds, validates and renders the final report and its recommendations."
+status = "active"
+source = "SRC-1 p2 §3; doc 03 §2.5"
+[terms.attributes]
+kind = "agent"
+
+[[terms]]
+id = "community_module"
+label = "Community module"
+definition = "Extension A pipeline that turns user complaints into unverified candidate incidents; not an agent."
+status = "active"
+source = "doc 10"
+[terms.attributes]
+kind = "module"

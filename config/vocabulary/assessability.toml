@@ -1,0 +1,29 @@
+# Controlled vocabulary 'assessability'. Source of truth for its metadata; the term set
+# itself is enforced in code where `code_literal` is given (a test keeps them equal).
+name = "assessability"
+version = "1.0"
+extensible = false
+id_style = "snake"
+description = "Whether an entity-metric pair could be judged."
+code_literal = "netcoop.core.vocab:Assessability"
+
+[[terms]]
+id = "assessed"
+label = "Assessed"
+definition = "Usable data was present and graded."
+status = "active"
+source = "doc 05 §6.3"
+
+[[terms]]
+id = "assessed_with_caveat"
+label = "Assessed with caveat"
+definition = "Graded, but the data carries a caveat such as being stale."
+status = "active"
+source = "doc 05 §6.3"
+
+[[terms]]
+id = "not_assessable"
+label = "Not assessable"
+definition = "No usable data; the pair is unknown, never healthy."
+status = "active"
+source = "doc 05 §6.3; CD-10"

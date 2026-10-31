@@ -1,0 +1,106 @@
+# Controlled vocabulary 'incident_state'. Source of truth for its metadata; the term set
+# itself is enforced in code where `code_literal` is given (a test keeps them equal).
+name = "incident_state"
+version = "1.0"
+extensible = false
+id_style = "upper"
+description = "Incident workflow states (doc 04 §2)."
+code_literal = "netcoop.orchestrator.states:State"
+
+[[terms]]
+id = "RECEIVED"
+label = "Received"
+definition = "Input received; incident id assigned."
+status = "active"
+source = "doc 04 §2"
+
+[[terms]]
+id = "VALIDATING"
+label = "Validating"
+definition = "Ingestion is checking and normalizing the input."
+status = "active"
+source = "doc 04 §2"
+
+[[terms]]
+id = "REJECTED"
+label = "Rejected"
+definition = "The input was unusable; a failure report was issued. Terminal."
+status = "active"
+source = "doc 04 §2"
+
+[[terms]]
+id = "READY"
+label = "Ready"
+definition = "Usable input with no warnings."
+status = "active"
+source = "doc 04 §2"
+
+[[terms]]
+id = "READY_WITH_WARNINGS"
+label = "Ready with warnings"
+definition = "Usable input with recorded warnings."
+status = "active"
+source = "doc 04 §2"
+
+[[terms]]
+id = "DISPATCHED"
+label = "Dispatched"
+definition = "Tasks sent to the specialist agents."
+status = "active"
+source = "doc 04 §2"
+
+[[terms]]
+id = "COLLECTING"
+label = "Collecting"
+definition = "Waiting for specialist findings; failures and retries are recorded here."
+status = "active"
+source = "doc 04 §2"
+
+[[terms]]
+id = "CORRELATING"
+label = "Correlating"
+definition = "The correlation agent is weighing the findings."
+status = "active"
+source = "doc 04 §2"
+
+[[terms]]
+id = "CLARIFYING"
+label = "Clarifying"
+definition = "A clarification question is being answered."
+status = "active"
+source = "doc 04 §2"
+
+[[terms]]
+id = "DECIDED"
+label = "Decided"
+definition = "The correlation agent's decision is recorded."
+status = "active"
+source = "doc 04 §2"
+
+[[terms]]
+id = "REPORTING"
+label = "Reporting"
+definition = "The reporting agent is building the report."
+status = "active"
+source = "doc 04 §2"
+
+[[terms]]
+id = "AWAITING_REVIEW"
+label = "Awaiting review"
+definition = "Recommendations wait for a human decision; actions stay simulated."
+status = "active"
+source = "doc 04 §2"
+
+[[terms]]
+id = "COMPLETE"
+label = "Complete"
+definition = "Incident closed. Terminal."
+status = "active"
+source = "doc 04 §2"
+
+[[terms]]
+id = "FAILED"
+label = "Failed"
+definition = "An unrecoverable internal error; a failure report was issued. Terminal."
+status = "active"
+source = "doc 04 §2"

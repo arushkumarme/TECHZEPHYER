@@ -219,3 +219,12 @@ Newest entry last. Each entry records actual commands and results. See `IMPLEMEN
 - **CI:** `.github/workflows/ci.yml` — backend (uv locked sync, generator fetch+cache, ruff, mypy, pytest, 13-scenario suite) and dashboard (npm ci, build, Vitest, Playwright Chromium E2E).
 - **Secrets scan:** tracked files and full history — no keys, tokens, credentials or `.env`; only a deliberately fake email/phone in a PII-stripping test.
 - **Executed:** ruff/format/mypy clean; `pytest -q` → 314 passed; `pytest -m ui` → 7 passed; Vitest 4 passed; scenarios 13/13, identical to committed results.
+
+## Protocol upgrade P1 — Controlled vocabulary registry · 2026-11-01 · VERIFIED (branch feature/protocol-upgrade)
+
+- 35 vocabularies in `config/vocabulary/*.toml` (definition, status, source, attributes per term) layered over the existing Literals; app term names kept (owner ruling). Metric terms carry category, unit, dimension from doc 06.
+- `src/netcoop/core/vocabulary/` registry (`require` with suggestions, blocked terms, `x-` extensions, `VocabTerm` pydantic marker), unit registry (`convert`, `unit_fits_metric`), renderers; `scripts/generate_docs.py` (idempotent) writes doc 05 Appendix A and `conformance/vocabularies.json`.
+- Drift guards: linked vocabularies equal the code's Literals; metric terms equal the field dictionary; every emitted error code registered (and none unused); ingestion severities agree; gate checks ↔ abstention reasons; scenario provenance values; report builder values; generated outputs current. Mutation check: deleting a term makes the drift and docs tests fail.
+- E2E proof: `tests/e2e/test_vocabulary_in_runs.py` checks every vocabulary-controlled value of every logged message in real S-05, S-09, S-12 runs.
+- Docs: doc 05 §12 + Appendix A, doc 00 D-16..D-21 (PROVISIONAL), doc 01 R-09.
+- Executed: `pytest -q` 339 passed (314 + 25 new); `pytest -m ui` 7; Vitest 4; scenarios 13/13; ruff, format, mypy (70 files) clean; `generate_docs.py --check` up to date. No existing test changed.

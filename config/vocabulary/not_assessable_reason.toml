@@ -1,0 +1,71 @@
+# Controlled vocabulary 'not_assessable_reason'. Source of truth for its metadata; the term set
+# itself is enforced in code where `code_literal` is given (a test keeps them equal).
+name = "not_assessable_reason"
+version = "1.0"
+extensible = false
+id_style = "upper"
+description = "Why an entity-metric pair could not be assessed."
+code_literal = "netcoop.core.vocab:NotAssessableReason"
+
+[[terms]]
+id = "MISSING"
+label = "Missing"
+definition = "The metric is absent for this entity."
+status = "active"
+source = "doc 05 §4"
+
+[[terms]]
+id = "MALFORMED"
+label = "Malformed"
+definition = "The value is not a usable number or recognised status."
+status = "active"
+source = "doc 05 §4"
+
+[[terms]]
+id = "UNMAPPED_FIELD"
+label = "Unmapped field"
+definition = "A field may carry the metric but has no listed alias, so it is not interpreted."
+status = "active"
+source = "doc 05 §4"
+
+[[terms]]
+id = "UNIT_AMBIGUOUS"
+label = "Unit ambiguous"
+definition = "The unit is missing, unknown or contradicts the field name."
+status = "active"
+source = "doc 05 §4"
+
+[[terms]]
+id = "STALE"
+label = "Stale"
+definition = "The newest data is older than the freshness limit."
+status = "active"
+source = "doc 05 §4"
+
+[[terms]]
+id = "INSUFFICIENT_SAMPLES"
+label = "Insufficient samples"
+definition = "Too few samples to judge."
+status = "active"
+source = "doc 05 §4"
+
+[[terms]]
+id = "NO_TOPOLOGY"
+label = "No topology"
+definition = "Topology is missing or does not contain the entity."
+status = "active"
+source = "doc 05 §4"
+
+[[terms]]
+id = "OUT_OF_SCOPE"
+label = "Out of scope"
+definition = "The entity or item is not part of the bundle being analysed."
+status = "active"
+source = "doc 05 §4"
+
+[[terms]]
+id = "IMPLAUSIBLE"
+label = "Implausible"
+definition = "The value is outside the definitional range, for example a percentage above 100."
+status = "active"
+source = "doc 05 §10"

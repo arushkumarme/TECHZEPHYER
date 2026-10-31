@@ -1,0 +1,2363 @@
+{
+  "abstention_reason": {
+    "description": "Why a decision abstains; one per failed gate check (PROVISIONAL naming, D-18).",
+    "extensible": false,
+    "terms": [
+      {
+        "attributes": {
+          "gate_check": "score_at_least_tau"
+        },
+        "definition": "The top score is below tau_diag.",
+        "id": "below_score_threshold",
+        "label": "Below score threshold",
+        "source": "doc 08 \u00a74.5",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "gate_check": "key_evidence_present"
+        },
+        "definition": "None of the cause's key signature items has supporting evidence.",
+        "id": "missing_key_evidence",
+        "label": "Missing key evidence",
+        "source": "doc 08 \u00a711 ID-13",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "gate_check": "min_signature_items"
+        },
+        "definition": "Fewer than n_min signature items support the cause.",
+        "id": "too_few_signature_items",
+        "label": "Too few signature items",
+        "source": "doc 08 \u00a74.5",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "gate_check": "min_independent_sources"
+        },
+        "definition": "Fewer than s_min agents support the cause.",
+        "id": "too_few_independent_sources",
+        "label": "Too few independent sources",
+        "source": "doc 08 \u00a74.5",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "gate_check": "margin_at_least_delta"
+        },
+        "definition": "The top two explanations are closer than delta.",
+        "id": "ambiguous_margin",
+        "label": "Ambiguous margin",
+        "source": "doc 08 \u00a74.4",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "gate_check": "not_telemetry_unreliable"
+        },
+        "definition": "The best explanation is that the data itself is broken.",
+        "id": "telemetry_unreliable",
+        "label": "Telemetry unreliable",
+        "source": "doc 08 \u00a74.5",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "gate_check": "diagnosable"
+        },
+        "definition": "The leading cause's required evidence does not exist in the data.",
+        "id": "not_diagnosable",
+        "label": "Not diagnosable",
+        "source": "doc 08 \u00a73.2",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "gate_check": "coverage_at_least_min"
+        },
+        "definition": "Too little of the scope was assessed to call it healthy.",
+        "id": "coverage_too_low",
+        "label": "Coverage too low",
+        "source": "doc 08 \u00a74.5",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "gate_check": "no_abnormal_measurements"
+        },
+        "definition": "Something is out of range, so 'no fault' cannot be claimed.",
+        "id": "abnormal_measurements_present",
+        "label": "Abnormal measurements present",
+        "source": "doc 08 \u00a711 ID-14",
+        "status": "active"
+      }
+    ],
+    "version": "1.0"
+  },
+  "agent": {
+    "description": "Participants that may send or receive protocol messages.",
+    "extensible": false,
+    "terms": [
+      {
+        "attributes": {
+          "kind": "orchestrator"
+        },
+        "definition": "Deterministic coordinator that assigns tasks, enforces limits and records every transition; not an AI.",
+        "id": "orchestrator",
+        "label": "Orchestrator",
+        "source": "doc 02 C-ORC",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "agent"
+        },
+        "definition": "Specialist that grades latency, jitter, packet loss and link utilization.",
+        "id": "performance_agent",
+        "label": "Performance agent",
+        "source": "SRC-1 p2 \u00a73; doc 03 \u00a72.1",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "agent"
+        },
+        "definition": "Specialist that grades device status, CPU, egress queue drops and interface errors.",
+        "id": "infrastructure_agent",
+        "label": "Infrastructure agent",
+        "source": "SRC-1 p2 \u00a73; doc 03 \u00a72.2",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "agent"
+        },
+        "definition": "Specialist that establishes topology scope, upstream paths, blast radius and service-probe results.",
+        "id": "connectivity_agent",
+        "label": "Connectivity agent",
+        "source": "SRC-1 p2 \u00a73; doc 03 \u00a72.3",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "agent"
+        },
+        "definition": "Agent that scores competing explanations from all findings and decides diagnosed or insufficient evidence.",
+        "id": "correlation_agent",
+        "label": "Correlation agent",
+        "source": "SRC-1 p2 \u00a73; doc 03 \u00a72.4",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "agent"
+        },
+        "definition": "Agent that builds, validates and renders the final report and its recommendations.",
+        "id": "reporting_agent",
+        "label": "Reporting agent",
+        "source": "SRC-1 p2 \u00a73; doc 03 \u00a72.5",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "module"
+        },
+        "definition": "Extension A pipeline that turns user complaints into unverified candidate incidents; not an agent.",
+        "id": "community_module",
+        "label": "Community module",
+        "source": "doc 10",
+        "status": "active"
+      }
+    ],
+    "version": "1.0"
+  },
+  "aggregation": {
+    "description": "How one observation value summarizes several samples (PROVISIONAL, D-19).",
+    "extensible": false,
+    "terms": [
+      {
+        "attributes": {},
+        "definition": "The sample with the highest severity, ties broken by magnitude; what the specialists report today.",
+        "id": "worst_by_severity",
+        "label": "Worst by severity",
+        "source": "agents/base.py",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "The most recent sample.",
+        "id": "last_value",
+        "label": "Last value",
+        "source": "PROPOSAL",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Arithmetic mean of the samples.",
+        "id": "mean",
+        "label": "Mean",
+        "source": "PROPOSAL",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Largest sample.",
+        "id": "max",
+        "label": "Maximum",
+        "source": "PROPOSAL",
+        "status": "active"
+      }
+    ],
+    "version": "1.0"
+  },
+  "assessability": {
+    "description": "Whether an entity-metric pair could be judged.",
+    "extensible": false,
+    "terms": [
+      {
+        "attributes": {},
+        "definition": "Usable data was present and graded.",
+        "id": "assessed",
+        "label": "Assessed",
+        "source": "doc 05 \u00a76.3",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Graded, but the data carries a caveat such as being stale.",
+        "id": "assessed_with_caveat",
+        "label": "Assessed with caveat",
+        "source": "doc 05 \u00a76.3",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "No usable data; the pair is unknown, never healthy.",
+        "id": "not_assessable",
+        "label": "Not assessable",
+        "source": "doc 05 \u00a76.3; CD-10",
+        "status": "active"
+      }
+    ],
+    "version": "1.0"
+  },
+  "bundle_acceptance": {
+    "description": "Result of ingestion for one telemetry bundle.",
+    "extensible": false,
+    "terms": [
+      {
+        "attributes": {},
+        "definition": "No warnings.",
+        "id": "READY",
+        "label": "Ready",
+        "source": "doc 05 \u00a76.2",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Usable, with recorded problems such as missing metrics.",
+        "id": "READY_WITH_WARNINGS",
+        "label": "Ready with warnings",
+        "source": "doc 05 \u00a76.2",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Unusable: nothing parseable, identifiable, datable or measurable.",
+        "id": "REJECTED",
+        "label": "Rejected",
+        "source": "doc 05 \u00a76.2",
+        "status": "active"
+      }
+    ],
+    "version": "1.0"
+  },
+  "cause_type": {
+    "description": "Root-cause hypotheses the diagnosis catalog can score (closed list).",
+    "extensible": false,
+    "terms": [
+      {
+        "attributes": {
+          "diagnosable": "yes"
+        },
+        "definition": "Assessed measurements are within expected ranges across enough of the scope.",
+        "id": "normal_operation",
+        "label": "Normal operation",
+        "source": "SRC-1 p4 \u00a75; doc 08 \u00a73.1",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "diagnosable": "yes"
+        },
+        "definition": "High link utilization with elevated egress queue drops and increased delay on the same device.",
+        "id": "link_congestion",
+        "label": "Link congestion",
+        "source": "SRC-1 p4 \u00a75; doc 08 \u00a73.1",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "diagnosable": "yes, needs topology"
+        },
+        "definition": "Symptoms on a device whose own load is normal while a device on its path to the core is congested.",
+        "id": "upstream_congestion",
+        "label": "Upstream congestion",
+        "source": "SRC-1 p5 \u00a76 (alternative); doc 08 \u00a73.1",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "diagnosable": "no: the generator has no wireless signal field (doc 06 \u00a73)"
+        },
+        "definition": "Poor wireless signal with retransmissions; requires wireless measurements.",
+        "id": "weak_wifi",
+        "label": "Weak Wi-Fi signal",
+        "source": "SRC-1 p4 \u00a75; doc 08 \u00a73.1",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "diagnosable": "yes"
+        },
+        "definition": "Rising interface errors, with packet loss localized to the interface.",
+        "id": "interface_fault",
+        "label": "Ethernet or interface fault",
+        "source": "SRC-1 p4 \u00a75; doc 08 \u00a73.1",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "diagnosable": "yes"
+        },
+        "definition": "High CPU utilization on the device, with delay or drops on traffic through it.",
+        "id": "device_overload",
+        "label": "Device CPU overload",
+        "source": "SRC-1 p1 \u00a71; doc 08 \u00a73.1",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "diagnosable": "yes"
+        },
+        "definition": "The device reports a critical status, with symptoms explained by its failure.",
+        "id": "device_failure",
+        "label": "Device or hardware failure",
+        "source": "SRC-1 p1 \u00a71; doc 08 \u00a73.1",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "diagnosable": "conditional: needs team-authored service-probe data"
+        },
+        "definition": "Service checks fail while the network path is healthy.",
+        "id": "dns_dhcp_failure",
+        "label": "DNS or DHCP failure",
+        "source": "SRC-1 p4 \u00a75; doc 08 \u00a73.3",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "diagnosable": "yes (as a data problem, never as a network fault)"
+        },
+        "definition": "The data itself is broken or incompatible, so a network fault cannot be claimed.",
+        "id": "telemetry_unreliable",
+        "label": "Telemetry unreliable",
+        "source": "SRC-1 p4 \u00a75 (interoperability failure); doc 08 \u00a73.1",
+        "status": "active"
+      }
+    ],
+    "version": "1.0"
+  },
+  "clarification_reason": {
+    "description": "Why a clarification is asked.",
+    "extensible": false,
+    "terms": [
+      {
+        "attributes": {},
+        "definition": "Observations of the same thing disagree and the conflict rules could not resolve it.",
+        "id": "conflict",
+        "label": "Conflict",
+        "source": "doc 03 \u00a73",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "The top two explanations are closer than the decision margin.",
+        "id": "narrow_margin",
+        "label": "Narrow margin",
+        "source": "doc 03 \u00a73; doc 08 \u00a74.4",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Evidence the leading explanation predicts was not assessed.",
+        "id": "missing_expected_evidence",
+        "label": "Missing expected evidence",
+        "source": "doc 03 \u00a73",
+        "status": "active"
+      }
+    ],
+    "version": "1.0"
+  },
+  "confidence_category": {
+    "description": "Category reported next to the numeric confidence.",
+    "extensible": false,
+    "terms": [
+      {
+        "attributes": {},
+        "definition": "Score at or above t_high.",
+        "id": "high",
+        "label": "High",
+        "source": "doc 08 \u00a74.6",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Score at or above t_med but below t_high.",
+        "id": "medium",
+        "label": "Medium",
+        "source": "doc 08 \u00a74.6",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Score below t_med.",
+        "id": "low",
+        "label": "Low",
+        "source": "doc 08 \u00a74.6",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "The decision gate failed.",
+        "id": "insufficient",
+        "label": "Insufficient",
+        "source": "doc 08 \u00a74.6",
+        "status": "active"
+      }
+    ],
+    "version": "1.0"
+  },
+  "conflict_rule": {
+    "description": "Rule that settled a conflict between observations.",
+    "extensible": false,
+    "terms": [
+      {
+        "attributes": {},
+        "definition": "Direct measurement beats derived evidence, which beats a user report.",
+        "id": "evidence_class",
+        "label": "Evidence class",
+        "source": "doc 08 \u00a75 rule 1",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "A newer observation beats one older by more than the tolerance.",
+        "id": "freshness",
+        "label": "Freshness",
+        "source": "doc 08 \u00a75 rule 2",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "An explanation consistent with the dependency structure beats one that is not.",
+        "id": "topology_consistency",
+        "label": "Topology consistency",
+        "source": "doc 08 \u00a75 rule 3",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "No rule decides: both are kept, the weaker evidence is used and the conflict is stated.",
+        "id": "unresolved",
+        "label": "Unresolved",
+        "source": "doc 08 \u00a75 rule 4",
+        "status": "active"
+      }
+    ],
+    "version": "1.0"
+  },
+  "data_provenance": {
+    "description": "Where a telemetry bundle came from (values as used in scenario files).",
+    "extensible": false,
+    "terms": [
+      {
+        "attributes": {},
+        "definition": "Produced by the organizers' generator with fixed seeds.",
+        "id": "synthetic-generator",
+        "label": "Synthetic (generator)",
+        "source": "doc 06; doc 09 \u00a73",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Generator output deliberately mutated by the team, labelled as such.",
+        "id": "team-authored",
+        "label": "Team-authored synthetic",
+        "source": "doc 05 \u00a76.4",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Generator telemetry plus team-authored DNS/DHCP probe results.",
+        "id": "synthetic-generator + team-authored probes",
+        "label": "Synthetic + team-authored probes",
+        "source": "doc 08 \u00a73.3",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "The bundle declared no provenance.",
+        "id": "unspecified",
+        "label": "Unspecified",
+        "source": "doc 05 \u00a711",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Checked against a public source; not available in this build.",
+        "id": "verified-public",
+        "label": "Verified public",
+        "source": "doc 11 \u00a72",
+        "status": "blocked"
+      },
+      {
+        "attributes": {},
+        "definition": "Authorized campus data; needs network-team access.",
+        "id": "verified-iitbbs",
+        "label": "Verified IIT Bhubaneswar",
+        "source": "doc 11 \u00a72; doc 15",
+        "status": "blocked"
+      }
+    ],
+    "version": "1.0"
+  },
+  "decision_kind": {
+    "description": "Verdict in a decision message.",
+    "extensible": false,
+    "terms": [
+      {
+        "attributes": {},
+        "definition": "Every gate condition holds: a probable cause is named.",
+        "id": "diagnosed",
+        "label": "Diagnosed",
+        "source": "doc 08 \u00a74.5",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "At least one gate condition fails: no single cause is asserted.",
+        "id": "insufficient_evidence",
+        "label": "Insufficient evidence",
+        "source": "SRC-1 p2; doc 08 \u00a74.5",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Assessed measurements are within range with enough coverage and no anomaly.",
+        "id": "no_fault_detected",
+        "label": "No fault detected",
+        "source": "doc 08 \u00a74.5; doc 08 \u00a711 ID-14",
+        "status": "active"
+      }
+    ],
+    "version": "1.0"
+  },
+  "dimension": {
+    "description": "Physical dimension of a metric; conversion only happens inside one dimension.",
+    "extensible": false,
+    "terms": [
+      {
+        "attributes": {},
+        "definition": "Durations such as latency and jitter; canonical unit millisecond.",
+        "id": "time",
+        "label": "Time",
+        "source": "doc 06 \u00a72",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Shares of a whole; canonical unit percent.",
+        "id": "ratio",
+        "label": "Ratio",
+        "source": "doc 06 \u00a72",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Integer counts of events per sample; canonical unit count.",
+        "id": "count",
+        "label": "Count",
+        "source": "doc 06 \u00a72",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Named states with no numeric unit.",
+        "id": "categorical",
+        "label": "Categorical",
+        "source": "doc 06 \u00a72",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "provisional": true
+        },
+        "definition": "Bits per second. No generator field uses it, so no units are defined (PROVISIONAL, D-17).",
+        "id": "data_rate",
+        "label": "Data rate",
+        "source": "SRC-1 p4 \u00a75",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "provisional": true
+        },
+        "definition": "Signal power such as dBm. No generator field uses it, so no units are defined (PROVISIONAL, D-17).",
+        "id": "power_level",
+        "label": "Power level",
+        "source": "SRC-1 p4 \u00a75",
+        "status": "active"
+      }
+    ],
+    "version": "1.0"
+  },
+  "entity_type": {
+    "description": "Kinds of entity a message can refer to.",
+    "extensible": false,
+    "terms": [
+      {
+        "attributes": {},
+        "definition": "A network device identified by the generator's device_id.",
+        "id": "device",
+        "label": "Device",
+        "source": "doc 06 \u00a72",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "A connection between two devices in the SIMULATED topology.",
+        "id": "link",
+        "label": "Link",
+        "source": "sample_data/topology/README.md",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "A placeholder campus area served by devices in the SIMULATED topology.",
+        "id": "zone",
+        "label": "Zone",
+        "source": "doc 10 \u00a74; doc 11 \u00a72",
+        "status": "active"
+      }
+    ],
+    "version": "1.0"
+  },
+  "error_code": {
+    "description": "Every error, warning and limitation code the system emits. Severity: fatal stops the incident, error degrades it, warning is surfaced, info is logged.",
+    "extensible": false,
+    "terms": [
+      {
+        "attributes": {
+          "kind": "orchestration",
+          "severity": "error"
+        },
+        "definition": "An agent reported or suffered a failure.",
+        "id": "AGENT_FAILED",
+        "label": "Agent failed",
+        "source": "doc 05 \u00a77; doc 04 \u00a75",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "limitation",
+          "severity": "warning"
+        },
+        "definition": "No finding arrived from an agent; its evidence is absent.",
+        "id": "AGENT_MISSING",
+        "label": "Agent missing",
+        "source": "doc 04 \u00a75",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "orchestration",
+          "severity": "error"
+        },
+        "definition": "An agent did not reply before its deadline.",
+        "id": "AGENT_TIMEOUT",
+        "label": "Agent timeout",
+        "source": "doc 05 \u00a77; doc 04 \u00a75",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "limitation",
+          "severity": "info"
+        },
+        "definition": "A cause cannot be assessed because its required evidence is not in the data.",
+        "id": "CAUSE_NOT_ASSESSABLE",
+        "label": "Cause not assessable",
+        "source": "doc 08 \u00a73.2",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "orchestration",
+          "severity": "info"
+        },
+        "definition": "The round limit was reached; the correlation agent decided on what it had.",
+        "id": "CLARIFICATION_LIMIT_REACHED",
+        "label": "Clarification limit reached",
+        "source": "doc 05 \u00a77; doc 03 \u00a73",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "limitation",
+          "severity": "warning"
+        },
+        "definition": "Conflicting observations could not be resolved by the rules.",
+        "id": "CONFLICT_UNRESOLVED",
+        "label": "Conflict unresolved",
+        "source": "doc 08 \u00a75",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "ingestion",
+          "severity": "warning"
+        },
+        "definition": "A device's newest data is older than the freshness limit.",
+        "id": "DATA_STALE",
+        "label": "Data stale",
+        "source": "doc 05 \u00a77; doc 05 \u00a711",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "ingestion",
+          "severity": "warning"
+        },
+        "definition": "A device is absent from the topology.",
+        "id": "ENTITY_NOT_IN_TOPOLOGY",
+        "label": "Entity not in topology",
+        "source": "doc 05 \u00a77; doc 05 \u00a711",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "ingestion",
+          "severity": "warning"
+        },
+        "definition": "A record has no usable device id.",
+        "id": "ENTITY_UNUSABLE",
+        "label": "Entity unusable",
+        "source": "doc 05 \u00a77; doc 05 \u00a711",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "ingestion",
+          "severity": "warning"
+        },
+        "definition": "A listed alternate field name was mapped.",
+        "id": "FIELD_ALIAS_APPLIED",
+        "label": "Field alias applied",
+        "source": "doc 05 \u00a77; doc 05 \u00a711",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "ingestion",
+          "severity": "info"
+        },
+        "definition": "An unknown field was ignored and reported.",
+        "id": "FIELD_IGNORED",
+        "label": "Field ignored",
+        "source": "doc 05 \u00a77; doc 05 \u00a711",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "ingestion",
+          "severity": "warning"
+        },
+        "definition": "A field has no listed alias and is not interpreted.",
+        "id": "FIELD_UNMAPPED",
+        "label": "Field unmapped",
+        "source": "doc 05 \u00a77; doc 05 \u00a711",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "limitation",
+          "severity": "info"
+        },
+        "definition": "The decision gate failed, so no single cause is asserted.",
+        "id": "GATE_NOT_MET",
+        "label": "Gate not met",
+        "source": "doc 08 \u00a74.5",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "ingestion",
+          "severity": "fatal"
+        },
+        "definition": "The bundle declares a mode other than simulation.",
+        "id": "INPUT_MODE_UNSUPPORTED",
+        "label": "Input mode unsupported",
+        "source": "doc 05 \u00a77; doc 05 \u00a711",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "ingestion",
+          "severity": "fatal"
+        },
+        "definition": "No record identifies a device.",
+        "id": "INPUT_NO_ENTITY",
+        "label": "Input no entity",
+        "source": "doc 05 \u00a77; doc 05 \u00a711",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "ingestion",
+          "severity": "fatal"
+        },
+        "definition": "No record has a usable timestamp.",
+        "id": "INPUT_NO_TIMESTAMP",
+        "label": "Input no timestamp",
+        "source": "doc 05 \u00a77; doc 05 \u00a711",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "ingestion",
+          "severity": "fatal"
+        },
+        "definition": "No record carries a usable metric.",
+        "id": "INPUT_NO_USABLE_METRIC",
+        "label": "Input no usable metric",
+        "source": "doc 05 \u00a77; doc 05 \u00a711",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "ingestion",
+          "severity": "fatal"
+        },
+        "definition": "The bundle declares a schema major version with no adapter.",
+        "id": "INPUT_SCHEMA_VERSION_UNSUPPORTED",
+        "label": "Input schema version unsupported",
+        "source": "doc 05 \u00a77; doc 05 \u00a711",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "ingestion",
+          "severity": "fatal"
+        },
+        "definition": "The input is not valid JSON or not a bundle.",
+        "id": "INPUT_UNPARSEABLE",
+        "label": "Input unparseable",
+        "source": "doc 05 \u00a77; doc 05 \u00a711",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "llm",
+          "severity": "info"
+        },
+        "definition": "LLM wording failed the grounding check; template text was used.",
+        "id": "LLM_OUTPUT_REJECTED",
+        "label": "Llm output rejected",
+        "source": "doc 05 \u00a77; doc 12 \u00a79",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "llm",
+          "severity": "info"
+        },
+        "definition": "No LLM was available; template text was used.",
+        "id": "LLM_UNAVAILABLE",
+        "label": "Llm unavailable",
+        "source": "doc 05 \u00a77; doc 12 \u00a79",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "protocol",
+          "severity": "error"
+        },
+        "definition": "A message failed validation; it is logged and not delivered.",
+        "id": "MESSAGE_INVALID",
+        "label": "Message invalid",
+        "source": "doc 05 \u00a77",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "protocol",
+          "severity": "error"
+        },
+        "definition": "A message bypassed the orchestrator or addressed its own sender.",
+        "id": "MESSAGE_ROUTING_INVALID",
+        "label": "Message routing invalid",
+        "source": "doc 03 \u00a73; M2",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "ingestion",
+          "severity": "warning"
+        },
+        "definition": "A metric is missing for some devices but present for others.",
+        "id": "METRIC_MISSING",
+        "label": "Metric missing",
+        "source": "doc 05 \u00a77; doc 05 \u00a711",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "ingestion",
+          "severity": "info"
+        },
+        "definition": "A metric is absent from every record of the bundle.",
+        "id": "METRIC_NOT_PROVIDED",
+        "label": "Metric not provided",
+        "source": "doc 05 \u00a77; doc 05 \u00a711",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "limitation",
+          "severity": "info"
+        },
+        "definition": "No DNS/DHCP probe data was supplied.",
+        "id": "NO_SERVICE_PROBES",
+        "label": "No service probes",
+        "source": "doc 08 \u00a73.3",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "protocol",
+          "severity": "error"
+        },
+        "definition": "The payload schema major version is not supported.",
+        "id": "PAYLOAD_SCHEMA_VERSION_UNSUPPORTED",
+        "label": "Payload schema version unsupported",
+        "source": "doc 05 \u00a710",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "ingestion",
+          "severity": "warning"
+        },
+        "definition": "A service-probe entry was malformed and dropped.",
+        "id": "PROBE_INVALID",
+        "label": "Probe invalid",
+        "source": "doc 05 \u00a77; doc 05 \u00a711",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "protocol",
+          "severity": "error"
+        },
+        "definition": "The envelope's protocol major version is not supported.",
+        "id": "PROTOCOL_VERSION_UNSUPPORTED",
+        "label": "Protocol version unsupported",
+        "source": "doc 05 \u00a710",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "ingestion",
+          "severity": "warning"
+        },
+        "definition": "Different records exist for the same device and time.",
+        "id": "RECORD_CONFLICT",
+        "label": "Record conflict",
+        "source": "doc 05 \u00a77; doc 05 \u00a711",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "ingestion",
+          "severity": "info"
+        },
+        "definition": "An identical duplicate record was removed.",
+        "id": "RECORD_DUPLICATE",
+        "label": "Record duplicate",
+        "source": "doc 05 \u00a77; doc 05 \u00a711",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "ingestion",
+          "severity": "warning"
+        },
+        "definition": "A registered adapter converted an older bundle layout.",
+        "id": "SCHEMA_ADAPTER_APPLIED",
+        "label": "Schema adapter applied",
+        "source": "doc 05 \u00a77; doc 05 \u00a711",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "ingestion",
+          "severity": "warning"
+        },
+        "definition": "A device status is not Healthy, Warning or Critical.",
+        "id": "STATUS_UNRECOGNIZED",
+        "label": "Status unrecognized",
+        "source": "doc 05 \u00a77; doc 05 \u00a711",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "ingestion",
+          "severity": "warning"
+        },
+        "definition": "A record's timestamp is missing, unparseable or has no timezone.",
+        "id": "TIMESTAMP_UNUSABLE",
+        "label": "Timestamp unusable",
+        "source": "doc 05 \u00a77; doc 05 \u00a711",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "orchestration",
+          "severity": "warning"
+        },
+        "definition": "An agent used all its tool calls; its investigation may be incomplete.",
+        "id": "TOOL_BUDGET_EXHAUSTED",
+        "label": "Tool budget exhausted",
+        "source": "doc 03 \u00a71",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "ingestion",
+          "severity": "warning"
+        },
+        "definition": "No topology is available.",
+        "id": "TOPOLOGY_MISSING",
+        "label": "Topology missing",
+        "source": "doc 05 \u00a77; doc 05 \u00a711",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "ingestion",
+          "severity": "warning"
+        },
+        "definition": "A unit is missing, unknown or contradictory.",
+        "id": "UNIT_AMBIGUOUS",
+        "label": "Unit ambiguous",
+        "source": "doc 05 \u00a77; doc 05 \u00a711",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "ingestion",
+          "severity": "info"
+        },
+        "definition": "A value was converted to the canonical unit.",
+        "id": "UNIT_CONVERTED",
+        "label": "Unit converted",
+        "source": "doc 05 \u00a77; doc 05 \u00a711",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "ingestion",
+          "severity": "warning"
+        },
+        "definition": "A value is outside its definitional range.",
+        "id": "VALUE_IMPLAUSIBLE",
+        "label": "Value implausible",
+        "source": "doc 05 \u00a77; doc 05 \u00a711",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "ingestion",
+          "severity": "warning"
+        },
+        "definition": "A value is not a finite number.",
+        "id": "VALUE_MALFORMED",
+        "label": "Value malformed",
+        "source": "doc 05 \u00a77; doc 05 \u00a711",
+        "status": "active"
+      }
+    ],
+    "version": "1.0"
+  },
+  "evidence_class": {
+    "description": "Strength class used by conflict rule 1.",
+    "extensible": false,
+    "terms": [
+      {
+        "attributes": {},
+        "definition": "Read directly from telemetry.",
+        "id": "direct_measurement",
+        "label": "Direct measurement",
+        "source": "doc 08 \u00a75",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Computed or inferred from other evidence.",
+        "id": "derived",
+        "label": "Derived",
+        "source": "doc 08 \u00a75",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Reported by a person; unverified.",
+        "id": "user_report",
+        "label": "User report",
+        "source": "doc 08 \u00a75-6",
+        "status": "active"
+      }
+    ],
+    "version": "1.0"
+  },
+  "evidence_stance": {
+    "description": "Whether evidence supports or contradicts a hypothesis (PROVISIONAL, D-19).",
+    "extensible": false,
+    "terms": [
+      {
+        "attributes": {},
+        "definition": "Makes the hypothesis more likely.",
+        "id": "supports",
+        "label": "Supports",
+        "source": "doc 05 \u00a74",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Makes the hypothesis less likely.",
+        "id": "contradicts",
+        "label": "Contradicts",
+        "source": "doc 05 \u00a74",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Relevant context that neither supports nor contradicts.",
+        "id": "neutral",
+        "label": "Neutral",
+        "source": "PROPOSAL",
+        "status": "active"
+      }
+    ],
+    "version": "1.0"
+  },
+  "evidence_type": {
+    "description": "What an evidence reference points at (PROVISIONAL, D-19).",
+    "extensible": false,
+    "terms": [
+      {
+        "attributes": {
+          "id_prefix": "OBS-"
+        },
+        "definition": "A measured or derived fact in a finding.",
+        "id": "observation",
+        "label": "Observation",
+        "source": "doc 05 \u00a74",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "id_prefix": "HYP-"
+        },
+        "definition": "An agent-local interpretation.",
+        "id": "hypothesis",
+        "label": "Hypothesis",
+        "source": "doc 05 \u00a74",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "id_prefix": "REC-"
+        },
+        "definition": "One record of the normalized bundle.",
+        "id": "normalized_record",
+        "label": "Normalized record",
+        "source": "doc 05 \u00a76",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "id_prefix": "CAND-"
+        },
+        "definition": "An unverified candidate built from complaints.",
+        "id": "community_report",
+        "label": "Community report",
+        "source": "doc 10",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "id_prefix": ""
+        },
+        "definition": "The recorded result of a tool call.",
+        "id": "tool_result",
+        "label": "Tool result",
+        "source": "doc 03 \u00a71",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "id_prefix": ""
+        },
+        "definition": "A device or link in the SIMULATED topology.",
+        "id": "topology_element",
+        "label": "Topology element",
+        "source": "doc 11",
+        "status": "active"
+      }
+    ],
+    "version": "1.0"
+  },
+  "incident_state": {
+    "description": "Incident workflow states (doc 04 \u00a72).",
+    "extensible": false,
+    "terms": [
+      {
+        "attributes": {},
+        "definition": "Input received; incident id assigned.",
+        "id": "RECEIVED",
+        "label": "Received",
+        "source": "doc 04 \u00a72",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Ingestion is checking and normalizing the input.",
+        "id": "VALIDATING",
+        "label": "Validating",
+        "source": "doc 04 \u00a72",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "The input was unusable; a failure report was issued. Terminal.",
+        "id": "REJECTED",
+        "label": "Rejected",
+        "source": "doc 04 \u00a72",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Usable input with no warnings.",
+        "id": "READY",
+        "label": "Ready",
+        "source": "doc 04 \u00a72",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Usable input with recorded warnings.",
+        "id": "READY_WITH_WARNINGS",
+        "label": "Ready with warnings",
+        "source": "doc 04 \u00a72",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Tasks sent to the specialist agents.",
+        "id": "DISPATCHED",
+        "label": "Dispatched",
+        "source": "doc 04 \u00a72",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Waiting for specialist findings; failures and retries are recorded here.",
+        "id": "COLLECTING",
+        "label": "Collecting",
+        "source": "doc 04 \u00a72",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "The correlation agent is weighing the findings.",
+        "id": "CORRELATING",
+        "label": "Correlating",
+        "source": "doc 04 \u00a72",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "A clarification question is being answered.",
+        "id": "CLARIFYING",
+        "label": "Clarifying",
+        "source": "doc 04 \u00a72",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "The correlation agent's decision is recorded.",
+        "id": "DECIDED",
+        "label": "Decided",
+        "source": "doc 04 \u00a72",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "The reporting agent is building the report.",
+        "id": "REPORTING",
+        "label": "Reporting",
+        "source": "doc 04 \u00a72",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Recommendations wait for a human decision; actions stay simulated.",
+        "id": "AWAITING_REVIEW",
+        "label": "Awaiting review",
+        "source": "doc 04 \u00a72",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Incident closed. Terminal.",
+        "id": "COMPLETE",
+        "label": "Complete",
+        "source": "doc 04 \u00a72",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "An unrecoverable internal error; a failure report was issued. Terminal.",
+        "id": "FAILED",
+        "label": "Failed",
+        "source": "doc 04 \u00a72",
+        "status": "active"
+      }
+    ],
+    "version": "1.0"
+  },
+  "message_status": {
+    "description": "Outcome flag carried by every envelope.",
+    "extensible": false,
+    "terms": [
+      {
+        "attributes": {},
+        "definition": "The sender completed the work fully.",
+        "id": "ok",
+        "label": "OK",
+        "source": "doc 05 \u00a72",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "The sender completed part of the work, for example could not assess its whole scope.",
+        "id": "partial",
+        "label": "Partial",
+        "source": "doc 05 \u00a72",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "The message reports a failure.",
+        "id": "error",
+        "label": "Error",
+        "source": "doc 05 \u00a72",
+        "status": "active"
+      }
+    ],
+    "version": "1.0"
+  },
+  "message_type": {
+    "description": "Kinds of protocol message.",
+    "extensible": false,
+    "terms": [
+      {
+        "attributes": {},
+        "definition": "Orchestrator asks one agent to do a scoped piece of work within a budget and deadline.",
+        "id": "task_request",
+        "label": "Task request",
+        "source": "doc 05 \u00a73",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "A specialist's independent observations, hypotheses, unknowns and tool trail for one task.",
+        "id": "finding",
+        "label": "Finding",
+        "source": "doc 05 \u00a73",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "A bounded, typed question one agent asks another through the orchestrator.",
+        "id": "clarification_request",
+        "label": "Clarification request",
+        "source": "doc 05 \u00a73; doc 03 \u00a73",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "The answer to a clarification request, or a stated reason it cannot be answered.",
+        "id": "clarification_response",
+        "label": "Clarification response",
+        "source": "doc 05 \u00a73",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "The correlation agent's ranked hypotheses and its verdict: diagnosed, insufficient evidence or no fault.",
+        "id": "decision",
+        "label": "Decision",
+        "source": "doc 05 \u00a73",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "The reporting agent delivers the validated report and its Markdown rendering.",
+        "id": "report_ready",
+        "label": "Report ready",
+        "source": "doc 05 \u00a73",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "A failure, timeout or invalid message, with a code and whether it is recoverable.",
+        "id": "agent_error",
+        "label": "Agent error",
+        "source": "doc 05 \u00a73",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "An unverified candidate incident built from user complaints (Extension A).",
+        "id": "community_candidate",
+        "label": "Community candidate",
+        "source": "doc 05 \u00a73; doc 10",
+        "status": "active"
+      }
+    ],
+    "version": "1.0"
+  },
+  "metric": {
+    "description": "Metric names used in observations: the generator's observed fields plus team-authored probe items. Never invent more (CLAUDE.md rule 1).",
+    "extensible": false,
+    "terms": [
+      {
+        "attributes": {
+          "category": "latency",
+          "dimension": "time",
+          "origin": "generator",
+          "unit": "millisecond"
+        },
+        "definition": "Generator field 'latency_ms' (doc 06 \u00a72), category latency, unit millisecond.",
+        "id": "latency_ms",
+        "label": "Latency",
+        "source": "OBSERVED doc 06 \u00a72",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "category": "jitter",
+          "dimension": "time",
+          "origin": "generator",
+          "unit": "millisecond"
+        },
+        "definition": "Generator field 'jitter_ms' (doc 06 \u00a72), category jitter, unit millisecond.",
+        "id": "jitter_ms",
+        "label": "Jitter",
+        "source": "OBSERVED doc 06 \u00a72",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "category": "packet_loss",
+          "dimension": "ratio",
+          "origin": "generator",
+          "unit": "percent"
+        },
+        "definition": "Generator field 'packet_loss_pct' (doc 06 \u00a72), category packet_loss, unit percent.",
+        "id": "packet_loss_pct",
+        "label": "Packet loss",
+        "source": "OBSERVED doc 06 \u00a72",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "category": "link_utilization",
+          "dimension": "ratio",
+          "origin": "generator",
+          "unit": "percent"
+        },
+        "definition": "Generator field 'link_utilization_pct' (doc 06 \u00a72), category link_utilization, unit percent.",
+        "id": "link_utilization_pct",
+        "label": "Link utilization",
+        "source": "OBSERVED doc 06 \u00a72",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "category": "cpu_utilization",
+          "dimension": "ratio",
+          "origin": "generator",
+          "unit": "percent"
+        },
+        "definition": "Generator field 'cpu_utilization_pct' (doc 06 \u00a72), category cpu_utilization, unit percent.",
+        "id": "cpu_utilization_pct",
+        "label": "CPU utilization",
+        "source": "OBSERVED doc 06 \u00a72",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "category": "egress_queue_drops",
+          "dimension": "count",
+          "origin": "generator",
+          "unit": "count"
+        },
+        "definition": "Generator field 'queue_drops' (doc 06 \u00a72), category egress_queue_drops, unit count.",
+        "id": "queue_drops",
+        "label": "Egress queue drops",
+        "source": "OBSERVED doc 06 \u00a72",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "category": "interface_errors",
+          "dimension": "count",
+          "origin": "generator",
+          "unit": "count"
+        },
+        "definition": "Generator field 'interface_errors' (doc 06 \u00a72), category interface_errors, unit count.",
+        "id": "interface_errors",
+        "label": "Interface errors",
+        "source": "OBSERVED doc 06 \u00a72",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "category": "device_status",
+          "dimension": "categorical",
+          "origin": "generator",
+          "unit": "none"
+        },
+        "definition": "Generator field 'status': Healthy, Warning or Critical (doc 06 \u00a72).",
+        "id": "status",
+        "label": "Device status",
+        "source": "OBSERVED doc 06 \u00a72",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "dimension": "categorical",
+          "origin": "team_authored_probe",
+          "unit": "outcome"
+        },
+        "definition": "Outcome of a team-authored DNS service check (success, failure, timeout).",
+        "id": "probe_dns",
+        "label": "DNS probe",
+        "source": "doc 08 \u00a73.3; ID-06",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "dimension": "categorical",
+          "origin": "team_authored_probe",
+          "unit": "outcome"
+        },
+        "definition": "Outcome of a team-authored DHCP service check (success, failure, timeout).",
+        "id": "probe_dhcp",
+        "label": "DHCP probe",
+        "source": "doc 08 \u00a73.3; ID-06",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "dimension": "categorical",
+          "origin": "structural",
+          "unit": "none"
+        },
+        "definition": "Whether the entity could be placed in the topology; used only in not-assessable items.",
+        "id": "topology",
+        "label": "Topology placement",
+        "source": "doc 05 \u00a74 (NO_TOPOLOGY)",
+        "status": "active"
+      }
+    ],
+    "version": "1.0"
+  },
+  "metric_category": {
+    "description": "Metric categories named in the problem statement (SRC-1 p4 \u00a75). Categories, not field names.",
+    "extensible": false,
+    "terms": [
+      {
+        "attributes": {
+          "dimension": "time",
+          "in_generator_data": true
+        },
+        "definition": "The 'latency' category from the problem statement's dataset list.",
+        "id": "latency",
+        "label": "Latency",
+        "source": "SRC-1 p4 \u00a75",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "dimension": "time",
+          "in_generator_data": true
+        },
+        "definition": "The 'jitter' category from the problem statement's dataset list.",
+        "id": "jitter",
+        "label": "Jitter",
+        "source": "SRC-1 p4 \u00a75",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "dimension": "ratio",
+          "in_generator_data": true
+        },
+        "definition": "The 'packet loss' category from the problem statement's dataset list.",
+        "id": "packet_loss",
+        "label": "Packet loss",
+        "source": "SRC-1 p4 \u00a75",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "dimension": "data_rate",
+          "in_generator_data": false
+        },
+        "definition": "The 'throughput' category from the problem statement's dataset list.",
+        "id": "throughput",
+        "label": "Throughput",
+        "source": "SRC-1 p4 \u00a75",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "dimension": "data_rate",
+          "in_generator_data": false
+        },
+        "definition": "The 'bandwidth' category from the problem statement's dataset list.",
+        "id": "bandwidth",
+        "label": "Bandwidth",
+        "source": "SRC-1 p4 \u00a75",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "dimension": "ratio",
+          "in_generator_data": true
+        },
+        "definition": "The 'link utilization' category from the problem statement's dataset list.",
+        "id": "link_utilization",
+        "label": "Link utilization",
+        "source": "SRC-1 p4 \u00a75",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "dimension": "categorical",
+          "in_generator_data": true
+        },
+        "definition": "The 'device status' category from the problem statement's dataset list.",
+        "id": "device_status",
+        "label": "Device status",
+        "source": "SRC-1 p4 \u00a75",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "dimension": "ratio",
+          "in_generator_data": true
+        },
+        "definition": "The 'cpu utilization' category from the problem statement's dataset list.",
+        "id": "cpu_utilization",
+        "label": "CPU utilization",
+        "source": "SRC-1 p4 \u00a75",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "dimension": "ratio",
+          "in_generator_data": false
+        },
+        "definition": "The 'memory utilization' category from the problem statement's dataset list.",
+        "id": "memory_utilization",
+        "label": "Memory utilization",
+        "source": "SRC-1 p4 \u00a75",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "dimension": "count",
+          "in_generator_data": true
+        },
+        "definition": "The 'egress queue drops' category from the problem statement's dataset list.",
+        "id": "egress_queue_drops",
+        "label": "Egress queue drops",
+        "source": "SRC-1 p4 \u00a75",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "dimension": "count",
+          "in_generator_data": true
+        },
+        "definition": "The 'interface errors' category from the problem statement's dataset list.",
+        "id": "interface_errors",
+        "label": "Interface errors",
+        "source": "SRC-1 p4 \u00a75",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "dimension": "power_level",
+          "in_generator_data": false
+        },
+        "definition": "The 'wireless signal measurements' category from the problem statement's dataset list.",
+        "id": "wireless_signal",
+        "label": "Wireless signal measurements",
+        "source": "SRC-1 p4 \u00a75",
+        "status": "active"
+      }
+    ],
+    "version": "1.0"
+  },
+  "mode": {
+    "description": "Operating mode. Only simulation is accepted in this build.",
+    "extensible": false,
+    "terms": [
+      {
+        "attributes": {},
+        "definition": "Synthetic or authorized test data, scenario playback, simulated actions.",
+        "id": "simulation",
+        "label": "Simulation",
+        "source": "doc 00 \u00a74; R-17",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Authorized campus feeds; defined for documentation only and never accepted.",
+        "id": "deployment",
+        "label": "Deployment",
+        "source": "doc 15",
+        "status": "blocked"
+      }
+    ],
+    "version": "1.0"
+  },
+  "not_assessable_reason": {
+    "description": "Why an entity-metric pair could not be assessed.",
+    "extensible": false,
+    "terms": [
+      {
+        "attributes": {},
+        "definition": "The metric is absent for this entity.",
+        "id": "MISSING",
+        "label": "Missing",
+        "source": "doc 05 \u00a74",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "The value is not a usable number or recognised status.",
+        "id": "MALFORMED",
+        "label": "Malformed",
+        "source": "doc 05 \u00a74",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "A field may carry the metric but has no listed alias, so it is not interpreted.",
+        "id": "UNMAPPED_FIELD",
+        "label": "Unmapped field",
+        "source": "doc 05 \u00a74",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "The unit is missing, unknown or contradicts the field name.",
+        "id": "UNIT_AMBIGUOUS",
+        "label": "Unit ambiguous",
+        "source": "doc 05 \u00a74",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "The newest data is older than the freshness limit.",
+        "id": "STALE",
+        "label": "Stale",
+        "source": "doc 05 \u00a74",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Too few samples to judge.",
+        "id": "INSUFFICIENT_SAMPLES",
+        "label": "Insufficient samples",
+        "source": "doc 05 \u00a74",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Topology is missing or does not contain the entity.",
+        "id": "NO_TOPOLOGY",
+        "label": "No topology",
+        "source": "doc 05 \u00a74",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "The entity or item is not part of the bundle being analysed.",
+        "id": "OUT_OF_SCOPE",
+        "label": "Out of scope",
+        "source": "doc 05 \u00a74",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "The value is outside the definitional range, for example a percentage above 100.",
+        "id": "IMPLAUSIBLE",
+        "label": "Implausible",
+        "source": "doc 05 \u00a710",
+        "status": "active"
+      }
+    ],
+    "version": "1.0"
+  },
+  "question_type": {
+    "description": "Closed list of clarification questions.",
+    "extensible": false,
+    "terms": [
+      {
+        "attributes": {},
+        "definition": "Re-examine entities over the whole bundle window.",
+        "id": "widen_time_window",
+        "label": "Widen time window",
+        "source": "doc 03 \u00a73",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Examine entities outside the original scope.",
+        "id": "assess_additional_entities",
+        "label": "Assess additional entities",
+        "source": "doc 03 \u00a73",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Which entities would be isolated or degraded if this entity failed.",
+        "id": "what_if_cause",
+        "label": "What-if cause",
+        "source": "doc 03 \u00a73",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Read one metric of one entity again.",
+        "id": "recheck_metric",
+        "label": "Re-check metric",
+        "source": "doc 03 \u00a73",
+        "status": "active"
+      }
+    ],
+    "version": "1.0"
+  },
+  "rationale_code": {
+    "description": "Why a specialist attached a local hypothesis. Extensible with 'x-' ids for site-specific rules.",
+    "extensible": true,
+    "terms": [
+      {
+        "attributes": {},
+        "definition": "Link utilization and latency or jitter are both abnormal.",
+        "id": "HIGH_UTILIZATION_WITH_DELAY",
+        "label": "High utilization with delay",
+        "source": "agents/performance.py",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Delay is abnormal although the device's own link load is normal.",
+        "id": "DELAY_WITH_NORMAL_LOCAL_UTILIZATION",
+        "label": "Delay with normal local utilization",
+        "source": "agents/performance.py",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Packet loss is abnormal without high link utilization.",
+        "id": "LOSS_WITHOUT_LOAD",
+        "label": "Loss without load",
+        "source": "agents/performance.py",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "The device's own status is Critical.",
+        "id": "DEVICE_REPORTS_CRITICAL",
+        "label": "Device reports critical",
+        "source": "agents/infrastructure.py",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "CPU utilization is abnormal.",
+        "id": "HIGH_CPU",
+        "label": "High CPU",
+        "source": "agents/infrastructure.py",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Interface error counts are abnormal.",
+        "id": "INTERFACE_ERRORS",
+        "label": "Interface errors",
+        "source": "agents/infrastructure.py",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Egress queue drops are abnormal.",
+        "id": "QUEUE_DROPS",
+        "label": "Queue drops",
+        "source": "agents/infrastructure.py",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Team-authored DNS/DHCP probes from the device fail or time out.",
+        "id": "SERVICE_PROBES_FAIL",
+        "label": "Service probes fail",
+        "source": "agents/connectivity.py",
+        "status": "active"
+      }
+    ],
+    "version": "1.0"
+  },
+  "recommendation_mode": {
+    "description": "How the reporting agent framed its recommendations.",
+    "extensible": false,
+    "terms": [
+      {
+        "attributes": {},
+        "definition": "Diagnosed: actions that address the probable cause.",
+        "id": "corrective",
+        "label": "Corrective",
+        "source": "doc 07 \u00a79",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "No fault: keep monitoring and collect what could not be assessed.",
+        "id": "monitoring",
+        "label": "Monitoring",
+        "source": "doc 07 \u00a79",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Insufficient evidence: steps that would settle the question.",
+        "id": "diagnostic_next_steps",
+        "label": "Diagnostic next steps",
+        "source": "doc 07 \u00a79",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Failed: correct the input or failing component and re-run.",
+        "id": "fix_input",
+        "label": "Fix input",
+        "source": "doc 07 \u00a79",
+        "status": "active"
+      }
+    ],
+    "version": "1.0"
+  },
+  "recommendation_priority": {
+    "description": "Priority of a recommendation (PROVISIONAL, D-19; not used yet).",
+    "extensible": false,
+    "terms": [
+      {
+        "attributes": {},
+        "definition": "Act first.",
+        "id": "high",
+        "label": "High",
+        "source": "PROPOSAL",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Act after high-priority items.",
+        "id": "medium",
+        "label": "Medium",
+        "source": "PROPOSAL",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Optional.",
+        "id": "low",
+        "label": "Low",
+        "source": "PROPOSAL",
+        "status": "active"
+      }
+    ],
+    "version": "1.0"
+  },
+  "report_status": {
+    "description": "Value of the official report key `status` (PROVISIONAL, open decision D-03).",
+    "extensible": false,
+    "terms": [
+      {
+        "attributes": {},
+        "definition": "A probable cause is named with supporting evidence.",
+        "id": "diagnosed",
+        "label": "Diagnosed",
+        "source": "SRC-1 p5 \u00a76",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Evidence does not support a single probable cause.",
+        "id": "insufficient_evidence",
+        "label": "Insufficient evidence",
+        "source": "D-03 default",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Assessed measurements are within expected ranges.",
+        "id": "no_fault_detected",
+        "label": "No fault detected",
+        "source": "D-03 default",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "No diagnosis was possible: input rejected or an internal failure.",
+        "id": "failed",
+        "label": "Failed",
+        "source": "D-03 default",
+        "status": "active"
+      }
+    ],
+    "version": "1.0"
+  },
+  "score_method": {
+    "description": "How a score was produced.",
+    "extensible": false,
+    "terms": [
+      {
+        "attributes": {},
+        "definition": "The documented scoring method of doc 08 \u00a74; a ranking, not a probability.",
+        "id": "heuristic",
+        "label": "Heuristic",
+        "source": "doc 08 \u00a74; CD-6",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "A specialist's own rough score for its hypothesis; never the final confidence.",
+        "id": "agent_local_heuristic",
+        "label": "Agent-local heuristic",
+        "source": "doc 05 \u00a74",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Validated against ground truth; blocked until the doc 08 \u00a79 gate is recorded.",
+        "id": "calibrated",
+        "label": "Calibrated",
+        "source": "doc 08 \u00a79",
+        "status": "blocked"
+      }
+    ],
+    "version": "1.0"
+  },
+  "severity": {
+    "description": "How abnormal one observation is.",
+    "extensible": false,
+    "terms": [
+      {
+        "attributes": {},
+        "definition": "Within the expected range set in config/diagnosis.toml.",
+        "id": "normal",
+        "label": "Normal",
+        "source": "doc 05 \u00a74; doc 08 \u00a711",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Above the expected range but below the critical level.",
+        "id": "elevated",
+        "label": "Elevated",
+        "source": "doc 05 \u00a74; doc 08 \u00a711",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "At or above the critical level.",
+        "id": "critical",
+        "label": "Critical",
+        "source": "doc 05 \u00a74; doc 08 \u00a711",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Could not be graded; never treated as normal.",
+        "id": "unknown",
+        "label": "Unknown",
+        "source": "doc 05 \u00a74; CD-10",
+        "status": "active"
+      }
+    ],
+    "version": "1.0"
+  },
+  "task_kind": {
+    "description": "Kind of work a task asks for (PROVISIONAL, D-19; carried as `goal` today).",
+    "extensible": false,
+    "terms": [
+      {
+        "attributes": {},
+        "definition": "A specialist examines its scope (goals assess_performance, assess_device_health, assess_connectivity_scope).",
+        "id": "investigate",
+        "label": "Investigate",
+        "source": "doc 04 \u00a73",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "The correlation agent weighs findings (goal correlate).",
+        "id": "correlate",
+        "label": "Correlate",
+        "source": "doc 04 \u00a73",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "The reporting agent builds the report (goal report).",
+        "id": "report",
+        "label": "Report",
+        "source": "doc 04 \u00a73",
+        "status": "active"
+      }
+    ],
+    "version": "1.0"
+  },
+  "topology_provenance": {
+    "description": "Provenance label carried by a topology file.",
+    "extensible": false,
+    "terms": [
+      {
+        "attributes": {},
+        "definition": "Team-authored synthetic topology.",
+        "id": "SIMULATED",
+        "label": "Simulated",
+        "source": "doc 11 \u00a72; ID-04",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Not available in this build.",
+        "id": "VERIFIED-PUBLIC",
+        "label": "Verified public",
+        "source": "doc 11 \u00a72",
+        "status": "blocked"
+      },
+      {
+        "attributes": {},
+        "definition": "Needs network-team access.",
+        "id": "VERIFIED-IITBBS",
+        "label": "Verified IIT Bhubaneswar",
+        "source": "doc 11 \u00a72",
+        "status": "blocked"
+      }
+    ],
+    "version": "1.0"
+  },
+  "trust_label": {
+    "description": "How far user reports are confirmed by telemetry.",
+    "extensible": false,
+    "terms": [
+      {
+        "attributes": {},
+        "definition": "Users reported a problem; telemetry does not show a matching fault.",
+        "id": "reported_unverified",
+        "label": "Reported, unverified",
+        "source": "doc 08 \u00a76; doc 10 \u00a76",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Telemetry shows a fault that no user report refers to.",
+        "id": "detected",
+        "label": "Detected",
+        "source": "doc 08 \u00a76",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "User reports and a diagnosed telemetry fault point to the same devices.",
+        "id": "corroborated",
+        "label": "Corroborated",
+        "source": "doc 08 \u00a76",
+        "status": "active"
+      }
+    ],
+    "version": "1.0"
+  },
+  "unit": {
+    "description": "Units the code reads or emits. `factor` converts to the canonical unit of the dimension.",
+    "extensible": false,
+    "terms": [
+      {
+        "attributes": {
+          "canonical": true,
+          "dimension": "time",
+          "factor": 1.0,
+          "spellings": [
+            "ms",
+            "millisecond"
+          ],
+          "symbol": "ms"
+        },
+        "definition": "Thousandth of a second; canonical time unit.",
+        "id": "millisecond",
+        "label": "ms",
+        "source": "doc 06 \u00a72",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "canonical": false,
+          "dimension": "time",
+          "factor": 1000.0,
+          "spellings": [
+            "s",
+            "second"
+          ],
+          "symbol": "s"
+        },
+        "definition": "One second.",
+        "id": "second",
+        "label": "s",
+        "source": "config/aliases.toml (team-authored)",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "canonical": false,
+          "dimension": "time",
+          "factor": 0.001,
+          "spellings": [
+            "us",
+            "microsecond"
+          ],
+          "symbol": "us"
+        },
+        "definition": "Millionth of a second.",
+        "id": "microsecond",
+        "label": "us",
+        "source": "config/aliases.toml (team-authored)",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "canonical": true,
+          "dimension": "ratio",
+          "factor": 1.0,
+          "spellings": [
+            "pct",
+            "percent",
+            "%"
+          ],
+          "symbol": "%"
+        },
+        "definition": "Parts per hundred; canonical ratio unit.",
+        "id": "percent",
+        "label": "%",
+        "source": "doc 06 \u00a72",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "canonical": false,
+          "dimension": "ratio",
+          "factor": 100.0,
+          "spellings": [
+            "ratio",
+            "fraction"
+          ],
+          "symbol": "ratio"
+        },
+        "definition": "Fraction of one (0.94 means 94 percent); only ever used when declared.",
+        "id": "ratio",
+        "label": "ratio",
+        "source": "config/aliases.toml (team-authored)",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "canonical": true,
+          "dimension": "count",
+          "factor": 1.0,
+          "spellings": [
+            "count"
+          ],
+          "symbol": "count"
+        },
+        "definition": "Number of events reported in one sample.",
+        "id": "count",
+        "label": "count",
+        "source": "doc 06 \u00a72",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "canonical": true,
+          "dimension": "categorical",
+          "factor": 1.0,
+          "spellings": [],
+          "symbol": "-"
+        },
+        "definition": "No unit: a named state such as device status.",
+        "id": "none",
+        "label": "-",
+        "source": "doc 06 \u00a72",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "canonical": false,
+          "dimension": "categorical",
+          "factor": 1.0,
+          "spellings": [],
+          "symbol": "outcome"
+        },
+        "definition": "Result of a service probe: success, failure or timeout.",
+        "id": "outcome",
+        "label": "outcome",
+        "source": "doc 08 \u00a73.3",
+        "status": "active"
+      }
+    ],
+    "version": "1.0"
+  }
+}

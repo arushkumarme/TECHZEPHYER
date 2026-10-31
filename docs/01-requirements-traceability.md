@@ -150,7 +150,7 @@ Never counted toward the mandatory rows. Disabled → core must still pass (`T-I
 | R-06 corrective actions | TESTED | `test_actions_adapt_to_uncertainty` |
 | R-07 no exact cause when insufficient | TESTED | `test_single_weak_symptom_is_insufficient`, S-08, S-09 |
 | R-08 collaborating agents | TESTED | `test_full_run` (5 agents, ≥2 evidence sources) |
-| R-09 interoperability protocol | TESTED | `tests/core/test_messages.py`, `test_bus_log.py`, `schemas/protocol/` |
+| R-09 interoperability protocol | TESTED | `tests/core/test_messages.py`, `test_bus_log.py`, `schemas/protocol/`; field meanings and units: `tests/core/test_vocabulary.py`, `tests/e2e/test_vocabulary_in_runs.py` (protocol upgrade P1) |
 | R-10 orchestration | TESTED | `tests/orchestrator/test_workflow.py` |
 | R-11 fault diagnosis from telemetry | TESTED | e2e S-01..S-12 |
 | R-12 unified report | TESTED | `test_official_keys_exact_and_typed` |

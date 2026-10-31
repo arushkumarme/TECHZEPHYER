@@ -1,0 +1,36 @@
+# Controlled vocabulary 'question_type'. Source of truth for its metadata; the term set
+# itself is enforced in code where `code_literal` is given (a test keeps them equal).
+name = "question_type"
+version = "1.0"
+extensible = false
+id_style = "snake"
+description = "Closed list of clarification questions."
+code_literal = "netcoop.core.vocab:QuestionType"
+
+[[terms]]
+id = "widen_time_window"
+label = "Widen time window"
+definition = "Re-examine entities over the whole bundle window."
+status = "active"
+source = "doc 03 §3"
+
+[[terms]]
+id = "assess_additional_entities"
+label = "Assess additional entities"
+definition = "Examine entities outside the original scope."
+status = "active"
+source = "doc 03 §3"
+
+[[terms]]
+id = "what_if_cause"
+label = "What-if cause"
+definition = "Which entities would be isolated or degraded if this entity failed."
+status = "active"
+source = "doc 03 §3"
+
+[[terms]]
+id = "recheck_metric"
+label = "Re-check metric"
+definition = "Read one metric of one entity again."
+status = "active"
+source = "doc 03 §3"

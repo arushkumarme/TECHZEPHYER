@@ -1,0 +1,29 @@
+# Controlled vocabulary 'decision_kind'. Source of truth for its metadata; the term set
+# itself is enforced in code where `code_literal` is given (a test keeps them equal).
+name = "decision_kind"
+version = "1.0"
+extensible = false
+id_style = "snake"
+description = "Verdict in a decision message."
+code_literal = "netcoop.core.vocab:DecisionKind"
+
+[[terms]]
+id = "diagnosed"
+label = "Diagnosed"
+definition = "Every gate condition holds: a probable cause is named."
+status = "active"
+source = "doc 08 §4.5"
+
+[[terms]]
+id = "insufficient_evidence"
+label = "Insufficient evidence"
+definition = "At least one gate condition fails: no single cause is asserted."
+status = "active"
+source = "SRC-1 p2; doc 08 §4.5"
+
+[[terms]]
+id = "no_fault_detected"
+label = "No fault detected"
+definition = "Assessed measurements are within range with enough coverage and no anomaly."
+status = "active"
+source = "doc 08 §4.5; doc 08 §11 ID-14"

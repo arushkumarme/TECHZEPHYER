@@ -1,0 +1,61 @@
+# Controlled vocabulary 'evidence_type'. Source of truth for its metadata; the term set
+# itself is enforced in code where `code_literal` is given (a test keeps them equal).
+name = "evidence_type"
+version = "1.0"
+extensible = false
+id_style = "snake"
+description = "What an evidence reference points at (PROVISIONAL, D-19)."
+
+[[terms]]
+id = "observation"
+label = "Observation"
+definition = "A measured or derived fact in a finding."
+status = "active"
+source = "doc 05 §4"
+[terms.attributes]
+id_prefix = "OBS-"
+
+[[terms]]
+id = "hypothesis"
+label = "Hypothesis"
+definition = "An agent-local interpretation."
+status = "active"
+source = "doc 05 §4"
+[terms.attributes]
+id_prefix = "HYP-"
+
+[[terms]]
+id = "normalized_record"
+label = "Normalized record"
+definition = "One record of the normalized bundle."
+status = "active"
+source = "doc 05 §6"
+[terms.attributes]
+id_prefix = "REC-"
+
+[[terms]]
+id = "community_report"
+label = "Community report"
+definition = "An unverified candidate built from complaints."
+status = "active"
+source = "doc 10"
+[terms.attributes]
+id_prefix = "CAND-"
+
+[[terms]]
+id = "tool_result"
+label = "Tool result"
+definition = "The recorded result of a tool call."
+status = "active"
+source = "doc 03 §1"
+[terms.attributes]
+id_prefix = ""
+
+[[terms]]
+id = "topology_element"
+label = "Topology element"
+definition = "A device or link in the SIMULATED topology."
+status = "active"
+source = "doc 11"
+[terms.attributes]
+id_prefix = ""

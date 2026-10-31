@@ -1,0 +1,28 @@
+# Controlled vocabulary 'task_kind'. Source of truth for its metadata; the term set
+# itself is enforced in code where `code_literal` is given (a test keeps them equal).
+name = "task_kind"
+version = "1.0"
+extensible = false
+id_style = "snake"
+description = "Kind of work a task asks for (PROVISIONAL, D-19; carried as `goal` today)."
+
+[[terms]]
+id = "investigate"
+label = "Investigate"
+definition = "A specialist examines its scope (goals assess_performance, assess_device_health, assess_connectivity_scope)."
+status = "active"
+source = "doc 04 §3"
+
+[[terms]]
+id = "correlate"
+label = "Correlate"
+definition = "The correlation agent weighs findings (goal correlate)."
+status = "active"
+source = "doc 04 §3"
+
+[[terms]]
+id = "report"
+label = "Report"
+definition = "The reporting agent builds the report (goal report)."
+status = "active"
+source = "doc 04 §3"

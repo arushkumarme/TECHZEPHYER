@@ -1,0 +1,36 @@
+# Controlled vocabulary 'report_status'. Source of truth for its metadata; the term set
+# itself is enforced in code where `code_literal` is given (a test keeps them equal).
+name = "report_status"
+version = "1.0"
+extensible = false
+id_style = "snake"
+description = "Value of the official report key `status` (PROVISIONAL, open decision D-03)."
+code_literal = "netcoop.report.validate:STATUSES"
+
+[[terms]]
+id = "diagnosed"
+label = "Diagnosed"
+definition = "A probable cause is named with supporting evidence."
+status = "active"
+source = "SRC-1 p5 §6"
+
+[[terms]]
+id = "insufficient_evidence"
+label = "Insufficient evidence"
+definition = "Evidence does not support a single probable cause."
+status = "active"
+source = "D-03 default"
+
+[[terms]]
+id = "no_fault_detected"
+label = "No fault detected"
+definition = "Assessed measurements are within expected ranges."
+status = "active"
+source = "D-03 default"
+
+[[terms]]
+id = "failed"
+label = "Failed"
+definition = "No diagnosis was possible: input rejected or an internal failure."
+status = "active"
+source = "D-03 default"

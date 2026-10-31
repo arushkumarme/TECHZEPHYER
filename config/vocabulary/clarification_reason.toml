@@ -1,0 +1,29 @@
+# Controlled vocabulary 'clarification_reason'. Source of truth for its metadata; the term set
+# itself is enforced in code where `code_literal` is given (a test keeps them equal).
+name = "clarification_reason"
+version = "1.0"
+extensible = false
+id_style = "snake"
+description = "Why a clarification is asked."
+code_literal = "netcoop.core.vocab:ClarificationReason"
+
+[[terms]]
+id = "conflict"
+label = "Conflict"
+definition = "Observations of the same thing disagree and the conflict rules could not resolve it."
+status = "active"
+source = "doc 03 §3"
+
+[[terms]]
+id = "narrow_margin"
+label = "Narrow margin"
+definition = "The top two explanations are closer than the decision margin."
+status = "active"
+source = "doc 03 §3; doc 08 §4.4"
+
+[[terms]]
+id = "missing_expected_evidence"
+label = "Missing expected evidence"
+definition = "Evidence the leading explanation predicts was not assessed."
+status = "active"
+source = "doc 03 §3"

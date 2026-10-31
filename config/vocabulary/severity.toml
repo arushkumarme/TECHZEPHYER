@@ -1,0 +1,36 @@
+# Controlled vocabulary 'severity'. Source of truth for its metadata; the term set
+# itself is enforced in code where `code_literal` is given (a test keeps them equal).
+name = "severity"
+version = "1.0"
+extensible = false
+id_style = "snake"
+description = "How abnormal one observation is."
+code_literal = "netcoop.core.vocab:Severity"
+
+[[terms]]
+id = "normal"
+label = "Normal"
+definition = "Within the expected range set in config/diagnosis.toml."
+status = "active"
+source = "doc 05 §4; doc 08 §11"
+
+[[terms]]
+id = "elevated"
+label = "Elevated"
+definition = "Above the expected range but below the critical level."
+status = "active"
+source = "doc 05 §4; doc 08 §11"
+
+[[terms]]
+id = "critical"
+label = "Critical"
+definition = "At or above the critical level."
+status = "active"
+source = "doc 05 §4; doc 08 §11"
+
+[[terms]]
+id = "unknown"
+label = "Unknown"
+definition = "Could not be graded; never treated as normal."
+status = "active"
+source = "doc 05 §4; CD-10"

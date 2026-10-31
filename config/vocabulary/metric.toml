@@ -1,0 +1,136 @@
+# Controlled vocabulary 'metric'. Source of truth for its metadata; the term set
+# itself is enforced in code where `code_literal` is given (a test keeps them equal).
+name = "metric"
+version = "1.0"
+extensible = false
+id_style = "snake"
+description = "Metric names used in observations: the generator's observed fields plus team-authored probe items. Never invent more (CLAUDE.md rule 1)."
+
+[[terms]]
+id = "latency_ms"
+label = "Latency"
+definition = "Generator field 'latency_ms' (doc 06 §2), category latency, unit millisecond."
+status = "active"
+source = "OBSERVED doc 06 §2"
+[terms.attributes]
+origin = "generator"
+category = "latency"
+unit = "millisecond"
+dimension = "time"
+
+[[terms]]
+id = "jitter_ms"
+label = "Jitter"
+definition = "Generator field 'jitter_ms' (doc 06 §2), category jitter, unit millisecond."
+status = "active"
+source = "OBSERVED doc 06 §2"
+[terms.attributes]
+origin = "generator"
+category = "jitter"
+unit = "millisecond"
+dimension = "time"
+
+[[terms]]
+id = "packet_loss_pct"
+label = "Packet loss"
+definition = "Generator field 'packet_loss_pct' (doc 06 §2), category packet_loss, unit percent."
+status = "active"
+source = "OBSERVED doc 06 §2"
+[terms.attributes]
+origin = "generator"
+category = "packet_loss"
+unit = "percent"
+dimension = "ratio"
+
+[[terms]]
+id = "link_utilization_pct"
+label = "Link utilization"
+definition = "Generator field 'link_utilization_pct' (doc 06 §2), category link_utilization, unit percent."
+status = "active"
+source = "OBSERVED doc 06 §2"
+[terms.attributes]
+origin = "generator"
+category = "link_utilization"
+unit = "percent"
+dimension = "ratio"
+
+[[terms]]
+id = "cpu_utilization_pct"
+label = "CPU utilization"
+definition = "Generator field 'cpu_utilization_pct' (doc 06 §2), category cpu_utilization, unit percent."
+status = "active"
+source = "OBSERVED doc 06 §2"
+[terms.attributes]
+origin = "generator"
+category = "cpu_utilization"
+unit = "percent"
+dimension = "ratio"
+
+[[terms]]
+id = "queue_drops"
+label = "Egress queue drops"
+definition = "Generator field 'queue_drops' (doc 06 §2), category egress_queue_drops, unit count."
+status = "active"
+source = "OBSERVED doc 06 §2"
+[terms.attributes]
+origin = "generator"
+category = "egress_queue_drops"
+unit = "count"
+dimension = "count"
+
+[[terms]]
+id = "interface_errors"
+label = "Interface errors"
+definition = "Generator field 'interface_errors' (doc 06 §2), category interface_errors, unit count."
+status = "active"
+source = "OBSERVED doc 06 §2"
+[terms.attributes]
+origin = "generator"
+category = "interface_errors"
+unit = "count"
+dimension = "count"
+
+[[terms]]
+id = "status"
+label = "Device status"
+definition = "Generator field 'status': Healthy, Warning or Critical (doc 06 §2)."
+status = "active"
+source = "OBSERVED doc 06 §2"
+[terms.attributes]
+origin = "generator"
+category = "device_status"
+unit = "none"
+dimension = "categorical"
+
+[[terms]]
+id = "probe_dns"
+label = "DNS probe"
+definition = "Outcome of a team-authored DNS service check (success, failure, timeout)."
+status = "active"
+source = "doc 08 §3.3; ID-06"
+[terms.attributes]
+origin = "team_authored_probe"
+unit = "outcome"
+dimension = "categorical"
+
+[[terms]]
+id = "probe_dhcp"
+label = "DHCP probe"
+definition = "Outcome of a team-authored DHCP service check (success, failure, timeout)."
+status = "active"
+source = "doc 08 §3.3; ID-06"
+[terms.attributes]
+origin = "team_authored_probe"
+unit = "outcome"
+dimension = "categorical"
+
+[[terms]]
+id = "topology"
+label = "Topology placement"
+definition = "Whether the entity could be placed in the topology; used only in not-assessable items."
+status = "active"
+source = "doc 05 §4 (NO_TOPOLOGY)"
+[terms.attributes]
+origin = "structural"
+unit = "none"
+dimension = "categorical"

@@ -1,0 +1,53 @@
+# Controlled vocabulary 'dimension'. Source of truth for its metadata; the term set
+# itself is enforced in code where `code_literal` is given (a test keeps them equal).
+name = "dimension"
+version = "1.0"
+extensible = false
+id_style = "snake"
+description = "Physical dimension of a metric; conversion only happens inside one dimension."
+
+[[terms]]
+id = "time"
+label = "Time"
+definition = "Durations such as latency and jitter; canonical unit millisecond."
+status = "active"
+source = "doc 06 §2"
+
+[[terms]]
+id = "ratio"
+label = "Ratio"
+definition = "Shares of a whole; canonical unit percent."
+status = "active"
+source = "doc 06 §2"
+
+[[terms]]
+id = "count"
+label = "Count"
+definition = "Integer counts of events per sample; canonical unit count."
+status = "active"
+source = "doc 06 §2"
+
+[[terms]]
+id = "categorical"
+label = "Categorical"
+definition = "Named states with no numeric unit."
+status = "active"
+source = "doc 06 §2"
+
+[[terms]]
+id = "data_rate"
+label = "Data rate"
+definition = "Bits per second. No generator field uses it, so no units are defined (PROVISIONAL, D-17)."
+status = "active"
+source = "SRC-1 p4 §5"
+[terms.attributes]
+provisional = true
+
+[[terms]]
+id = "power_level"
+label = "Power level"
+definition = "Signal power such as dBm. No generator field uses it, so no units are defined (PROVISIONAL, D-17)."
+status = "active"
+source = "SRC-1 p4 §5"
+[terms.attributes]
+provisional = true

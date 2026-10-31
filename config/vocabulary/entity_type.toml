@@ -1,0 +1,28 @@
+# Controlled vocabulary 'entity_type'. Source of truth for its metadata; the term set
+# itself is enforced in code where `code_literal` is given (a test keeps them equal).
+name = "entity_type"
+version = "1.0"
+extensible = false
+id_style = "snake"
+description = "Kinds of entity a message can refer to."
+
+[[terms]]
+id = "device"
+label = "Device"
+definition = "A network device identified by the generator's device_id."
+status = "active"
+source = "doc 06 §2"
+
+[[terms]]
+id = "link"
+label = "Link"
+definition = "A connection between two devices in the SIMULATED topology."
+status = "active"
+source = "sample_data/topology/README.md"
+
+[[terms]]
+id = "zone"
+label = "Zone"
+definition = "A placeholder campus area served by devices in the SIMULATED topology."
+status = "active"
+source = "doc 10 §4; doc 11 §2"

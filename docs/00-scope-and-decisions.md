@@ -124,6 +124,12 @@ Headings 1, 9 and 10 are absent; heading 6 ("Be rigorous about diagnosis and evi
 | D-13 | Any contact with the IIT Bhubaneswar network team | Doc 15 wording | None assumed |
 | D-14 | Python / Node versions and package choices | Doc 13 | TBD at implementation |
 | D-15 | Is there a complete version of `SRC-2`? | Doc 00 §6.2 | Proceed with what exists |
+| D-16 | Metric -> category / unit / dimension map (`config/vocabulary/metric.toml`) | Doc 05 App. A, unit checks | **PROVISIONAL**: derived from the generator fields in doc 06; revisit if another data source is added |
+| D-17 | Data-rate and power-level dimensions (throughput, bandwidth, wireless signal) have no units | Doc 05 App. A | **PROVISIONAL**: no generator field uses them, so no units are defined; never guessed |
+| D-18 | Names of abstention reasons (one per decision-gate check) | Doc 05 App. A, Prompt 3 | **PROVISIONAL**: names mapped 1:1 to the existing gate checks in `diagnosis/scoring.py` |
+| D-19 | Registry-only vocabularies not yet carried in messages: `task_kind`, `evidence_type`, `evidence_stance`, `recommendation_priority`, `aggregation` | Prompt 3 | **PROVISIONAL**: defined now, wired into payloads in Prompt 3 |
+| D-20 | Severity/kind of non-ingestion error and limitation codes (e.g. `GATE_NOT_MET` = info) | Doc 05 App. A | **PROVISIONAL**: team-chosen; ingestion codes keep doc 05 §7 severities (test-enforced) |
+| D-21 | `cause_type` is **closed** (the prompt pack proposed extensible) | Doc 08 | **PROVISIONAL**: a new cause needs a catalog signature and scoring, so `x-` extensions are not accepted; `rationale_code` is the extensible vocabulary instead |
 
 ## 8. Assumptions and explicit non-assumptions
 

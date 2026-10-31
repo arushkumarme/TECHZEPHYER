@@ -1,0 +1,89 @@
+# Controlled vocabulary 'cause_type'. Source of truth for its metadata; the term set
+# itself is enforced in code where `code_literal` is given (a test keeps them equal).
+name = "cause_type"
+version = "1.0"
+extensible = false
+id_style = "snake"
+description = "Root-cause hypotheses the diagnosis catalog can score (closed list)."
+code_literal = "netcoop.core.vocab:CauseType"
+
+[[terms]]
+id = "normal_operation"
+label = "Normal operation"
+definition = "Assessed measurements are within expected ranges across enough of the scope."
+status = "active"
+source = "SRC-1 p4 §5; doc 08 §3.1"
+[terms.attributes]
+diagnosable = "yes"
+
+[[terms]]
+id = "link_congestion"
+label = "Link congestion"
+definition = "High link utilization with elevated egress queue drops and increased delay on the same device."
+status = "active"
+source = "SRC-1 p4 §5; doc 08 §3.1"
+[terms.attributes]
+diagnosable = "yes"
+
+[[terms]]
+id = "upstream_congestion"
+label = "Upstream congestion"
+definition = "Symptoms on a device whose own load is normal while a device on its path to the core is congested."
+status = "active"
+source = "SRC-1 p5 §6 (alternative); doc 08 §3.1"
+[terms.attributes]
+diagnosable = "yes, needs topology"
+
+[[terms]]
+id = "weak_wifi"
+label = "Weak Wi-Fi signal"
+definition = "Poor wireless signal with retransmissions; requires wireless measurements."
+status = "active"
+source = "SRC-1 p4 §5; doc 08 §3.1"
+[terms.attributes]
+diagnosable = "no: the generator has no wireless signal field (doc 06 §3)"
+
+[[terms]]
+id = "interface_fault"
+label = "Ethernet or interface fault"
+definition = "Rising interface errors, with packet loss localized to the interface."
+status = "active"
+source = "SRC-1 p4 §5; doc 08 §3.1"
+[terms.attributes]
+diagnosable = "yes"
+
+[[terms]]
+id = "device_overload"
+label = "Device CPU overload"
+definition = "High CPU utilization on the device, with delay or drops on traffic through it."
+status = "active"
+source = "SRC-1 p1 §1; doc 08 §3.1"
+[terms.attributes]
+diagnosable = "yes"
+
+[[terms]]
+id = "device_failure"
+label = "Device or hardware failure"
+definition = "The device reports a critical status, with symptoms explained by its failure."
+status = "active"
+source = "SRC-1 p1 §1; doc 08 §3.1"
+[terms.attributes]
+diagnosable = "yes"
+
+[[terms]]
+id = "dns_dhcp_failure"
+label = "DNS or DHCP failure"
+definition = "Service checks fail while the network path is healthy."
+status = "active"
+source = "SRC-1 p4 §5; doc 08 §3.3"
+[terms.attributes]
+diagnosable = "conditional: needs team-authored service-probe data"
+
+[[terms]]
+id = "telemetry_unreliable"
+label = "Telemetry unreliable"
+definition = "The data itself is broken or incompatible, so a network fault cannot be claimed."
+status = "active"
+source = "SRC-1 p4 §5 (interoperability failure); doc 08 §3.1"
+[terms.attributes]
+diagnosable = "yes (as a data problem, never as a network fault)"
