@@ -235,6 +235,52 @@ The "interpret" half of `R-09`: every agent uses the same defined terms. Each vo
 
 §3 and §4 describe the 1.1 payloads. The real agents fill the new fields. The orchestrator stamps task ids and kinds and points correlate/report tasks at earlier messages by id. Specialists echo the task id and give the reason for every not-assessable observation. The correlation agent numbers clarifications (`CLR-<round>`) and decisions (`DEC-0001`) and writes a real abstention block: failed gate checks mapped to abstention reasons, plus the evidence that would change the decision. The reporting agent sends one `Recommendation` per official recommended action. Telemetry is never placed in a payload. Evidence: `tests/core/test_payload_rules.py` (the 7 rules, every model, round trips, the PDF example), `tests/e2e/test_payloads_in_runs.py` (real S-02, S-07, S-08, S-09, S-12 runs; every logged message re-validates).
 
+## 15. Authority matrix and conversation rules (protocol upgrade, Prompt 4) — `IMPLEMENTED`, `TESTED`
+
+A rulebook enforced by code: **who** may send **which** message, **to whom**, and **when**. The rules are data (`config/protocol/authority.toml`). `ConversationGuard.check(message, state)` in `core/guard/` is pure: it never changes the message or the state and returns the violations, each with a code and a plain-English reason, e.g. *"Rejected: only correlation_agent may send a decision; performance_agent tried."* `ConversationState` tracks, per incident, the open tasks, questions waiting for relay, relayed questions, rounds used, whether a decision and a report were accepted, the seen message ids and the current incident state. `state.apply(message)` returns a new state and is called only for accepted messages. Replaying the same messages always gives the identical, JSON-serializable state (`rebuild_state`).
+
+- **In the bus.** The orchestrator's bus checks every message after parsing. The check, the state update, the `seq` assignment and the log append happen under one lock, so the state follows the log exactly. A rejected message is logged (invalid, with the first violation's code and all reasons) and raises `GuardViolationError`. The incident state comes from the orchestrator's state machine and is not duplicated. After a restart the state is rebuilt from the log.
+- **The rows describe the app's real flow** (measured on every scenario run). Investigate tasks go out before the `DISPATCHED` transition. The correlation agent answers its correlate task with a `clarification_request` or a `decision`. The orchestrator relays the question to the named target with `in_reply_to` = the original question, and sends `agent_error` against a timed-out or failed request. Only the correlation agent asks questions.
+- **Community input** is admitted only with the `community_signals` extension on. Otherwise the guard rejects it (`EXTENSION_DISABLED`), it is logged, and the report states it in `limitations`. The core result is unchanged.
+- **Codes.** `MESSAGE_ROUTING_INVALID` is deprecated, replaced by `DIRECT_AGENT_MESSAGE_FORBIDDEN` and `RECIPIENT_NOT_ALLOWED`. `BusRoutingError` is still raised for routing faults.
+- **Evidence:** `tests/core/test_guard.py`. It has an accepted case for every row, a rejected case per rule, the demo sentence, no mutation, deterministic replay, every real scenario passing the guard, a forged decision injected into a real incident and logged with its reason, and a community message rejected when the flag is off.
+
+<!-- BEGIN GENERATED: authority -->
+
+### Authority matrix
+
+Specialists = `performance_agent`, `infrastructure_agent`, `connectivity_agent`. Source: `config/protocol/authority.toml` (version 1.1).
+
+| Message type | Sender | Recipient | Incident states | Reply rule | Other |
+|---|---|---|---|---|---|
+| `task_request` | `orchestrator` | specialists | `READY`, `READY_WITH_WARNINGS`, `DISPATCHED`, `COLLECTING` | starts a conversation (no `in_reply_to`) | task kind `investigate` |
+| `task_request` | `orchestrator` | `correlation_agent` | `CORRELATING` | starts a conversation (no `in_reply_to`) | task kind `correlate` |
+| `task_request` | `orchestrator` | `reporting_agent` | `REPORTING` | starts a conversation (no `in_reply_to`) | task kind `report` |
+| `finding` | specialists | `orchestrator` | `DISPATCHED`, `COLLECTING` | answers an open `task_request` addressed to the sender | task kind `investigate` |
+| `clarification_request` | `correlation_agent` | `orchestrator` | `CORRELATING` | answers an open `task_request` addressed to the sender | task kind `correlate`; counts toward the round limit |
+| `clarification_request` | `orchestrator` | specialists | `CLARIFYING` | relays the correlation agent's open question to the target it names | - |
+| `clarification_response` | specialists | `orchestrator` | `CLARIFYING` | answers the question relayed to the sender | - |
+| `decision` | `correlation_agent` | `orchestrator` | `CORRELATING` | answers an open `task_request` addressed to the sender | task kind `correlate`; once per incident |
+| `report_ready` | `reporting_agent` | `orchestrator` | `REPORTING` | answers an open `task_request` addressed to the sender | task kind `report`; once per incident; after a decision |
+| `agent_error` | `performance_agent`, `infrastructure_agent`, `connectivity_agent`, `correlation_agent`, `reporting_agent` | `orchestrator` | any open state | may reply to any earlier message of the incident | - |
+| `agent_error` | `orchestrator` | `performance_agent`, `infrastructure_agent`, `connectivity_agent`, `correlation_agent`, `reporting_agent` | any open state | may reply to any earlier message of the incident | - |
+| `community_candidate` | `community_module` | `orchestrator` | any open state | starts a conversation (no `in_reply_to`) | extension `community_signals` must be on |
+
+### Conversation rules
+
+Checked in this order; every rejection is logged with its code and a plain-English reason.
+
+1. **Closed incident** — nothing is accepted once the incident is `REJECTED`, `COMPLETE`, `FAILED` (`INCIDENT_CLOSED`).
+2. **No duplicates** — a message id is accepted once per incident (`DUPLICATE_MESSAGE`).
+3. **Hub and spoke** — every message is to or from the `orchestrator`; agents never message each other (`DIRECT_AGENT_MESSAGE_FORBIDDEN`), and nobody messages itself (`RECIPIENT_NOT_ALLOWED`).
+4. **Authority** — only the senders in the matrix may send a type (`SENDER_NOT_AUTHORIZED`), and only to its recipients (`RECIPIENT_NOT_ALLOWED`).
+5. **Extensions** — extension messages need their feature flag (`EXTENSION_DISABLED`).
+6. **Sequence** — a type is legal only in its incident states, `decision` and `report_ready` at most once, `report_ready` only after a decision (`MESSAGE_OUT_OF_SEQUENCE`).
+7. **Replies** — a reply must answer an open request addressed to its sender; a relayed question must name the target of the correlation agent's question (`REPLY_MISMATCH`).
+8. **Round limit** — the correlation agent's questions count toward `max_clarification_rounds` (default 2) per incident (`CLARIFICATION_LIMIT_EXCEEDED`).
+
+<!-- END GENERATED: authority -->
+
 ## Appendix A: Controlled vocabularies
 
 <!-- BEGIN GENERATED: vocabulary -->
@@ -256,7 +302,7 @@ _Generated by `scripts/generate_docs.py` from `config/vocabulary/*.toml`; do not
 | [`decision_kind`](#vocabulary-decision-kind) | 3 | closed | `netcoop.core.vocab:DecisionKind` |
 | [`dimension`](#vocabulary-dimension) | 6 | closed | registry only |
 | [`entity_type`](#vocabulary-entity-type) | 3 | closed | registry only |
-| [`error_code`](#vocabulary-error-code) | 54 | closed | registry only |
+| [`error_code`](#vocabulary-error-code) | 63 | closed | registry only |
 | [`evidence_class`](#vocabulary-evidence-class) | 3 | closed | `netcoop.core.vocab:EvidenceClass` |
 | [`evidence_stance`](#vocabulary-evidence-stance) | 3 | closed | registry only |
 | [`evidence_type`](#vocabulary-evidence-type) | 6 | closed | registry only |
@@ -462,7 +508,7 @@ Every error, warning and limitation code the system emits. Severity: fatal stops
 | `LLM_OUTPUT_REJECTED` | Llm output rejected | LLM wording failed the grounding check; template text was used. | active | doc 05 §7; doc 12 §9 | severity=info, kind=llm |
 | `LLM_UNAVAILABLE` | Llm unavailable | No LLM was available; template text was used. | active | doc 05 §7; doc 12 §9 | severity=info, kind=llm |
 | `MESSAGE_INVALID` | Message invalid | A message failed validation; it is logged and not delivered. | active | doc 05 §7 | severity=error, kind=protocol |
-| `MESSAGE_ROUTING_INVALID` | Message routing invalid | A message bypassed the orchestrator or addressed its own sender. | active | doc 03 §3; M2 | severity=error, kind=protocol |
+| `MESSAGE_ROUTING_INVALID` | Message routing invalid | A message bypassed the orchestrator or addressed its own sender. Deprecated since protocol 1.1: replaced by DIRECT_AGENT_MESSAGE_FORBIDDEN and RECIPIENT_NOT_ALLOWED. | deprecated | doc 03 §3; M2 | severity=error, kind=protocol |
 | `METRIC_MISSING` | Metric missing | A metric is missing for some devices but present for others. | active | doc 05 §7; doc 05 §11 | severity=warning, kind=ingestion |
 | `METRIC_NOT_PROVIDED` | Metric not provided | A metric is absent from every record of the bundle. | active | doc 05 §7; doc 05 §11 | severity=info, kind=ingestion |
 | `NO_SERVICE_PROBES` | No service probes | No DNS/DHCP probe data was supplied. | active | doc 08 §3.3 | severity=info, kind=limitation |
@@ -494,6 +540,15 @@ Every error, warning and limitation code the system emits. Severity: fatal stops
 | `ABSTENTION_MISMATCH` | Abstention block mismatch | An insufficient_evidence decision has no abstention block, or a diagnosed decision has one. | active | doc 05 §14 (P3) | severity=error, kind=protocol |
 | `CLARIFICATION_PARAMETERS_INVALID` | Clarification parameters invalid | A clarification request lacks a parameter its question type needs. | active | doc 05 §14 (P3) | severity=error, kind=protocol |
 | `CLARIFICATION_ANSWER_MISMATCH` | Clarification answer mismatch | A clarification response's answerable value contradicts its answered flag. | active | doc 05 §14 (P3) | severity=error, kind=protocol |
+| `SENDER_NOT_AUTHORIZED` | Sender not authorized | The authority matrix does not allow this participant to send this message type. | active | doc 05 §15 (P4) | severity=error, kind=conversation |
+| `RECIPIENT_NOT_ALLOWED` | Recipient not allowed | This message type from this sender may not go to this recipient (or a participant messaged itself). | active | doc 05 §15 (P4) | severity=error, kind=conversation |
+| `MESSAGE_OUT_OF_SEQUENCE` | Message out of sequence | The message is legal only in other incident states, was already sent once, or needs an earlier decision. | active | doc 05 §15 (P4) | severity=error, kind=conversation |
+| `REPLY_MISMATCH` | Reply mismatch | in_reply_to is missing, or does not point to an open request addressed to the sender. | active | doc 05 §15 (P4) | severity=error, kind=conversation |
+| `DUPLICATE_MESSAGE` | Duplicate message | A message with this id was already accepted in the incident. | active | doc 05 §15 (P4) | severity=error, kind=conversation |
+| `INCIDENT_CLOSED` | Incident closed | The incident is complete, failed or rejected; no further messages are accepted. | active | doc 05 §15 (P4) | severity=error, kind=conversation |
+| `CLARIFICATION_LIMIT_EXCEEDED` | Clarification limit exceeded | A clarification question beyond the configured rounds per incident (default 2). | active | doc 05 §15 (P4) | severity=error, kind=conversation |
+| `DIRECT_AGENT_MESSAGE_FORBIDDEN` | Direct agent message forbidden | Hub and spoke: every message is to or from the orchestrator; agents never message each other directly. | active | doc 05 §15 (P4) | severity=error, kind=conversation |
+| `EXTENSION_DISABLED` | Extension disabled | The message belongs to an extension whose feature flag is off (e.g. community_candidate without community_signals). | active | doc 05 §15 (P4) | severity=error, kind=conversation |
 
 ### Vocabulary: evidence_class
 

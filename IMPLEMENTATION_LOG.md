@@ -245,3 +245,11 @@ Newest entry last. Each entry records actual commands and results. See `IMPLEMEN
 - Real agents fill the new fields: task ids/kinds/input references, not-assessable reasons, clarification and decision ids, abstention block, structured recommendations.
 - Existing test changed (setup only, listed before the change): `tests/diagnosis/test_scoring.py::_obs` fixture `value=None` -> `value=1.0` (rule 1; scoring reads severity only). No assertion changed.
 - Decision D-24 (recommendation priority by order).
+
+## Protocol upgrade P4 — authority matrix and conversation guard (2026-11-01)
+
+- Rules as data (`config/protocol/authority.toml`), describing the app's measured real flow; `core/guard/` (`ConversationGuard`, immutable `ConversationState`, `rebuild_state`); generated authority matrix + conversation rules in doc 05 §15.
+- The orchestrator's bus enforces the guard on every message (check + state + seq + log under one lock); rejections are logged with code and plain-English reason and raise `GuardViolationError`.
+- New codes: SENDER_NOT_AUTHORIZED, RECIPIENT_NOT_ALLOWED, MESSAGE_OUT_OF_SEQUENCE, REPLY_MISMATCH, DUPLICATE_MESSAGE, INCIDENT_CLOSED, CLARIFICATION_LIMIT_EXCEEDED, DIRECT_AGENT_MESSAGE_FORBIDDEN, EXTENSION_DISABLED; MESSAGE_ROUTING_INVALID deprecated.
+- Owner decision (Conflict 16, option a): community input needs the community_signals flag. Existing tests changed (setup only, listed before the change; no assertion changed): `tests/community/test_community.py` (3 tests: corroborated, reported_unverified, detected_without_matching_complaints), `tests/community/test_community_api_cli.py` (test_demo_file_end_to_end, test_cli_community), `tests/geo/test_geo.py` (`_incident` helper used by test_reported_and_detected_layers_are_separate, test_corroborated_layer). New test: `test_community_message_is_rejected_when_the_flag_is_off`.
+

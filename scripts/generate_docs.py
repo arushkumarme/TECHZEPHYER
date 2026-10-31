@@ -12,6 +12,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+from netcoop.core.guard.render import AUTHORITY_BEGIN, AUTHORITY_END, render_authority
 from netcoop.core.vocabulary.render import (
     APPENDIX_BEGIN,
     APPENDIX_END,
@@ -25,7 +26,16 @@ VOCAB_JSON = REPO_ROOT / "conformance" / "vocabularies.json"
 APPENDIX_HEADING = "## Appendix A: Controlled vocabularies"
 
 
+def replace_block(text: str, begin: str, end: str, block: str) -> str:
+    """Replace an existing generated block; the markers must already be in the doc."""
+    if begin not in text or end not in text:
+        raise SystemExit(f"markers {begin!r} / {end!r} missing from docs/05")
+    start, stop = text.index(begin), text.index(end) + len(end)
+    return text[:start] + block + text[stop:]
+
+
 def updated_doc05(text: str) -> str:
+    text = replace_block(text, AUTHORITY_BEGIN, AUTHORITY_END, render_authority())
     block = render_appendix()
     if APPENDIX_BEGIN in text and APPENDIX_END in text:
         start = text.index(APPENDIX_BEGIN)

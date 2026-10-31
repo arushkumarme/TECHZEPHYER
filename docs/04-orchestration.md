@@ -47,6 +47,16 @@ Every transition is logged with timestamp, trigger and (if any) message ID.
 - Clarification answers are processed one at a time, in request order, so replay is deterministic.
 - Timeouts and tool budgets are configuration values (not fixed here).
 
+### 4.1 Which messages are legal in which state (protocol 1.1)
+
+Each incident state allows only certain messages. The conversation guard (doc 05 §15, generated authority matrix) enforces this against the orchestrator's current state:
+- `READY` / `READY_WITH_WARNINGS` / `DISPATCHED` / `COLLECTING`: investigate tasks (sent before the `DISPATCHED` transition; retries during `COLLECTING`). Specialist findings arrive in `DISPATCHED` / `COLLECTING`.
+- `CORRELATING`: correlate tasks, and the correlation agent's answer, either a `clarification_request` (counted toward the round limit) or the single `decision`.
+- `CLARIFYING`: the relayed question to the named target, and its `clarification_response`.
+- `REPORTING`: the report task and the single `report_ready`, only after a decision.
+- Any open state: `agent_error` (either direction) and, with the extension on, `community_candidate`.
+- `COMPLETE` / `FAILED` / `REJECTED`: nothing (`INCIDENT_CLOSED`).
+
 ## 5. Degraded operation and failure handling
 
 | Situation | Orchestrator behaviour | Effect on result |

@@ -1,0 +1,134 @@
+# Authority matrix and conversation rules (doc 05 §15). The ConversationGuard enforces
+# exactly these rows; docs/05 renders them (scripts/generate_docs.py). Rows describe the
+# app's ACTUAL message flow (measured on every scenario run, protocol-upgrade Prompt 4).
+#
+# Per row:
+#   senders / recipients  participants; "@specialists" and "@agents" are groups below
+#   states                incident states (doc 04 §2) in which the message is legal; "*" = any open
+#   reply                 none              - starts a conversation (no in_reply_to)
+#                         task_request      - answers an OPEN task_request addressed to the sender
+#                         question          - orchestrator relay of the correlation agent's open
+#                                             question to the target it names
+#                         relayed_question  - answers the relayed question addressed to the sender
+#                         optional          - may reply to any earlier message of the incident
+#   task_kind             for task_request: the kind this recipient takes;
+#                         for replies: the kind of task the reply must answer
+#   once                  at most one accepted per incident
+#   requires_decision     only after an accepted decision
+#   counts_round          counts toward the clarification round limit
+#   extension             feature flag that must be on
+
+version = "1.1"
+hub = "orchestrator"
+closed_states = ["REJECTED", "COMPLETE", "FAILED"]
+
+[groups]
+specialists = ["performance_agent", "infrastructure_agent", "connectivity_agent"]
+agents = [
+    "performance_agent",
+    "infrastructure_agent",
+    "connectivity_agent",
+    "correlation_agent",
+    "reporting_agent",
+]
+
+[[rows]]
+message_type = "task_request"
+senders = ["orchestrator"]
+recipients = ["@specialists"]
+states = ["READY", "READY_WITH_WARNINGS", "DISPATCHED", "COLLECTING"]
+reply = "none"
+task_kind = "investigate"
+note = "Investigate tasks are sent before the DISPATCHED transition; retries during COLLECTING."
+
+[[rows]]
+message_type = "task_request"
+senders = ["orchestrator"]
+recipients = ["correlation_agent"]
+states = ["CORRELATING"]
+reply = "none"
+task_kind = "correlate"
+note = "One correlate task per round; a new one after each answered clarification."
+
+[[rows]]
+message_type = "task_request"
+senders = ["orchestrator"]
+recipients = ["reporting_agent"]
+states = ["REPORTING"]
+reply = "none"
+task_kind = "report"
+
+[[rows]]
+message_type = "finding"
+senders = ["@specialists"]
+recipients = ["orchestrator"]
+states = ["DISPATCHED", "COLLECTING"]
+reply = "task_request"
+task_kind = "investigate"
+
+[[rows]]
+message_type = "clarification_request"
+senders = ["correlation_agent"]
+recipients = ["orchestrator"]
+states = ["CORRELATING"]
+reply = "task_request"
+task_kind = "correlate"
+counts_round = true
+note = "The correlation agent answers its correlate task with a question; only it asks (doc 03 §3)."
+
+[[rows]]
+message_type = "clarification_request"
+senders = ["orchestrator"]
+recipients = ["@specialists"]
+states = ["CLARIFYING"]
+reply = "question"
+note = "The orchestrator relays the question to the target it names, recording the original message id in in_reply_to."
+
+[[rows]]
+message_type = "clarification_response"
+senders = ["@specialists"]
+recipients = ["orchestrator"]
+states = ["CLARIFYING"]
+reply = "relayed_question"
+
+[[rows]]
+message_type = "decision"
+senders = ["correlation_agent"]
+recipients = ["orchestrator"]
+states = ["CORRELATING"]
+reply = "task_request"
+task_kind = "correlate"
+once = true
+
+[[rows]]
+message_type = "report_ready"
+senders = ["reporting_agent"]
+recipients = ["orchestrator"]
+states = ["REPORTING"]
+reply = "task_request"
+task_kind = "report"
+once = true
+requires_decision = true
+
+[[rows]]
+message_type = "agent_error"
+senders = ["@agents"]
+recipients = ["orchestrator"]
+states = ["*"]
+reply = "optional"
+
+[[rows]]
+message_type = "agent_error"
+senders = ["orchestrator"]
+recipients = ["@agents"]
+states = ["*"]
+reply = "optional"
+note = "The orchestrator records a timeout, crash or malformed reply against the request it concerns."
+
+[[rows]]
+message_type = "community_candidate"
+senders = ["community_module"]
+recipients = ["orchestrator"]
+states = ["*"]
+reply = "none"
+extension = "community_signals"

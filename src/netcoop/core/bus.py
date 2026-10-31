@@ -14,6 +14,7 @@ import threading
 from collections.abc import Callable
 from typing import Any
 
+from netcoop.core.guard import ConversationGuard, ConversationState, Violation, rebuild_state
 from netcoop.core.ids import Clock, IdFactory, SystemClock
 from netcoop.core.log_store import LogStore
 from netcoop.core.messages import (
@@ -36,6 +37,19 @@ _HUB: AgentId = "orchestrator"
 class BusRoutingError(RuntimeError):
     """A message violates the routing rules or has no destination."""
 
+    def __init__(self, message: str, *, code: str = "RECIPIENT_NOT_ALLOWED") -> None:
+        super().__init__(message)
+        self.code = code
+
+
+class GuardViolationError(MessageValidationError):
+    """The conversation guard rejected a message (doc 05 §15). ``code`` is the first
+    violation; ``violations`` holds all of them, each with a plain-English reason."""
+
+    def __init__(self, code: str, detail: str, violations: tuple[Violation, ...]) -> None:
+        super().__init__(code, detail)
+        self.violations = violations
+
 
 class MessageBus:
     def __init__(
@@ -46,6 +60,8 @@ class MessageBus:
         ids: IdFactory | None = None,
         snapshot: DataSnapshot | None = None,
         max_message_bytes: int = DEFAULT_MAX_MESSAGE_BYTES,
+        guard: ConversationGuard | None = None,
+        incident_state: Callable[[str], str | None] | None = None,
     ) -> None:
         self.store = store
         self.clock: Clock = clock or SystemClock()
@@ -57,6 +73,10 @@ class MessageBus:
         self._listeners: dict[str, Listener] = {}
         self._seq: dict[str, int] = {}
         self._seq_lock = threading.Lock()
+        #: Authority matrix + conversation rules (doc 05 §15); None = not enforced.
+        self.guard = guard
+        self._incident_state = incident_state
+        self._conversations: dict[str, ConversationState] = {}
 
     # ------------------------------------------------------------------ registration
     def register(self, agent_id: AgentId, handler: Handler) -> None:
@@ -153,30 +173,65 @@ class MessageBus:
                 raw_json=raw,
                 header=header,
                 valid=False,
-                error_code="MESSAGE_ROUTING_INVALID",
+                error_code=exc.code,
                 error_detail=str(exc),
             )
             raise
-        parsed, raw = self._stamp_seq(parsed, raw)
-        self.store.append_message(
-            raw_json=raw,
-            header=parsed.envelope.model_dump(mode="json", exclude={"payload"}),
-            valid=True,
-            ignored_fields=parsed.ignored_fields,
-        )
+        # Guard check, state update, seq and log append happen under ONE lock, in order:
+        # the conversation state always follows the log exactly (deterministic by seq).
+        with self._seq_lock:
+            incident = parsed.envelope.incident_id
+            if self.guard is not None and incident is not None:
+                state = self.conversation(incident)
+                result = self.guard.check(parsed.envelope, state)
+                if not result.allowed:
+                    first = result.violations[0]
+                    detail = " ".join(x.reason for x in result.violations)
+                    self.store.append_message(
+                        raw_json=raw,
+                        header=parsed.envelope.model_dump(mode="json", exclude={"payload"}),
+                        valid=False,
+                        error_code=first.code,
+                        error_detail=detail[:2000],
+                    )
+                    raise GuardViolationError(first.code, detail, result.violations)
+                self._conversations[incident] = state.apply(parsed.envelope, self.guard.rules)
+            parsed, raw = self._stamp_seq(parsed, raw)
+            self.store.append_message(
+                raw_json=raw,
+                header=parsed.envelope.model_dump(mode="json", exclude={"payload"}),
+                valid=True,
+                ignored_fields=parsed.ignored_fields,
+            )
         return parsed
+
+    def conversation(self, incident: str) -> ConversationState:
+        """The incident's conversation state (rebuilt from the log on first use, e.g. after
+        a restart), with the current incident state from the orchestrator."""
+        state = self._conversations.get(incident)
+        if state is None:
+            state = rebuild_state(
+                (
+                    Envelope.model_validate_json(m.raw_json)
+                    for m in self.store.messages(incident)
+                    if m.valid
+                ),
+                rules=self.guard.rules if self.guard else None,
+            )
+            self._conversations[incident] = state
+        current = self._incident_state(incident) if self._incident_state else None
+        return state.with_incident_state(current, self.guard.rules if self.guard else None)
 
     def _stamp_seq(self, parsed: ParsedMessage, raw: str) -> tuple[ParsedMessage, str]:
         """Assign the next per-incident sequence number to an accepted message (protocol
-        1.1). Numbering continues from the log after a restart."""
+        1.1). Numbering continues from the log after a restart. Caller holds the lock."""
         incident = parsed.envelope.incident_id
         if incident is None or parsed.envelope.seq is not None:
             return parsed, raw
-        with self._seq_lock:
-            if incident not in self._seq:
-                self._seq[incident] = self.store.max_seq(incident)
-            self._seq[incident] += 1
-            n = self._seq[incident]
+        if incident not in self._seq:
+            self._seq[incident] = self.store.max_seq(incident)
+        self._seq[incident] += 1
+        n = self._seq[incident]
         envelope = parsed.envelope.model_copy(update={"seq": n})
         stamped = ParsedMessage(envelope, parsed.payload, parsed.ignored_fields, parsed.warnings)
         return stamped, envelope.to_json()
@@ -272,10 +327,14 @@ class MessageBus:
 def _check_route(sender: str, recipient: str) -> None:
     if _HUB not in (sender, recipient):
         raise BusRoutingError(
-            f"{sender} -> {recipient}: agents communicate only through the orchestrator"
+            f"Rejected: {sender} tried to message {recipient} directly; agents talk only "
+            "through the orchestrator.",
+            code="DIRECT_AGENT_MESSAGE_FORBIDDEN",
         )
     if sender == recipient:
-        raise BusRoutingError(f"{sender} cannot message itself")
+        raise BusRoutingError(
+            f"Rejected: {sender} cannot message itself.", code="RECIPIENT_NOT_ALLOWED"
+        )
 
 
 def _check_reply(reply: ParsedMessage, request: ParsedMessage) -> None:

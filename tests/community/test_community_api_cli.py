@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from datetime import datetime
@@ -74,7 +75,9 @@ def test_demo_file_end_to_end(tmp_path: Path) -> None:  # S-14 / S-15 with the d
     (cand,) = pipe.candidates()
     assert cand.distinct_reporters == 3  # reporters 1, 2 and 4; duplicate/spam not counted
     r = pipe.investigate(
-        cand.candidate_id, Orchestrator(store), load_scenario("S-02").input_bytes
+        cand.candidate_id,
+        Orchestrator(store, settings=_on()),  # type: ignore[arg-type]
+        load_scenario("S-02").input_bytes,
     ).report
     assert r["netcoop_extensions"]["community_signals"][0]["trust_label"] == "corroborated"
 
@@ -90,6 +93,8 @@ def test_cli_community(tmp_path: Path) -> None:
             cwd=REPO_ROOT,
             timeout=120,
             check=False,
+            # Setup (P4): the community extension must be on to admit community input.
+            env={**os.environ, "NETCOOP_ENABLE": "community_signals"},
         )
 
     load = cli("community", "load", str(DEMO))

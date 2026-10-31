@@ -229,8 +229,8 @@ kind = "protocol"
 [[terms]]
 id = "MESSAGE_ROUTING_INVALID"
 label = "Message routing invalid"
-definition = "A message bypassed the orchestrator or addressed its own sender."
-status = "active"
+definition = "A message bypassed the orchestrator or addressed its own sender. Deprecated since protocol 1.1: replaced by DIRECT_AGENT_MESSAGE_FORBIDDEN and RECIPIENT_NOT_ALLOWED."
+status = "deprecated"
 source = "doc 03 §3; M2"
 [terms.attributes]
 severity = "error"
@@ -545,3 +545,93 @@ source = "doc 05 §14 (P3)"
 [terms.attributes]
 severity = "error"
 kind = "protocol"
+
+[[terms]]
+id = "SENDER_NOT_AUTHORIZED"
+label = "Sender not authorized"
+definition = "The authority matrix does not allow this participant to send this message type."
+status = "active"
+source = "doc 05 §15 (P4)"
+[terms.attributes]
+severity = "error"
+kind = "conversation"
+
+[[terms]]
+id = "RECIPIENT_NOT_ALLOWED"
+label = "Recipient not allowed"
+definition = "This message type from this sender may not go to this recipient (or a participant messaged itself)."
+status = "active"
+source = "doc 05 §15 (P4)"
+[terms.attributes]
+severity = "error"
+kind = "conversation"
+
+[[terms]]
+id = "MESSAGE_OUT_OF_SEQUENCE"
+label = "Message out of sequence"
+definition = "The message is legal only in other incident states, was already sent once, or needs an earlier decision."
+status = "active"
+source = "doc 05 §15 (P4)"
+[terms.attributes]
+severity = "error"
+kind = "conversation"
+
+[[terms]]
+id = "REPLY_MISMATCH"
+label = "Reply mismatch"
+definition = "in_reply_to is missing, or does not point to an open request addressed to the sender."
+status = "active"
+source = "doc 05 §15 (P4)"
+[terms.attributes]
+severity = "error"
+kind = "conversation"
+
+[[terms]]
+id = "DUPLICATE_MESSAGE"
+label = "Duplicate message"
+definition = "A message with this id was already accepted in the incident."
+status = "active"
+source = "doc 05 §15 (P4)"
+[terms.attributes]
+severity = "error"
+kind = "conversation"
+
+[[terms]]
+id = "INCIDENT_CLOSED"
+label = "Incident closed"
+definition = "The incident is complete, failed or rejected; no further messages are accepted."
+status = "active"
+source = "doc 05 §15 (P4)"
+[terms.attributes]
+severity = "error"
+kind = "conversation"
+
+[[terms]]
+id = "CLARIFICATION_LIMIT_EXCEEDED"
+label = "Clarification limit exceeded"
+definition = "A clarification question beyond the configured rounds per incident (default 2)."
+status = "active"
+source = "doc 05 §15 (P4)"
+[terms.attributes]
+severity = "error"
+kind = "conversation"
+
+[[terms]]
+id = "DIRECT_AGENT_MESSAGE_FORBIDDEN"
+label = "Direct agent message forbidden"
+definition = "Hub and spoke: every message is to or from the orchestrator; agents never message each other directly."
+status = "active"
+source = "doc 05 §15 (P4)"
+[terms.attributes]
+severity = "error"
+kind = "conversation"
+
+[[terms]]
+id = "EXTENSION_DISABLED"
+label = "Extension disabled"
+definition = "The message belongs to an extension whose feature flag is off (e.g. community_candidate without community_signals)."
+status = "active"
+source = "doc 05 §15 (P4)"
+[terms.attributes]
+severity = "error"
+kind = "conversation"

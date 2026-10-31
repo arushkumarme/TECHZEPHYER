@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import base64
 import concurrent.futures as cf
+import json
 from collections.abc import Callable
 from contextlib import ExitStack
 from dataclasses import dataclass, field
@@ -36,7 +37,8 @@ from netcoop.agents.performance import PerformanceAgent
 from netcoop.agents.reporting import ReportingAgent, reporting_context
 from netcoop.config.settings import Settings, load_settings
 from netcoop.core.blocks import IncidentContext, TimeWindow
-from netcoop.core.bus import Handler, MessageBus
+from netcoop.core.bus import GuardViolationError, Handler, MessageBus
+from netcoop.core.guard import ConversationGuard
 from netcoop.core.ids import Clock, IdFactory, SystemClock
 from netcoop.core.log_store import LogStore
 from netcoop.core.messages import (
@@ -396,13 +398,25 @@ class Orchestrator:
         )
         if not already:
             for payload in payloads:
-                run.bus.notify(
-                    sender="community_module",
-                    recipient="orchestrator",
-                    message_type="community_candidate",
-                    payload=payload,
-                    incident_id=run.incident,
-                )
+                try:
+                    run.bus.notify(
+                        sender="community_module",
+                        recipient="orchestrator",
+                        message_type="community_candidate",
+                        payload=payload,
+                        incident_id=run.incident,
+                    )
+                except GuardViolationError as exc:  # e.g. EXTENSION_DISABLED: never fatal
+                    run.community_errors.append(
+                        f"Community input {payload.candidate_id} not admitted ({exc.code}: "
+                        f"{exc.detail}); the core diagnosis is unaffected."
+                    )
+        admitted = {
+            json.loads(m.raw_json)["payload"]["candidate_id"]
+            for m in self.store.messages(run.incident)
+            if m.valid and m.message_type == "community_candidate"
+        }
+        run.community = [e for e in run.community if str(e["candidate_id"]) in admitted]
 
     def _take_snapshot(self, run: _Run, acceptance: str) -> DataSnapshot:
         """Fingerprint the data every agent will analyse; checkpointed so a resumed run
@@ -463,7 +477,13 @@ class Orchestrator:
             ids=ids,
             snapshot=run.snapshot,
             max_message_bytes=self.settings.protocol.max_message_bytes,
+            guard=ConversationGuard(
+                max_clarification_rounds=cfg.max_clarification_rounds,
+                extensions=[name for name, on in self.settings.features.model_dump().items() if on],
+            ),
+            incident_state=self._state.get,
         )
+        self.last_bus: MessageBus | None = bus  # the live bus, for inspection and demos
         toolbox: Any
         if cfg.tool_transport == "mcp":
             # Imported here: the MCP server itself imports the scenario runner (and thus

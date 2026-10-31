@@ -54,7 +54,7 @@ Every official requirement from `SRC-1` (`Agentic_AI_Hackathon.pdf`) is listed w
 | ID | Criterion | Satisfied through | Test | Demo |
 |---|---|---|---|---|
 | M-01 | At least two collaborating agents with distinct responsibilities | R-08 | T-ORCH-COLLAB-01 | Demo-2 |
-| M-02 | Structured communication between agents | R-09 | T-PROTO-*, `tests/orchestrator/test_stamping.py`, `tests/e2e/test_payloads_in_runs.py` | Demo-2 |
+| M-02 | Structured communication between agents | R-09 | T-PROTO-*, `tests/orchestrator/test_stamping.py`, `tests/e2e/test_payloads_in_runs.py`, `tests/core/test_guard.py` | Demo-2 |
 | M-03 | Evidence from multiple agents contributes to a single diagnosis | R-08, R-11 | T-DIAG-MULTI-01 | Demo-2 |
 | M-04 | At least one malformed, missing or incompatible input case is handled | R-13 | T-ERR-* | Demo-3, 4 |
 | M-05 | A report with probable root cause, supporting evidence and recommended action | R-12 | T-RPT-* | Demo-2 |
@@ -74,9 +74,9 @@ Every official requirement from `SRC-1` (`Agentic_AI_Hackathon.pdf`) is listed w
 
 | ID | Criterion | Weight | How the design addresses it | Evidence a judge can see |
 |---|---|---|---|---|
-| E-01 | Agent interoperability and protocol design | 30% | Versioned message envelope (1.1: data snapshot ID, mode, provenance, seq), typed messages, safe parser, controlled vocabularies, field dictionary, normalization policy (docs 05, 06) | Message log, protocol doc, interoperability-failure scenario |
+| E-01 | Agent interoperability and protocol design | 30% | Versioned message envelope (1.1: data snapshot ID, mode, provenance, seq), typed messages with semantic rules, safe parser, controlled vocabularies, authority matrix + conversation guard, field dictionary, normalization policy (docs 05, 06) | Message log, protocol doc, interoperability-failure scenario |
 | E-02 | Diagnostic accuracy and evidence quality | 25% | Hypothesis catalog, documented heuristic score, evidence traceable to observations (doc 08) | Report evidence trail, scenario results |
-| E-03 | Agent orchestration and conflict resolution | 15% | State machine, bounded clarification, written conflict rules (docs 03, 04, 08 §5) | Orchestration trace, ambiguous-case scenario |
+| E-03 | Agent orchestration and conflict resolution | 15% | State machine, bounded clarification (round limit enforced by the guard, `tests/core/test_guard.py::test_clarification_round_limit`), message legality per state (doc 04 §4.1), written conflict rules (docs 03, 04, 08 §5) | Orchestration trace, ambiguous-case scenario |
 | E-04 | Robustness to missing, inconsistent, or incompatible data | 15% | Bundle acceptance policy, not-assessable semantics, degraded operation (docs 04, 05) | Partial-metric, stale, topology-missing, agent-failure scenarios |
 | E-05 | Code quality, documentation, and demonstration | 5% | Traceability, tests, README, demo script | This matrix, test report, video |
 | E-06 | Innovation, usability, and extensibility | 10% | Extensions A and B, mode separation, adapter design (docs 10, 11, 15) | Demo-7, Demo-8 |
@@ -150,8 +150,8 @@ Never counted toward the mandatory rows. Disabled → core must still pass (`T-I
 | R-06 corrective actions | TESTED | `test_actions_adapt_to_uncertainty` |
 | R-07 no exact cause when insufficient | TESTED | `test_single_weak_symptom_is_insufficient`, S-08, S-09 |
 | R-08 collaborating agents | TESTED | `test_full_run` (5 agents, ≥2 evidence sources) |
-| R-09 interoperability protocol | TESTED | `tests/core/test_messages.py`, `test_bus_log.py`, `schemas/protocol/`; field meanings and units: `tests/core/test_vocabulary.py`, `tests/e2e/test_vocabulary_in_runs.py` (protocol upgrade P1); envelope 1.1, data snapshot, safe parsing: `tests/core/test_envelope_v11.py`, `tests/core/test_snapshot.py`, `tests/orchestrator/test_stamping.py` (P2); payload models and semantic rules: `tests/core/test_payload_rules.py`, `tests/e2e/test_payloads_in_runs.py` (P3) |
-| R-10 orchestration | TESTED | `tests/orchestrator/test_workflow.py` |
+| R-09 interoperability protocol | TESTED | `tests/core/test_messages.py`, `test_bus_log.py`, `schemas/protocol/`; field meanings and units: `tests/core/test_vocabulary.py`, `tests/e2e/test_vocabulary_in_runs.py` (protocol upgrade P1); envelope 1.1, data snapshot, safe parsing: `tests/core/test_envelope_v11.py`, `tests/core/test_snapshot.py`, `tests/orchestrator/test_stamping.py` (P2); payload models and semantic rules: `tests/core/test_payload_rules.py`, `tests/e2e/test_payloads_in_runs.py` (P3); authority and conversation rules: `tests/core/test_guard.py` (P4) |
+| R-10 orchestration | TESTED | `tests/orchestrator/test_workflow.py`; authority matrix and conversation rules: `tests/core/test_guard.py` (P4) |
 | R-11 fault diagnosis from telemetry | TESTED | e2e S-01..S-12 |
 | R-12 unified report | TESTED | `test_official_keys_exact_and_typed`; strict `OfficialReport` model: `test_rule7_the_pdf_example_validates_and_an_eleventh_key_does_not`, `test_every_scenario_report_validates_as_official_report` (P3) |
 | R-13 validation / error handling | TESTED | `tests/ingestion/test_ingest.py` (E-01..E-12), S-06, S-06b, S-10 |
