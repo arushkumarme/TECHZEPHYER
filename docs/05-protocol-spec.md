@@ -163,8 +163,8 @@ Severity: **fatal** stops the incident; **error** degrades it; **warning** is re
 
 ## 8. Transport
 
-- In-process message bus; each message is serialized to JSON, validated, appended to the log, then delivered. `PLANNED`
-- No broker, no MCP, no external agent framework at this stage (`CD-2`).
+- In-process message bus; each message is serialized to JSON, validated (envelope, payload rules, conversation guard), appended to the log, then delivered synchronously to the recipient registered for it. `IMPLEMENTED` (§16)
+- No broker and no external agent framework (`CD-2`). MCP exists only as the read-only tool/resource interface (doc 16); agent-to-agent messages never use it.
 - Agent-to-agent REST is not planned. The envelope is transport-neutral, so it could be added later. `FUTURE`
 - The backend API (doc 02) is for dashboard and complaint submission only, not for agent communication.
 
@@ -280,6 +280,15 @@ Checked in this order; every rejection is logged with its code and a plain-Engli
 8. **Round limit** — the correlation agent's questions count toward `max_clarification_rounds` (default 2) per incident (`CLARIFICATION_LIMIT_EXCEEDED`).
 
 <!-- END GENERATED: authority -->
+
+## 16. Message bus and append-only log (protocol upgrade, Prompt 5) — `IMPLEMENTED`, `TESTED`
+
+- **Order of work in `MessageBus.transmit`:** serialize to JSON, then `try_parse` (envelope, version, size, payload and semantic rules), then the hub-and-spoke route check, then the reply check, then the conversation guard. On success it applies the new state, stamps `seq` and appends to the log, all under one lock, and then delivers. **Every attempt is logged**, accepted or rejected. Specialist handlers still run in worker threads (deadlines need them), but every reply is validated and logged by the orchestrator's thread in fixed order.
+- **Log row:** `attempt_seq` (1, 2, 3 … per incident, every attempt), `protocol_seq` (the envelope `seq` of an accepted message), `received_at` (injected clock), sender, recipient, type, `in_reply_to`, `snapshot_id`, `mode`, `data_provenance`, `status`, `payload_json`, `verdict` (`accepted` / `rejected`), `violations_json` (code, plain-English reason, field path), `warnings_json`, plus the raw message.
+- **Store API:** `append`, `get_incident_messages`, `get_message`, `iter_trace`, `export_jsonl`. There is **no update or delete method**. SQLite triggers abort any `UPDATE` or `DELETE`, and the only raw-SQL hook is the private `_execute_raw_for_tests`.
+- **Migration:** opening a database written by an earlier version adds the new columns automatically (`ALTER TABLE … ADD COLUMN` never rewrites rows) and records `messages_v2_protocol_1_1` in `schema_migrations`. Old rows read the new columns as derived values: attempt order, verdict from `valid`, violations from the old error code.
+- **Read API for agents and tools:** `bus.get_message(id)` and `bus.messages_for(incident, types=...)`, so a correlate task can read the findings it references. Reading never changes anything. `bus.rebuild_state(incident)` replays the conversation state from the log alone.
+- **Evidence:** `tests/core/test_bus_v11.py`. It checks delivery once and in order; rejected messages logged with reasons and not delivered; warnings logged; monotonic sequence and duplicate rejection; identical log on replay; rebuilt state equal to live; references resolved by id; no update/delete; subscribers only receive their own messages; and an old-format database migrated.
 
 ## Appendix A: Controlled vocabularies
 

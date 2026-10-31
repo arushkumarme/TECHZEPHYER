@@ -9,7 +9,8 @@ from __future__ import annotations
 import json
 import sqlite3
 import threading
-from dataclasses import dataclass
+from collections.abc import Iterator
+from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -77,10 +78,55 @@ CREATE TABLE IF NOT EXISTS approvals (
 );
 CREATE INDEX IF NOT EXISTS ix_approvals_incident ON approvals(incident_id, seq);
 """
+#: Columns added in protocol 1.1 (Prompt 5). Added by an automatic migration so databases
+#: written by earlier versions keep working; their old rows read these as derived/empty.
+_MESSAGE_COLUMNS_V2: tuple[tuple[str, str], ...] = (
+    ("attempt_seq", "INTEGER"),  # every attempt per incident, accepted or rejected
+    ("received_at", "TEXT"),  # bus clock (injected)
+    ("snapshot_id", "TEXT"),
+    ("mode", "TEXT"),
+    ("data_provenance", "TEXT"),
+    ("status", "TEXT"),
+    ("verdict", "TEXT"),  # accepted | rejected
+    ("violations_json", "TEXT"),  # [{code, reason, path}]
+    ("warnings_json", "TEXT"),  # [{code, reason, path}]
+    ("payload_json", "TEXT"),
+    ("protocol_seq", "INTEGER"),  # envelope seq of an accepted message
+)
+_MIGRATIONS_TABLE = """
+CREATE TABLE IF NOT EXISTS schema_migrations (
+    seq  INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE
+);
+"""
+_V1_COLUMNS = (
+    "seq",
+    "incident_id",
+    "message_id",
+    "in_reply_to",
+    "sender",
+    "recipient",
+    "message_type",
+    "sent_at",
+    "valid",
+    "error_code",
+    "error_detail",
+    "ignored_fields",
+    "raw_json",
+)
+
 _APPEND_ONLY = [
     f"CREATE TRIGGER IF NOT EXISTS {table}_no_{op.lower()} BEFORE {op} ON {table} "
     f"BEGIN SELECT RAISE(ABORT, '{table} is append-only'); END;"
-    for table in ("messages", "transitions", "incidents", "reports", "checkpoints", "approvals")
+    for table in (
+        "messages",
+        "transitions",
+        "incidents",
+        "reports",
+        "checkpoints",
+        "approvals",
+        "schema_migrations",
+    )
     for op in ("UPDATE", "DELETE")
 ]
 
@@ -100,6 +146,43 @@ class LoggedMessage:
     error_detail: str | None
     ignored_fields: list[str]
     raw_json: str
+    # ---- protocol 1.1 log columns ----
+    attempt_seq: int = 0
+    received_at: str | None = None
+    snapshot_id: str | None = None
+    mode: str | None = None
+    data_provenance: str | None = None
+    status: str | None = None
+    verdict: str = "accepted"
+    violations: list[dict[str, Any]] = field(default_factory=list)
+    warnings: list[dict[str, Any]] = field(default_factory=list)
+    payload_json: str | None = None
+    protocol_seq: int | None = None
+
+    def as_record(self) -> dict[str, Any]:
+        """Plain-dict form (used by ``iter_trace`` and ``export_jsonl``)."""
+        return {
+            "incident_id": self.incident_id,
+            "seq": self.attempt_seq,
+            "protocol_seq": self.protocol_seq,
+            "message_id": self.message_id,
+            "received_at": self.received_at,
+            "sent_at": self.sent_at,
+            "sender": self.sender,
+            "recipient": self.recipient,
+            "message_type": self.message_type,
+            "in_reply_to": self.in_reply_to,
+            "snapshot_id": self.snapshot_id,
+            "mode": self.mode,
+            "data_provenance": self.data_provenance,
+            "status": self.status,
+            "verdict": self.verdict,
+            "error_code": self.error_code,
+            "violations": self.violations,
+            "warnings": self.warnings,
+            "ignored_fields": self.ignored_fields,
+            "payload": json.loads(self.payload_json) if self.payload_json else None,
+        }
 
 
 @dataclass(frozen=True)
@@ -128,8 +211,27 @@ class LogStore:
         self._extension_tables: set[str] = set()
         with self._lock:
             self._conn.executescript(_SCHEMA)
+            self._conn.executescript(_MIGRATIONS_TABLE)
+            self._migrate()
             for stmt in _APPEND_ONLY:
                 self._conn.execute(stmt)
+
+    def _migrate(self) -> None:
+        """Add the 1.1 message columns to a database written by an earlier version.
+        ALTER TABLE ... ADD COLUMN never rewrites existing rows, so the append-only rule
+        holds; old rows read the new columns as derived values (see ``messages``)."""
+        have = {r[1] for r in self._conn.execute("PRAGMA table_info(messages)")}
+        for name, sql_type in _MESSAGE_COLUMNS_V2:
+            if name not in have:
+                self._conn.execute(f"ALTER TABLE messages ADD COLUMN {name} {sql_type}")
+        self._conn.execute(
+            "INSERT OR IGNORE INTO schema_migrations (name) VALUES ('messages_v2_protocol_1_1')"
+        )
+
+    def migrations(self) -> list[str]:
+        with self._lock:
+            rows = self._conn.execute("SELECT name FROM schema_migrations ORDER BY seq")
+            return [r[0] for r in rows.fetchall()]
 
     # ------------------------------------------------------------------ writes
     def append_message(
@@ -141,15 +243,27 @@ class LogStore:
         ignored_fields: list[str] | None = None,
         error_code: str | None = None,
         error_detail: str | None = None,
+        received_at: datetime | None = None,
+        violations: list[dict[str, Any]] | None = None,
+        warnings: list[dict[str, Any]] | None = None,
     ) -> int:
-        """Append one wire message. ``header`` holds whatever envelope fields were readable."""
+        """Append one message attempt (accepted or rejected). ``header`` holds whatever
+        envelope fields were readable. ``attempt_seq`` is assigned here, per incident."""
+        incident = _s(header.get("incident_id"))
+        if not valid and not violations and error_code:
+            violations = [{"code": error_code, "reason": error_detail or "", "path": ""}]
         with self._lock:
+            (count,) = self._conn.execute(
+                "SELECT COUNT(*) FROM messages WHERE incident_id IS ?", (incident,)
+            ).fetchone()
             cur = self._conn.execute(
                 "INSERT INTO messages (incident_id, message_id, in_reply_to, sender, recipient,"
                 " message_type, sent_at, valid, error_code, error_detail, ignored_fields,"
-                " raw_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+                " raw_json, attempt_seq, received_at, snapshot_id, mode, data_provenance,"
+                " status, verdict, violations_json, warnings_json, payload_json, protocol_seq)"
+                " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (
-                    _s(header.get("incident_id")),
+                    incident,
                     _s(header.get("message_id")),
                     _s(header.get("in_reply_to")),
                     _s(header.get("sender")),
@@ -161,10 +275,24 @@ class LogStore:
                     error_detail,
                     json.dumps(ignored_fields or []),
                     raw_json,
+                    count + 1,
+                    received_at.isoformat() if received_at else None,
+                    _s(header.get("snapshot_id")),
+                    _s(header.get("mode")),
+                    _s(header.get("data_provenance")),
+                    _s(header.get("status")),
+                    "accepted" if valid else "rejected",
+                    json.dumps(violations or []),
+                    json.dumps(warnings or []),
+                    _payload_json(raw_json),
+                    header.get("seq") if valid and isinstance(header.get("seq"), int) else None,
                 ),
             )
             assert cur.lastrowid is not None
             return cur.lastrowid
+
+    #: Pack name for :meth:`append_message`.
+    append = append_message
 
     def append_transition(
         self,
@@ -196,31 +324,80 @@ class LogStore:
 
     # ------------------------------------------------------------------ reads
     def messages(self, incident_id: str | None = None) -> list[LoggedMessage]:
+        cols = ", ".join((*_V1_COLUMNS, *(c for c, _ in _MESSAGE_COLUMNS_V2)))
         with self._lock:
             if incident_id is None:
-                rows = self._conn.execute("SELECT * FROM messages ORDER BY seq").fetchall()
+                rows = self._conn.execute(f"SELECT {cols} FROM messages ORDER BY seq").fetchall()
             else:
                 rows = self._conn.execute(
-                    "SELECT * FROM messages WHERE incident_id=? ORDER BY seq", (incident_id,)
+                    f"SELECT {cols} FROM messages WHERE incident_id=? ORDER BY seq",
+                    (incident_id,),
                 ).fetchall()
-        return [
-            LoggedMessage(
-                seq=r[0],
-                incident_id=r[1],
-                message_id=r[2],
-                in_reply_to=r[3],
-                sender=r[4],
-                recipient=r[5],
-                message_type=r[6],
-                sent_at=r[7],
-                valid=bool(r[8]),
-                error_code=r[9],
-                error_detail=r[10],
-                ignored_fields=json.loads(r[11]),
-                raw_json=r[12],
+        out: list[LoggedMessage] = []
+        position: dict[str | None, int] = {}
+        for r in rows:
+            position[r[1]] = position.get(r[1], 0) + 1
+            v = dict(zip((c for c, _ in _MESSAGE_COLUMNS_V2), r[13:], strict=True))
+            out.append(
+                LoggedMessage(
+                    seq=r[0],
+                    incident_id=r[1],
+                    message_id=r[2],
+                    in_reply_to=r[3],
+                    sender=r[4],
+                    recipient=r[5],
+                    message_type=r[6],
+                    sent_at=r[7],
+                    valid=bool(r[8]),
+                    error_code=r[9],
+                    error_detail=r[10],
+                    ignored_fields=json.loads(r[11]),
+                    raw_json=r[12],
+                    # rows written before the migration: derive what can be derived
+                    attempt_seq=v["attempt_seq"] or position[r[1]],
+                    received_at=v["received_at"],
+                    snapshot_id=v["snapshot_id"],
+                    mode=v["mode"],
+                    data_provenance=v["data_provenance"],
+                    status=v["status"],
+                    verdict=v["verdict"] or ("accepted" if r[8] else "rejected"),
+                    violations=json.loads(v["violations_json"])
+                    if v["violations_json"]
+                    else ([] if r[8] else [{"code": r[9], "reason": r[10] or "", "path": ""}]),
+                    warnings=json.loads(v["warnings_json"]) if v["warnings_json"] else [],
+                    payload_json=v["payload_json"] or _payload_json(r[12]),
+                    protocol_seq=v["protocol_seq"],
+                )
             )
-            for r in rows
-        ]
+        return out
+
+    #: Pack name for :meth:`messages` with an incident.
+    def get_incident_messages(self, incident_id: str) -> list[LoggedMessage]:
+        return self.messages(incident_id)
+
+    def get_message(self, message_id: str) -> LoggedMessage | None:
+        """The accepted message with this id (or the last attempt with it, if none was)."""
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT incident_id FROM messages WHERE message_id=? ORDER BY valid DESC, seq "
+                "LIMIT 1",
+                (message_id,),
+            ).fetchone()
+        if row is None:
+            return None
+        found = [m for m in self.messages(row[0]) if m.message_id == message_id]
+        accepted = [m for m in found if m.valid]
+        return (accepted or found)[-1] if found else None
+
+    def iter_trace(self, incident_id: str) -> Iterator[dict[str, Any]]:
+        """Every attempt of an incident in log order, as plain records."""
+        for m in self.messages(incident_id):
+            yield m.as_record()
+
+    def export_jsonl(self, incident_id: str | None = None) -> str:
+        """One JSON line per message attempt (sorted keys): the shareable log."""
+        rows = self.messages(incident_id)
+        return "".join(json.dumps(m.as_record(), sort_keys=True) + "\n" for m in rows)
 
     def transitions(self, incident_id: str) -> list[Transition]:
         with self._lock:
@@ -407,8 +584,9 @@ class LogStore:
             names = [d[0] for d in cur.description]
             return [dict(zip(names, r, strict=True)) for r in cur.fetchall()]
 
-    def execute_unsafe_for_tests(self, sql: str) -> None:
-        """Run raw SQL (tests use it to prove the append-only triggers fire)."""
+    def _execute_raw_for_tests(self, sql: str) -> None:
+        """Run raw SQL. Private: tests use it to prove the append-only triggers fire. The
+        public API has no update or delete method."""
         with self._lock:
             self._conn.execute(sql)
 
@@ -419,3 +597,12 @@ class LogStore:
 
 def _s(value: Any) -> str | None:
     return None if value is None else str(value)
+
+
+def _payload_json(raw_json: str) -> str | None:
+    try:
+        data = json.loads(raw_json)
+    except (json.JSONDecodeError, TypeError):
+        return None
+    payload = data.get("payload") if isinstance(data, dict) else None
+    return json.dumps(payload, sort_keys=True) if isinstance(payload, dict) else None

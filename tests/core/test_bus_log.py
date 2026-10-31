@@ -133,7 +133,7 @@ def test_log_is_append_only(bus: MessageBus) -> None:
         "DELETE FROM transitions",
     ):
         with pytest.raises(sqlite3.DatabaseError, match="append-only"):
-            bus.store.execute_unsafe_for_tests(stmt)
+            bus.store._execute_raw_for_tests(stmt)
 
 
 def test_transitions_and_persistence_across_reopen(tmp_path: Path) -> None:

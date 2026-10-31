@@ -24,7 +24,7 @@ from netcoop.core.messages import (
     make_message,
     parse_message,
 )
-from netcoop.core.parse import DEFAULT_MAX_MESSAGE_BYTES
+from netcoop.core.parse import DEFAULT_MAX_MESSAGE_BYTES, ParseIssue, try_parse
 from netcoop.core.snapshot import DataSnapshot
 from netcoop.core.vocab import AgentId, MessageStatus, MessageType
 
@@ -154,8 +154,17 @@ class MessageBus:
             header.setdefault("sender", req.recipient)
             header.setdefault("recipient", req.sender)
             header.setdefault("in_reply_to", req.message_id)
+        received = self.clock.now()
+        result = try_parse(raw, max_bytes=self.max_message_bytes)
+        warnings = [_issue(w) for w in result.warnings]
         try:
-            parsed = parse_message(raw, max_bytes=self.max_message_bytes)
+            if result.message is None:
+                first = result.errors[0]
+                raise MessageValidationError(
+                    first.code,
+                    "; ".join(f"{e.path or '<message>'}: {e.reason}" for e in result.errors),
+                )
+            parsed = result.message
             _check_route(parsed.envelope.sender, parsed.envelope.recipient)
             if expect_reply_to is not None:
                 _check_reply(parsed, expect_reply_to)
@@ -166,6 +175,10 @@ class MessageBus:
                 valid=False,
                 error_code=exc.code,
                 error_detail=exc.detail[:2000],
+                received_at=received,
+                violations=[_issue(e) for e in result.errors]
+                or [{"code": exc.code, "reason": exc.detail[:2000], "path": ""}],
+                warnings=warnings,
             )
             raise
         except BusRoutingError as exc:
@@ -175,6 +188,9 @@ class MessageBus:
                 valid=False,
                 error_code=exc.code,
                 error_detail=str(exc),
+                received_at=received,
+                violations=[{"code": exc.code, "reason": str(exc), "path": ""}],
+                warnings=warnings,
             )
             raise
         # Guard check, state update, seq and log append happen under ONE lock, in order:
@@ -183,18 +199,24 @@ class MessageBus:
             incident = parsed.envelope.incident_id
             if self.guard is not None and incident is not None:
                 state = self.conversation(incident)
-                result = self.guard.check(parsed.envelope, state)
-                if not result.allowed:
-                    first = result.violations[0]
-                    detail = " ".join(x.reason for x in result.violations)
+                verdict = self.guard.check(parsed.envelope, state)
+                if not verdict.allowed:
+                    top = verdict.violations[0]
+                    detail = " ".join(x.reason for x in verdict.violations)
                     self.store.append_message(
                         raw_json=raw,
                         header=parsed.envelope.model_dump(mode="json", exclude={"payload"}),
                         valid=False,
-                        error_code=first.code,
+                        error_code=top.code,
                         error_detail=detail[:2000],
+                        received_at=received,
+                        violations=[
+                            {"code": x.code, "reason": x.reason, "path": ""}
+                            for x in verdict.violations
+                        ],
+                        warnings=warnings,
                     )
-                    raise GuardViolationError(first.code, detail, result.violations)
+                    raise GuardViolationError(top.code, detail, verdict.violations)
                 self._conversations[incident] = state.apply(parsed.envelope, self.guard.rules)
             parsed, raw = self._stamp_seq(parsed, raw)
             self.store.append_message(
@@ -202,8 +224,42 @@ class MessageBus:
                 header=parsed.envelope.model_dump(mode="json", exclude={"payload"}),
                 valid=True,
                 ignored_fields=parsed.ignored_fields,
+                received_at=received,
+                warnings=warnings,
             )
         return parsed
+
+    # ------------------------------------------------------------------ read API
+    def get_message(self, message_id: str) -> ParsedMessage | None:
+        """An accepted message by id (agents/tools read earlier messages by reference)."""
+        logged = self.store.get_message(message_id)
+        if logged is None or not logged.valid:
+            return None
+        return parse_message(logged.raw_json)
+
+    def messages_for(
+        self, incident_id: str, types: tuple[str, ...] | list[str] | None = None
+    ) -> list[ParsedMessage]:
+        """Accepted messages of an incident in log order, optionally of some types only.
+        Reading never changes anything."""
+        return [
+            parse_message(m.raw_json)
+            for m in self.store.messages(incident_id)
+            if m.valid and (types is None or m.message_type in types)
+        ]
+
+    def rebuild_state(self, incident_id: str) -> ConversationState:
+        """The conversation state rebuilt from the log alone (replay), ignoring any cache."""
+        current = self._incident_state(incident_id) if self._incident_state else None
+        return rebuild_state(
+            (
+                Envelope.model_validate_json(m.raw_json)
+                for m in self.store.messages(incident_id)
+                if m.valid
+            ),
+            incident_state=current,
+            rules=self.guard.rules if self.guard else None,
+        )
 
     def conversation(self, incident: str) -> ConversationState:
         """The incident's conversation state (rebuilt from the log on first use, e.g. after
@@ -357,3 +413,7 @@ def _best_effort_header(raw: str) -> dict[str, Any]:
     except (json.JSONDecodeError, TypeError):
         return {}
     return {k: v for k, v in data.items() if k != "payload"} if isinstance(data, dict) else {}
+
+
+def _issue(i: ParseIssue) -> dict[str, str]:
+    return {"code": i.code, "reason": i.reason, "path": i.path}

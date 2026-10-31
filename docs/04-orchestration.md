@@ -80,7 +80,8 @@ Authority: A-CORR applies the rules; the orchestrator only ensures every conflic
 
 - The log contains enough to replay an incident without re-running agents: task messages, tool-call records with results, findings, clarifications, decision.
 - Re-running a scenario with the same configuration and data must give the same states, decision and score (`T-REPRO-*`). Whether the generator supports fixed seeds is `UNKNOWN` (doc 09).
-- Pause/resume across restarts is **not** promised (`SRC-1 p3 §4`: optional).
+- Pause/resume across restarts **is implemented** (optional in `SRC-1 p3 §4`; built in M10, §10 below), and is not extended by the protocol upgrade.
+- The conversation state (open tasks, questions, rounds used, decision/report sent) is rebuilt from the message log alone: `MessageBus.rebuild_state(incident)` equals the live state (`tests/core/test_bus_v11.py`). Replaying a run with the same clock, ids and configuration gives a byte-identical log export (`LogStore.export_jsonl`).
 
 ## 8. Extension hooks
 

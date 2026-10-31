@@ -54,7 +54,7 @@ Every official requirement from `SRC-1` (`Agentic_AI_Hackathon.pdf`) is listed w
 | ID | Criterion | Satisfied through | Test | Demo |
 |---|---|---|---|---|
 | M-01 | At least two collaborating agents with distinct responsibilities | R-08 | T-ORCH-COLLAB-01 | Demo-2 |
-| M-02 | Structured communication between agents | R-09 | T-PROTO-*, `tests/orchestrator/test_stamping.py`, `tests/e2e/test_payloads_in_runs.py`, `tests/core/test_guard.py` | Demo-2 |
+| M-02 | Structured communication between agents | R-09 | T-PROTO-*, T-LOG-*, `tests/orchestrator/test_stamping.py`, `tests/e2e/test_payloads_in_runs.py`, `tests/core/test_guard.py`, `tests/core/test_bus_v11.py` | Demo-2 |
 | M-03 | Evidence from multiple agents contributes to a single diagnosis | R-08, R-11 | T-DIAG-MULTI-01 | Demo-2 |
 | M-04 | At least one malformed, missing or incompatible input case is handled | R-13 | T-ERR-* | Demo-3, 4 |
 | M-05 | A report with probable root cause, supporting evidence and recommended action | R-12 | T-RPT-* | Demo-2 |
@@ -150,7 +150,7 @@ Never counted toward the mandatory rows. Disabled → core must still pass (`T-I
 | R-06 corrective actions | TESTED | `test_actions_adapt_to_uncertainty` |
 | R-07 no exact cause when insufficient | TESTED | `test_single_weak_symptom_is_insufficient`, S-08, S-09 |
 | R-08 collaborating agents | TESTED | `test_full_run` (5 agents, ≥2 evidence sources) |
-| R-09 interoperability protocol | TESTED | `tests/core/test_messages.py`, `test_bus_log.py`, `schemas/protocol/`; field meanings and units: `tests/core/test_vocabulary.py`, `tests/e2e/test_vocabulary_in_runs.py` (protocol upgrade P1); envelope 1.1, data snapshot, safe parsing: `tests/core/test_envelope_v11.py`, `tests/core/test_snapshot.py`, `tests/orchestrator/test_stamping.py` (P2); payload models and semantic rules: `tests/core/test_payload_rules.py`, `tests/e2e/test_payloads_in_runs.py` (P3); authority and conversation rules: `tests/core/test_guard.py` (P4) |
+| R-09 interoperability protocol | TESTED | `tests/core/test_messages.py`, `test_bus_log.py`, `schemas/protocol/`; field meanings and units: `tests/core/test_vocabulary.py`, `tests/e2e/test_vocabulary_in_runs.py` (protocol upgrade P1); envelope 1.1, data snapshot, safe parsing: `tests/core/test_envelope_v11.py`, `tests/core/test_snapshot.py`, `tests/orchestrator/test_stamping.py` (P2); payload models and semantic rules: `tests/core/test_payload_rules.py`, `tests/e2e/test_payloads_in_runs.py` (P3); authority and conversation rules: `tests/core/test_guard.py` (P4); bus and append-only log: `tests/core/test_bus_v11.py` (P5) |
 | R-10 orchestration | TESTED | `tests/orchestrator/test_workflow.py`; authority matrix and conversation rules: `tests/core/test_guard.py` (P4) |
 | R-11 fault diagnosis from telemetry | TESTED | e2e S-01..S-12 |
 | R-12 unified report | TESTED | `test_official_keys_exact_and_typed`; strict `OfficialReport` model: `test_rule7_the_pdf_example_validates_and_an_eleventh_key_does_not`, `test_every_scenario_report_validates_as_official_report` (P3) |
@@ -165,7 +165,7 @@ Never counted toward the mandatory rows. Disabled → core must still pass (`T-I
 | M-01..M-06 minimum acceptance | TESTED | `test_full_run`, protocol tests, `test_congestion_is_diagnosed_from_two_agents`, ingestion tests, report tests, CLI test |
 | O-01 MCP | TESTED | `tests/mcp/test_mcp.py` (server tools/resources, agents via MCP, stdio subprocess); doc 16 |
 | O-02 HITL | TESTED | `tests/orchestrator/test_review.py` (approve/reject, recorded, completes incident, CLI) |
-| O-03 persistent state / pause-resume | TESTED | `tests/orchestrator/test_persistence.py` (pause/resume after restart, crash recovery, CLI) |
+| O-03 persistent state / pause-resume | TESTED | `tests/orchestrator/test_persistence.py` (pause/resume after restart, crash recovery, CLI); message log with verdicts, replayable conversation state and migration: `tests/core/test_bus_v11.py` (P5) |
 | O-04 dashboard | TESTED | `tests/api/test_api.py`, `tests/ui/test_dashboard_e2e.py` (Chromium), `dashboard/src/lib/lanes.test.ts`; screenshots in `docs/results/screenshots/` |
 | O-05 simulated remediation | TESTED | `test_approval_is_recorded_and_outcome_simulated`, `test_simulator_has_no_write_path` |
 | X-CSI-01, 04..08 | TESTED | `tests/community/` (web form, extraction, clustering, orchestrator entry, trust labels, separation from official evidence) |

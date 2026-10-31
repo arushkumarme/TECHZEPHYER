@@ -253,3 +253,9 @@ Newest entry last. Each entry records actual commands and results. See `IMPLEMEN
 - New codes: SENDER_NOT_AUTHORIZED, RECIPIENT_NOT_ALLOWED, MESSAGE_OUT_OF_SEQUENCE, REPLY_MISMATCH, DUPLICATE_MESSAGE, INCIDENT_CLOSED, CLARIFICATION_LIMIT_EXCEEDED, DIRECT_AGENT_MESSAGE_FORBIDDEN, EXTENSION_DISABLED; MESSAGE_ROUTING_INVALID deprecated.
 - Owner decision (Conflict 16, option a): community input needs the community_signals flag. Existing tests changed (setup only, listed before the change; no assertion changed): `tests/community/test_community.py` (3 tests: corroborated, reported_unverified, detected_without_matching_complaints), `tests/community/test_community_api_cli.py` (test_demo_file_end_to_end, test_cli_community), `tests/geo/test_geo.py` (`_incident` helper used by test_reported_and_detected_layers_are_separate, test_corroborated_layer). New test: `test_community_message_is_rejected_when_the_flag_is_off`.
 
+## Protocol upgrade P5 — message bus and append-only log (2026-11-01)
+
+- Log rows gain attempt_seq, received_at, snapshot/mode/provenance, status, verdict, violations_json, warnings_json, payload_json, protocol_seq; automatic migration of older databases (recorded in schema_migrations, append-only).
+- Store API additions: append, get_incident_messages, get_message, iter_trace, export_jsonl; no update/delete. Bus: every parse error and warning recorded (try_parse), read API get_message / messages_for, rebuild_state from the log.
+- Existing tests changed (method rename only, listed in the plan): `tests/core/test_bus_log.py`, `tests/orchestrator/test_persistence.py`, `tests/orchestrator/test_review.py` now call `_execute_raw_for_tests` (was the public `execute_unsafe_for_tests`).
+- Stale docs corrected: doc 02 C-BUS was `PLANNED`; doc 05 §8 said "no MCP" and `PLANNED`; doc 04 §7 said pause/resume was not promised.

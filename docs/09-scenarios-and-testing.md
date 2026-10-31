@@ -54,13 +54,13 @@ The expected outcome is *ground truth by construction* unless the generator prov
 | `T-AGT-CONN-*`, `T-AGT-*` | Each agent stand-alone against recorded task messages |
 | `T-AGT-BEHAV-*` | The 8-point agent checklist (doc 03 §1): scope respected; tool budget enforced; investigation path differs by scenario; independent finding identical with other agents absent; abstention; clarification bounded; message-only coordination; output adapts to uncertainty |
 | `T-ORCH-*`, `T-ORCH-COLLAB-*` | State transitions, timeouts, retries, clarification round cap, degraded runs, collaboration |
-| `T-PROTO-*` | Envelope validation; unknown fields ignored and logged; missing required fields rejected; version rules |
+| `T-PROTO-*` | Envelope validation; unknown fields ignored and logged; missing required fields rejected; version rules; payload semantic rules; authority matrix and conversation rules (`tests/core/test_messages.py`, `test_envelope_v11.py`, `test_payload_rules.py`, `test_guard.py`) |
 | `T-ING-*`, `T-ING-FIELDS-*` | Normalization, alias use, unit conversion, data-quality note, field coverage |
 | `T-ERR-*`, `T-ERR-MISSING-*` | Error catalog (§5); missing ≠ healthy |
 | `T-RPT-*` (`T-RPT-EVID`, `T-RPT-ACT`, `T-RPT-SCHEMA`) | Report content; official keys exact (doc 07 §8); evidence traceability |
 | `T-MODE-*` | Mode refusal of unknown values; simulation banner and provenance present; no live wording |
 | `T-SAFE-*`, `T-HITL-*` | No state-changing tool exists; actions simulated; approval recorded |
-| `T-LOG-*` | Message and state log completeness; replay |
+| `T-LOG-*` | Message and state log completeness; replay; every attempt logged with verdict and reasons; migration of old databases; no update/delete (`tests/core/test_bus_log.py`, `test_bus_v11.py`, `tests/orchestrator/test_persistence.py`) |
 | `T-UI-*`, `T-UI-LABEL-*` | Dashboard views and labels (after core) |
 | `T-REPRO-*` | Fresh checkout → documented run → expected output |
 | `T-LLM-OFF-01` | Diagnosis fields identical with LLM disabled vs a mock provider |
