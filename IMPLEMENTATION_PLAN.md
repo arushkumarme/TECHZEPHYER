@@ -70,7 +70,7 @@ These refine the design docs; each is mirrored into the relevant doc when its mi
 | M14 | FastAPI backend: incidents, runs, trace, reports, topology, approvals, scenarios | O-04, P-03 | T-API-* | VERIFIED |
 | M15 | Extension A — community signals: intake, pseudonymize, screen, extract, gazetteer, cluster, candidate → orchestrator, trust labels | X-CSI-01..08 | T-CSI-*, T-ISO-* | VERIFIED |
 | M16 | Extension B — geo backend: campus layers with provenance, blast radius isolated/degraded/unknown, map API | X-GEO-01..05 | T-GEO-* | VERIFIED |
-| M17 | React + Leaflet dashboard: incidents, trace, report, approvals, complaint form, map layers, banner | O-04, X-GEO-*, X-CSI-08 | T-UI-*, Playwright E2E | NOT_STARTED |
+| M17 | React + Leaflet dashboard: incidents, trace, report, approvals, complaint form, map layers, banner | O-04, X-GEO-*, X-CSI-08 | T-UI-*, Playwright E2E | VERIFIED |
 | M18 | Release verification: clean install, all suites, demo reproducibility, docs + traceability final | §11 of brief | T-REPRO-01, full checklist | NOT_STARTED |
 
 Dependency order: M0 → M1 → M2 → M3 → M4 → M5 → M6 → M7 → M8 → M9 → (M10, M11, M12, M13 in that order) → M14 → M15 → M16 → M17 → M18.

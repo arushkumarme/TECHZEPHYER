@@ -46,6 +46,23 @@ uv run netcoop-mcp                     # MCP server over stdio (doc 16)
 
 Endpoints (all under `/api`): `GET health`, `GET scenarios`, `GET scenarios/{id}`, `POST scenarios/{id}/run` (`{"fault_injection": {...}, "pause_after": STATE}`), `GET incidents`, `POST incidents` (raw bundle), `GET incidents/{id}`, `GET incidents/{id}/report[?strict=true]`, `GET incidents/{id}/report.md`, `GET incidents/{id}/trace`, `GET incidents/{id}/messages/{message_id}`, `POST incidents/{id}/resume`, `GET incidents/{id}/review`, `POST incidents/{id}/review/{index}` (`{"decision": "approve|reject", "reviewer": "...", "note": "..."}`), `GET topology/{id}`, `GET field-dictionary`. CORS allows the Vite dev server (`localhost:5173`). No endpoint can change a network device (test `test_no_device_changing_endpoint`).
 
+## 3b. Dashboard (React + Vite + Leaflet, separate app — CD-3)
+
+```bash
+npm --prefix dashboard install          # Node 22 tested
+npm --prefix dashboard run build        # type-check (TypeScript 7) + production build -> dashboard/dist
+npm --prefix dashboard test             # Vitest unit tests
+
+# Development: two processes; Vite proxies /api to the backend
+NETCOOP_ENABLE=community_signals,geospatial uv run fastapi dev      # backend :8000
+npm --prefix dashboard run dev                                       # UI :5173
+
+# Demo / E2E: one process serving the built UI
+NETCOOP_ENABLE=community_signals,geospatial NETCOOP_DASHBOARD_DIST=dashboard/dist uv run fastapi run
+```
+
+`NETCOOP_ENABLE` switches optional features on without editing `config/netcoop.toml` (unknown names are refused). Fonts are bundled (no internet needed). Browser tests: `uv run playwright install chromium` once, then `uv run pytest -m ui` (excluded from the default run).
+
 ## 4. Configuration (`config/`)
 
 | File | Content |

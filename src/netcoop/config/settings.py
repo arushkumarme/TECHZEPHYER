@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import tomllib
 from pathlib import Path
 from typing import Literal
@@ -56,5 +57,16 @@ class Settings(BaseModel):
 
 
 def load_settings(path: Path = DEFAULT_SETTINGS_PATH) -> Settings:
+    """Load ``config/netcoop.toml``. ``NETCOOP_ENABLE`` (comma-separated feature names,
+    e.g. ``community_signals,geospatial``) switches optional features on for a demo
+    without editing the file. Unknown names are refused, never ignored."""
     with path.open("rb") as fh:
-        return Settings.model_validate(tomllib.load(fh))
+        data = tomllib.load(fh)
+    enable = [f.strip() for f in os.environ.get("NETCOOP_ENABLE", "").split(",") if f.strip()]
+    if enable:
+        known = set(Features.model_fields)
+        unknown = sorted(set(enable) - known)
+        if unknown:
+            raise ValueError(f"NETCOOP_ENABLE: unknown features {unknown}; known: {sorted(known)}")
+        data.setdefault("features", {}).update({f: True for f in enable})
+    return Settings.model_validate(data)

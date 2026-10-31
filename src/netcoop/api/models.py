@@ -16,6 +16,7 @@ class Health(BaseModel):
     mode: Literal["simulation"] = "simulation"
     banner: str
     version: str
+    features: dict[str, bool] = Field(default_factory=dict)
 
 
 class ScenarioInfo(BaseModel):

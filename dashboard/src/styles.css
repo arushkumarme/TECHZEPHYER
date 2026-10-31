@@ -1,0 +1,163 @@
+/* NetCoop AI dashboard. Tokens come from network-cabling vernacular: each colour has a
+   job (link blue = structure, signal red = detected fault, report amber = user reports,
+   always dashed; violet = corroborated; green = healthy). Never colour alone: every
+   state also has a stroke pattern or shape. */
+:root {
+  --ground: #eef1f3;
+  --surface: #ffffff;
+  --ink: #1c2833;
+  --ink-soft: #4a5866;
+  --rule: #c9d1d8;
+  --link-blue: #1f5fa8;
+  --signal-red: #b42318;
+  --report-amber: #b7791f;
+  --violet: #6941c6;
+  --healthy: #2f7d4f;
+  --focus: #1f5fa8;
+  --sans: "Atkinson Hyperlegible", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, monospace;
+  --step--1: 0.8125rem;
+  --step-0: 1rem;
+  --step-1: 1.25rem;
+  --step-2: 1.625rem;
+  --step-3: 2.125rem;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  font-family: var(--sans);
+  font-size: var(--step-0);
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--ground);
+}
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+code, .id { font-family: var(--mono); font-size: 0.92em; }
+
+/* Persistent honesty banner: always visible, never dismissible. */
+.banner {
+  position: sticky; top: 0; z-index: 1000;
+  background: repeating-linear-gradient(-45deg, #fff4dc 0 12px, #fbe9c2 12px 24px);
+  border-bottom: 2px solid var(--report-amber);
+  padding: 0.45rem 1.25rem;
+  font-size: var(--step--1);
+}
+.banner strong { margin-right: 0.4rem; }
+
+.topbar {
+  display: flex; align-items: baseline; gap: 2rem;
+  padding: 0.9rem 1.25rem 0; background: var(--surface);
+  border-bottom: 1px solid var(--rule);
+}
+.brand { font-size: var(--step-1); font-weight: 700; letter-spacing: -0.01em; margin: 0; }
+.brand small { font-weight: 400; color: var(--ink-soft); font-size: var(--step--1); margin-left: 0.5rem; }
+.tabs { display: flex; gap: 0.25rem; }
+.tabs button {
+  font: inherit; background: none; border: none; cursor: pointer;
+  padding: 0.6rem 0.9rem; color: var(--ink-soft);
+  border-bottom: 3px solid transparent;
+}
+.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--link-blue); font-weight: 700; }
+
+.layout { display: grid; grid-template-columns: 19rem minmax(0, 1fr); min-height: calc(100vh - 7rem); }
+.rail { background: var(--surface); border-right: 1px solid var(--rule); padding: 1rem 1.25rem; }
+.main { padding: 1.5rem 2rem 4rem; max-width: 72rem; }
+
+h2 { font-size: var(--step-1); margin: 1.75rem 0 0.6rem; }
+h3 { font-size: var(--step-0); margin: 1.25rem 0 0.4rem; }
+.rail h2:first-child, .main h2:first-child { margin-top: 0; }
+.muted { color: var(--ink-soft); }
+.small { font-size: var(--step--1); }
+
+label { display: block; font-size: var(--step--1); color: var(--ink-soft); margin: 0.6rem 0 0.2rem; }
+select, input, textarea {
+  font: inherit; width: 100%; padding: 0.45rem 0.55rem;
+  border: 1px solid var(--rule); border-radius: 4px; background: var(--surface); color: var(--ink);
+}
+button.primary, button.secondary {
+  font: inherit; cursor: pointer; border-radius: 4px; padding: 0.5rem 0.9rem;
+  border: 1px solid var(--link-blue);
+}
+button.primary { background: var(--link-blue); color: #fff; }
+button.secondary { background: var(--surface); color: var(--link-blue); }
+button:disabled { opacity: 0.55; cursor: progress; }
+.row { display: flex; gap: 0.5rem; align-items: center; margin-top: 0.75rem; flex-wrap: wrap; }
+
+.incident-list { list-style: none; margin: 0.5rem 0 0; padding: 0; }
+.incident-list button {
+  width: 100%; text-align: left; font: inherit; cursor: pointer;
+  background: none; border: none; border-left: 4px solid transparent;
+  padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--rule);
+}
+.incident-list button[aria-current="true"] { background: #e6eef7; border-left-color: var(--link-blue); }
+
+/* Status: text + left stripe pattern, not colour alone. */
+.status { display: inline-block; font-size: var(--step--1); font-weight: 700; padding: 0.1rem 0.5rem; border-radius: 3px; border: 1px solid currentColor; }
+.status.diagnosed { color: var(--signal-red); }
+.status.insufficient_evidence { color: var(--report-amber); border-style: dashed; }
+.status.no_fault_detected { color: var(--healthy); }
+.status.failed { color: var(--ink-soft); border-style: dotted; }
+
+.cause { font-size: var(--step-3); line-height: 1.15; letter-spacing: -0.015em; margin: 0.6rem 0 0.4rem; max-width: 40ch; font-weight: 700; }
+.narrative { max-width: 70ch; color: var(--ink-soft); }
+
+.meter { display: grid; grid-template-columns: auto 14rem auto; gap: 0.75rem; align-items: center; margin: 0.75rem 0; }
+.meter-track { height: 0.6rem; background: #dfe5ea; border-radius: 2px; position: relative; }
+.meter-fill { position: absolute; inset: 0 auto 0 0; background: var(--ink); border-radius: 2px; }
+.meter-mark { position: absolute; top: -0.25rem; bottom: -0.25rem; width: 2px; background: var(--ink-soft); }
+
+.section { border-top: 1px solid var(--rule); margin-top: 1.5rem; padding-top: 0.25rem; }
+table { border-collapse: collapse; width: 100%; font-size: var(--step--1); }
+th, td { text-align: left; padding: 0.4rem 0.6rem 0.4rem 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-weight: 700; color: var(--ink-soft); }
+.list { margin: 0.3rem 0; padding-left: 1.2rem; max-width: 75ch; }
+.list li { margin: 0.2rem 0; }
+
+/* The memorable element: agent exchange swimlanes. */
+.swim { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 0.75rem; overflow-x: auto; }
+.swim svg { display: block; }
+.swim .lane-label { font-size: 12px; font-weight: 700; fill: var(--ink); }
+.swim .lane-line { stroke: var(--rule); stroke-width: 1; }
+.swim .state-band { fill: #f3f5f7; }
+.swim .state-text { font-size: 11px; fill: var(--ink-soft); }
+.swim .arrow { stroke: var(--link-blue); stroke-width: 1.6; fill: none; }
+.swim .arrow.reply { stroke-dasharray: 5 3; }
+.swim .arrow.error { stroke: var(--signal-red); stroke-width: 2.2; }
+.swim .arrow.clarify { stroke: var(--violet); }
+.swim .arrow-label { font-size: 11px; fill: var(--ink); }
+.swim .row-hit { fill: transparent; cursor: pointer; }
+.swim .row-hit:hover, .swim .row-hit:focus { fill: rgba(31, 95, 168, 0.07); outline: none; }
+.swim-detail { margin-top: 0.5rem; font-size: var(--step--1); max-width: 90ch; }
+
+.review-item { display: grid; grid-template-columns: 1fr auto; gap: 0.5rem 1rem; padding: 0.6rem 0; border-bottom: 1px solid var(--rule); }
+.outcome { grid-column: 1 / -1; font-size: var(--step--1); color: var(--ink-soft); border-left: 3px solid var(--violet); padding-left: 0.6rem; }
+
+.notice { border-left: 4px solid var(--report-amber); background: #fff8ea; padding: 0.6rem 0.8rem; margin: 0.75rem 0; max-width: 75ch; }
+.error-box { border-left: 4px solid var(--signal-red); background: #fdeceb; padding: 0.6rem 0.8rem; margin: 0.75rem 0; }
+
+.map-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 17rem; gap: 1rem; }
+.map { height: 34rem; border: 1px solid var(--rule); border-radius: 6px; background: #f7f9fa; }
+.legend { font-size: var(--step--1); }
+.legend li { list-style: none; display: flex; gap: 0.5rem; align-items: center; margin: 0.35rem 0; }
+.legend ul { padding: 0; margin: 0; }
+.swatch { width: 26px; height: 14px; flex: none; }
+
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+  .rail { border-right: none; border-bottom: 1px solid var(--rule); }
+  .main { padding: 1rem; }
+  .map-wrap { grid-template-columns: 1fr; }
+  .cause { font-size: var(--step-2); }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+.meter { margin-bottom: 1.4rem; }
+.meter-mark-label { position: absolute; top: 0.85rem; transform: translateX(-50%); font-size: 11px; color: var(--ink-soft); white-space: nowrap; }
+/* Permanent zone names on the schematic map (labels are placeholders, see layout note). */
+.leaflet-tooltip.zone-label {
+  background: transparent; border: none; box-shadow: none; padding: 0;
+  font-family: var(--sans); font-size: 12px; font-weight: 700; color: var(--ink);
+  text-align: center; white-space: normal; width: 7rem;
+}
+.leaflet-tooltip.zone-label::before { display: none; }

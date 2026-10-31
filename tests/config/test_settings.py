@@ -31,3 +31,15 @@ def test_alias_config_declares_team_authored_provenance() -> None:
     a = load_aliases()
     assert "team-authored" in a.provenance
     assert all(a.unit(al.unit) is not None for al in a.metric_aliases.values() if al.unit)
+
+
+def test_env_enables_features(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("NETCOOP_ENABLE", "community_signals, geospatial")
+    f = load_settings().features
+    assert (f.community_signals, f.geospatial, f.llm) == (True, True, False)
+
+
+def test_env_unknown_feature_refused(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("NETCOOP_ENABLE", "live_mode")
+    with pytest.raises(ValueError, match="unknown features"):
+        load_settings()

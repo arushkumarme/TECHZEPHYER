@@ -193,3 +193,14 @@ Newest entry last. Each entry records actual commands and results. See `IMPLEMEN
 - **Test-quality fix:** replaced a tautological zone assertion with a concrete expected-zone test.
 - **Gates:** G1–G7 ✔.
 - **Next:** M17 React + Leaflet dashboard.
+
+## M17 — React + Leaflet dashboard · 2026-10-31 · VERIFIED
+
+- **Objective:** official component 11 (interactive dashboard) and the Extension B map UI.
+- **Skills used:** frontend-design (token system from cabling vernacular; one bold element = agent exchange swimlane; checked against generic defaults), webapp-testing (Python Playwright, reconnaissance → selectors → assertions, screenshots for critique).
+- **Files:** `dashboard/` (api client, swimlane + layout lib, incident/map/community views, styles, Vitest), backend: `NETCOOP_ENABLE` feature override, `/api/health` features, optional `app.frontend()` serving of the built UI; `tests/ui/test_dashboard_e2e.py` (7, marker `ui`), `tests/config` (+2); docs 11 §12, 13 §3b, 01; screenshots.
+- **Executed:** `uv run pytest -q` → 311 passed (7 ui deselected); `uv run pytest -m ui` → 7 passed (real backend + Chromium); `npx vitest run` → 4 passed; `tsc -b` clean; ruff/format/mypy clean.
+- **Found via browser + screenshots and fixed:** ambiguous accessible names in my selectors; zero-height SVG lines never "visible" (assert attachment instead); narrative repeated the headline cause (now shown only when it adds something); unlabelled map zones and small map (permanent offset labels, fractional zoom); threshold tick only explained on hover (now labelled).
+- **Process note:** the swimlane layout tests were written with the code, not run red first.
+- **Gates:** G1–G7 ✔.
+- **Next:** M18 release verification.

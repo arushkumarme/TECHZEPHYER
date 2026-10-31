@@ -102,8 +102,12 @@ system = APIRouter(prefix="/api", tags=["system"])
 
 
 @system.get("/health")
-def health() -> Health:
-    return Health(banner=BANNER, version=netcoop.__version__)
+def health(backend: BackendDep) -> Health:
+    return Health(
+        banner=BANNER,
+        version=netcoop.__version__,
+        features=backend.settings.features.model_dump(),
+    )
 
 
 @system.get("/field-dictionary")
@@ -358,6 +362,11 @@ def create_app(*, db_path: Path | str | None = None, settings: Settings | None =
 
     for extension in EXTENSIONS:
         extension(app, app.state.backend)
+    # Optional: serve the separately built React dashboard (CD-3 keeps the codebases
+    # separate; this only saves running a second server for demos and E2E tests).
+    dist = os.environ.get("NETCOOP_DASHBOARD_DIST")
+    if dist and Path(dist).is_dir():
+        app.frontend("/", directory=dist)
     return app
 
 

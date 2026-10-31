@@ -166,10 +166,10 @@ Never counted toward the mandatory rows. Disabled → core must still pass (`T-I
 | O-01 MCP | TESTED | `tests/mcp/test_mcp.py` (server tools/resources, agents via MCP, stdio subprocess); doc 16 |
 | O-02 HITL | TESTED | `tests/orchestrator/test_review.py` (approve/reject, recorded, completes incident, CLI) |
 | O-03 persistent state / pause-resume | TESTED | `tests/orchestrator/test_persistence.py` (pause/resume after restart, crash recovery, CLI) |
-| O-04 dashboard | PARTIAL — backend API TESTED (`tests/api/test_api.py`); React UI is M17 | |
+| O-04 dashboard | TESTED | `tests/api/test_api.py`, `tests/ui/test_dashboard_e2e.py` (Chromium), `dashboard/src/lib/lanes.test.ts`; screenshots in `docs/results/screenshots/` |
 | O-05 simulated remediation | TESTED | `test_approval_is_recorded_and_outcome_simulated`, `test_simulator_has_no_write_path` |
 | X-CSI-01, 04..08 | TESTED | `tests/community/` (web form, extraction, clustering, orchestrator entry, trust labels, separation from official evidence) |
 | X-CSI-02 Telegram | NOT_BUILT (stretch) — channel value reserved | |
 | X-CSI-03 WhatsApp | FUTURE (not built) | |
 | X-GEO-02..05 (backend) | TESTED | `tests/geo/test_geo.py` |
-| X-GEO-01 interactive map (UI) | NOT_STARTED (M17) | |
+| X-GEO-01 interactive map (UI) | TESTED | `test_map_layers` (browser) |
