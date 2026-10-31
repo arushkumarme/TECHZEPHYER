@@ -37,7 +37,8 @@ class FixedClock:
 class IdFactory:
     """Sequential ids per prefix: ``INC-0001``, ``MSG-000001``, ``OBS-0001``..."""
 
-    def __init__(self) -> None:
+    def __init__(self, namespace: str | None = None) -> None:
+        self.namespace = namespace
         self._counters: defaultdict[str, int] = defaultdict(int)
         self._lock = threading.Lock()
 
@@ -50,4 +51,5 @@ class IdFactory:
         return self.next("INC")
 
     def message(self) -> str:
-        return self.next("MSG", width=6)
+        msg = self.next("MSG", width=6)
+        return f"{self.namespace}-{msg}" if self.namespace else msg

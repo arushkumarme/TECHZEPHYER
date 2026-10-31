@@ -339,8 +339,12 @@ def build_failure_report(
     provenance: str,
     data_quality: dict[str, Any] | None = None,
     generated_at: datetime | None = None,
+    findings: dict[str, Finding] | None = None,
 ) -> dict[str, Any]:
-    """Schema-valid report for rejected input or an internal failure (doc 07 §6)."""
+    """Schema-valid report for rejected input or an internal failure (doc 07 §6).
+
+    Specialist findings gathered before an internal failure are still summarised in
+    ``agent_contributions`` (doc 04 §5)."""
     reason = errors[0] if errors else "unknown error"
     return {
         "incident_id": incident_id,
@@ -363,6 +367,14 @@ def build_failure_report(
             "confidence_category": "insufficient",
             "errors": errors,
             "data_quality": data_quality or {},
+            "agent_contributions": {
+                a: {
+                    "status": "ok",
+                    "observations": len(f.observations),
+                    "tool_calls": len(f.tool_calls),
+                }
+                for a, f in sorted((findings or {}).items())
+            },
             "recommendation_mode": "fix_input",
             "recommendation_status": [],
             "community_signals": [],

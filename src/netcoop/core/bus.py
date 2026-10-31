@@ -68,9 +68,10 @@ class MessageBus:
         incident_id: str | None,
         in_reply_to: str | None = None,
         status: MessageStatus = "ok",
+        message_id: str | None = None,
     ) -> Envelope:
         return make_message(
-            message_id=self.ids.message(),
+            message_id=message_id or self.ids.message(),
             sender=sender,
             recipient=recipient,
             message_type=message_type,
@@ -91,6 +92,8 @@ class MessageBus:
     ) -> Envelope:
         """Build the reply envelope for ``request`` (sender/recipient swapped)."""
         env = request.envelope
+        # Reply ids derive from the request id, so replies produced concurrently in
+        # worker threads still get deterministic ids (doc 04 §4 replay).
         return self.build(
             sender=env.recipient,
             recipient=env.sender,
@@ -99,6 +102,7 @@ class MessageBus:
             incident_id=env.incident_id,
             in_reply_to=env.message_id,
             status=status,
+            message_id=f"{env.message_id}.R",
         )
 
     # ------------------------------------------------------------------ transport
@@ -150,11 +154,31 @@ class MessageBus:
         in_reply_to: str | None = None,
     ) -> ParsedMessage:
         """Send a request and return the validated reply from the recipient's handler."""
+        sent = self.send_request(
+            sender=sender,
+            recipient=recipient,
+            message_type=message_type,
+            payload=payload,
+            incident_id=incident_id,
+            in_reply_to=in_reply_to,
+        )
+        return self.deliver(sent)
+
+    def send_request(
+        self,
+        *,
+        sender: AgentId,
+        recipient: AgentId,
+        message_type: MessageType,
+        payload: Any,
+        incident_id: str | None,
+        in_reply_to: str | None = None,
+    ) -> ParsedMessage:
+        """Build, validate and log a request without delivering it (deterministic ids)."""
         _check_route(sender, recipient)
-        handler = self._handlers.get(recipient)
-        if handler is None:
+        if recipient not in self._handlers:
             raise BusRoutingError(f"no handler registered for {recipient}")
-        sent = self.transmit(
+        return self.transmit(
             self.build(
                 sender=sender,
                 recipient=recipient,
@@ -164,6 +188,10 @@ class MessageBus:
                 in_reply_to=in_reply_to,
             )
         )
+
+    def deliver(self, sent: ParsedMessage) -> ParsedMessage:
+        """Hand a logged request to its recipient; validate and log the reply."""
+        handler = self._handlers[sent.envelope.recipient]
         return self.transmit(handler(sent), expect_reply_to=sent)
 
     def notify(

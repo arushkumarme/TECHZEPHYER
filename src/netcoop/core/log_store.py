@@ -42,11 +42,25 @@ CREATE TABLE IF NOT EXISTS transitions (
     detail      TEXT NOT NULL DEFAULT '{}'
 );
 CREATE INDEX IF NOT EXISTS ix_transitions_incident ON transitions(incident_id, seq);
+CREATE TABLE IF NOT EXISTS incidents (
+    seq         INTEGER PRIMARY KEY AUTOINCREMENT,
+    incident_id TEXT NOT NULL UNIQUE,
+    created_at  TEXT NOT NULL,
+    meta        TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS reports (
+    seq         INTEGER PRIMARY KEY AUTOINCREMENT,
+    incident_id TEXT NOT NULL,
+    created_at  TEXT NOT NULL,
+    report_json TEXT NOT NULL,
+    markdown    TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ix_reports_incident ON reports(incident_id, seq);
 """
 _APPEND_ONLY = [
     f"CREATE TRIGGER IF NOT EXISTS {table}_no_{op.lower()} BEFORE {op} ON {table} "
     f"BEGIN SELECT RAISE(ABORT, '{table} is append-only'); END;"
-    for table in ("messages", "transitions")
+    for table in ("messages", "transitions", "incidents", "reports")
     for op in ("UPDATE", "DELETE")
 ]
 
@@ -212,6 +226,55 @@ class LogStore:
                 "SELECT incident_id FROM transitions GROUP BY incident_id ORDER BY MIN(seq)"
             ).fetchall()
         return [r[0] for r in rows]
+
+    def register_incident(self, meta: dict[str, Any], *, at: datetime) -> str:
+        """Allocate the next sequential incident id (``INC-0001``...) and record it."""
+        with self._lock:
+            (count,) = self._conn.execute("SELECT COUNT(*) FROM incidents").fetchone()
+            incident_id = f"INC-{count + 1:04d}"
+            self._conn.execute(
+                "INSERT INTO incidents (incident_id, created_at, meta) VALUES (?,?,?)",
+                (incident_id, at.isoformat(), json.dumps(meta, sort_keys=True, default=str)),
+            )
+            return incident_id
+
+    def incident_meta(self, incident_id: str) -> dict[str, Any] | None:
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT meta, created_at FROM incidents WHERE incident_id=?", (incident_id,)
+            ).fetchone()
+        if row is None:
+            return None
+        meta: dict[str, Any] = json.loads(row[0])
+        meta["created_at"] = row[1]
+        return meta
+
+    def list_incidents(self) -> list[str]:
+        with self._lock:
+            rows = self._conn.execute("SELECT incident_id FROM incidents ORDER BY seq").fetchall()
+        return [r[0] for r in rows]
+
+    def append_report(
+        self, incident_id: str, report: dict[str, Any], markdown: str, *, at: datetime
+    ) -> None:
+        with self._lock:
+            self._conn.execute(
+                "INSERT INTO reports (incident_id, created_at, report_json, markdown)"
+                " VALUES (?,?,?,?)",
+                (incident_id, at.isoformat(), json.dumps(report), markdown),
+            )
+
+    def latest_report(self, incident_id: str) -> tuple[dict[str, Any], str] | None:
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT report_json, markdown FROM reports WHERE incident_id=?"
+                " ORDER BY seq DESC LIMIT 1",
+                (incident_id,),
+            ).fetchone()
+        if row is None:
+            return None
+        report: dict[str, Any] = json.loads(row[0])
+        return report, row[1]
 
     def execute_unsafe_for_tests(self, sql: str) -> None:
         """Run raw SQL (tests use it to prove the append-only triggers fire)."""

@@ -14,3 +14,15 @@ llm = false                 # LLM gateway (doc 02 C-LLM); null provider when fal
 stale_after_s = 900
 supported_bundle_majors = [1]
 adapter_bundle_majors = [0]   # team-authored flat layout, see ingestion/normalize.py
+
+[orchestration]
+# Doc 04 §4-§5. PROPOSAL values; deterministic replay does not depend on them.
+specialist_deadline_s = 10.0
+agent_retries = 1                 # retry a failed/late agent once, then mark it missing
+max_clarification_rounds = 2      # doc 03 §3 initial default
+parallel_specialists = true
+
+[orchestration.tool_budgets]
+performance_agent = 30
+infrastructure_agent = 30
+connectivity_agent = 40

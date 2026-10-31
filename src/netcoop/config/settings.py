@@ -28,12 +28,28 @@ class IngestionSettings(BaseModel):
     adapter_bundle_majors: list[int] = Field(default_factory=lambda: [0])
 
 
+class OrchestrationSettings(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    specialist_deadline_s: float = Field(default=10.0, gt=0)
+    agent_retries: int = Field(default=1, ge=0, le=3)
+    max_clarification_rounds: int = Field(default=2, ge=0, le=5)
+    parallel_specialists: bool = True
+    tool_budgets: dict[str, int] = Field(
+        default_factory=lambda: {
+            "performance_agent": 30,
+            "infrastructure_agent": 30,
+            "connectivity_agent": 40,
+        }
+    )
+
+
 class Settings(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
     #: Any value other than "simulation" fails validation: there is no live mode.
     mode: Literal["simulation"] = "simulation"
     features: Features = Field(default_factory=Features)
     ingestion: IngestionSettings = Field(default_factory=IngestionSettings)
+    orchestration: OrchestrationSettings = Field(default_factory=OrchestrationSettings)
 
 
 def load_settings(path: Path = DEFAULT_SETTINGS_PATH) -> Settings:

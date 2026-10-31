@@ -76,3 +76,15 @@ Authority: A-CORR applies the rules; the orchestrator only ensures every conflic
 
 - `community_candidate` messages enter at `RECEIVED` (doc 10). They are stored with the incident and passed to A-CORR as *unverified* evidence.
 - If the extension is disabled the hook is never invoked (`T-ISO-01`).
+
+## 9. Implementation (M8, 2026-10-31) — `IMPLEMENTED`, `TESTED`
+
+Code: `src/netcoop/orchestrator/{states,workflow,faults}.py`; settings `[orchestration]` in `config/netcoop.toml`; tests `tests/orchestrator/test_workflow.py`.
+
+- **Transition table** (`states.ALLOWED`) is enforced; an illegal move raises. `COLLECTING → COLLECTING` is used only to log an agent failure/retry event.
+- **Phase 1:** tasks to the three specialists are built in fixed order in the orchestrator thread; replies run in a thread pool (`parallel_specialists = true`) with a per-agent deadline (`specialist_deadline_s`). Timeout, `agent_error`, invalid message or exception → `agent_error` logged (codes `AGENT_TIMEOUT` / `AGENT_FAILED` / `MESSAGE_INVALID`), retried `agent_retries` times (default 1), then the agent is **missing**.
+- **Determinism:** reply ids derive from request ids (`<request>.R`); message ids are namespaced per incident (`INC-0001-MSG-000001`); incident ids are sequential per log database. Test `test_sequential_and_parallel_runs_are_identical` shows parallel and sequential runs log identical message ids, states and reports.
+- **Correlation** is retried once, else `FAILED` with a failure report that still lists specialist contributions. **Reporting** is retried once, else the deterministic fallback builder is used (transition trigger `fallback_report`).
+- **Deviation from §5 (documented):** when all specialists are missing the orchestrator still runs the correlation agent (with no findings) instead of skipping to `DECIDED`; it deterministically yields `insufficient_evidence` with three `AGENT_MISSING` limitations, so the report explains itself.
+- **Persistence:** `incidents` and `reports` tables (append-only) join `messages` and `transitions` in the SQLite log (groundwork for M10 pause/resume).
+- **Fault injection** (`timeout`, `error`, `invalid`) exists only for scenario S-10 and tests; never active unless requested.

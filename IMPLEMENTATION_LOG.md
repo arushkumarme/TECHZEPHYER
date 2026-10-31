@@ -92,3 +92,14 @@ Newest entry last. Each entry records actual commands and results. See `IMPLEMEN
 - **Observed outcomes on generator profiles (pipeline level):** `normal` → no_fault_detected; `latency_spike` → diagnosed link congestion (conf 0.66, medium); `hardware_failure` → diagnosed device/hardware failure (conf 0.95, margin 0.114 over overload/interface fault).
 - **Gates:** G1–G7 ✔.
 - **Next:** M8 orchestrator state machine.
+
+## M8 — Orchestrator state machine · 2026-10-31 · VERIFIED
+
+- **Objective:** deterministic incident workflow with parallel specialists, deadlines, retries, bounded clarification loop, degraded operation, failure reports.
+- **Requirements:** R-10, M-01, M-03 (T-ORCH-*, T-ORCH-COLLAB-01, T-REPRO-02).
+- **Files:** `src/netcoop/orchestrator/{states,workflow,faults}.py`; bus: `send_request`/`deliver`, deterministic reply ids; `IdFactory(namespace)`; `LogStore` incidents/reports tables; settings `[orchestration]`; doc 04 §9.
+- **Tests added:** 14 (transition table, full run + collaboration, normal READY run, rejected input, missing topology, specialist timeout/error/invalid with retry, all specialists failing, correlation failure, reporting fallback, parallel = sequential determinism, incident id sequence and global message-id uniqueness, CLARIFYING bounded).
+- **Executed:** red (collection error) → `uv run pytest -q` → 180 passed; ruff, format, mypy strict clean (43 files).
+- **Failure met:** my test expected `READY` for a hardware-failure bundle; ingestion correctly reports `READY_WITH_WARNINGS` because the generator's hardware profile omits `jitter_ms` (METRIC_MISSING). Test corrected to assert that warning; a separate normal-run test asserts `READY`.
+- **Gates:** G1–G7 ✔ (G6: full real stack — ingestion, tools, five agents, bus, SQLite).
+- **Next:** M9 scenario packages, CLI, end-to-end + reproducibility.
