@@ -1,0 +1,22 @@
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+.coverage
+htmlcov/
+# runtime state and outputs
+var/
+*.sqlite3
+*.db
+# secrets
+.env
+.env.*
+!.env.example
+# frontend
+node_modules/
+dashboard/dist/
