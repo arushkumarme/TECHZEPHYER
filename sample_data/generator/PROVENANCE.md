@@ -5,13 +5,13 @@
 | Linked from | `SRC-1 p4 §5` ("Sample- Input-generator-code-COLAB") |
 | Colab URL (from the PDF's link annotation) | `https://colab.research.google.com/drive/1xFOtO114qWICAxGisK9K6oOHoOxwvGi1` |
 | Retrieved | 2026-10-31, via the public Drive export URL `https://drive.google.com/uc?export=download&id=1xFOtO114qWICAxGisK9K6oOHoOxwvGi1` (no sign-in needed) |
-| File | `organizer_generator.ipynb` — stored **unchanged** |
+| File | `organizer_generator.ipynb` — **not committed** (no stated licence); fetched on demand into this folder by `scripts/fetch_generator.py` / `ensure_notebook()` and kept only if the hash matches |
 | SHA-256 | `f245012f96a878a10653d14df95bdb45cbd6c59f42c8fe61d33efebf70aea460` |
-| Licence | Not stated by the organizers |
+| Licence | **Not stated by the organizers** — therefore not redistributed in this repository (owner decision 2026-10-31) |
 
 ## How it is used
 
-`src/netcoop/scenarios/generator.py` extracts the single code cell, checks the hash, and runs the organizer's `generate_telemetry(fault_type)` with a seeded `random.Random` and a fixed clock in place of the module globals `random` and `datetime`. The organizer's code is not edited. The runner refuses unknown fault types (the original code would silently fall back to `normal`).
+First use (tests, scenario builder, CLI) downloads the notebook from the public link above and verifies its SHA-256; an altered file is refused and never written. `src/netcoop/scenarios/generator.py` then extracts the single code cell, checks the hash, and runs the organizer's `generate_telemetry(fault_type)` with a seeded `random.Random` and a fixed clock in place of the module globals `random` and `datetime`. The organizer's code is not edited. The runner refuses unknown fault types (the original code would silently fall back to `normal`).
 
 ## What the generator does *not* provide (OBSERVED by reading the code)
 

@@ -15,8 +15,11 @@ No internet connection is needed to run the core once dependencies are installed
 ## 2. Install
 
 ```bash
-uv sync            # creates .venv and installs the locked dependencies (incl. dev tools)
+uv sync                                   # creates .venv and installs the locked dependencies
+uv run python scripts/fetch_generator.py  # one-time: download + verify the organizers' generator
 ```
+
+The organizers' generator notebook has no stated licence, so it is **not** in the repository. It is downloaded from the public link in the hackathon PDF and kept only if its SHA-256 matches the inspected copy (tests also fetch it automatically). The committed scenario inputs in `sample_data/scenarios/` work without it; only regeneration and generator tests need it.
 
 ## 3. Run the core (CLI)
 
@@ -85,6 +88,10 @@ uv run python scripts/build_scenarios.py   # regenerate scenario packages (byte-
 uv run python -m netcoop.core.schema_export   # regenerate protocol JSON Schemas
 ```
 
+## 5a. Continuous integration
+
+`.github/workflows/ci.yml` (GitHub Actions, `ubuntu-latest`, no secrets): job **backend** — `uv sync --locked`, fetch + verify generator (cached by hash), `ruff check`, `ruff format --check`, `mypy`, `pytest -q`, `netcoop scenarios run-all` (results uploaded as an artifact); job **dashboard** — Node 22 `npm ci`, `npm run build` (type-check), Vitest, Playwright Chromium, `pytest -m ui` (screenshots uploaded). Triggers: pushes to `develop`/`main`, pull requests, manual.
+
 ## 6. Outputs
 
 - JSON report (extended, or `--strict` official-only) and Markdown report per incident; also stored in the SQLite `reports` table.
@@ -99,5 +106,6 @@ uv run python -m netcoop.core.schema_export   # regenerate protocol JSON Schemas
 
 ## 8. Troubleshooting (from problems actually met)
 
-- **`ruff` flags the vendored notebook** — it is excluded on purpose (`extend-exclude`); the organizer's code is never edited.
+- **`ruff` flags the generator notebook** — it is excluded on purpose (`extend-exclude`); the organizer's code is never edited.
+- **`GeneratorUnavailable`** — no internet on first run: run `scripts/fetch_generator.py` once with access, or copy the notebook into `sample_data/generator/`.
 - **Python 3.15 on the machine** — uv uses the pinned 3.12; do not run with a system Python outside the venv.

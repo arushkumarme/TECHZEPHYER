@@ -211,3 +211,11 @@ Newest entry last. Each entry records actual commands and results. See `IMPLEMEN
 - **Executed in the clean clone:** `uv sync`; `npm --prefix dashboard ci`; config load; `ruff check`, `ruff format --check`, `mypy` (66 files) clean; `uv run pytest -q` → 311 passed; `npm run build` (tsc + vite) ok; Vitest 4 passed; `uv run pytest -m ui` → 7 passed (Chromium); `netcoop scenarios run-all` → 13/13 PASS, table identical to the committed results.
 - **Not done (recorded, not claimed):** demo video (DLV-4), GitHub push (needs owner authorization), real LLM provider (KI-05), Telegram channel (KI-06).
 - README status, doc 14 deliverables and demo commands updated.
+
+## Release prep for GitHub · 2026-10-31
+
+- **Generator licence:** the organizers' notebook states no licence → owner chose *fetch, don't vendor*. `ensure_notebook()` downloads it from the PDF's public link and keeps it only if the SHA-256 matches; `scripts/fetch_generator.py`; session fixture in `tests/conftest.py`; notebook git-ignored. Live download verified byte-identical to the inspected copy. +3 tests (fetch, tampered download refused, offline error).
+- **History:** owner approved filtering only that file out of local history before the first push (remote empty, no force push); original history kept locally as `backup/pre-licence-filter` (not pushed).
+- **CI:** `.github/workflows/ci.yml` — backend (uv locked sync, generator fetch+cache, ruff, mypy, pytest, 13-scenario suite) and dashboard (npm ci, build, Vitest, Playwright Chromium E2E).
+- **Secrets scan:** tracked files and full history — no keys, tokens, credentials or `.env`; only a deliberately fake email/phone in a PII-stripping test.
+- **Executed:** ruff/format/mypy clean; `pytest -q` → 314 passed; `pytest -m ui` → 7 passed; Vitest 4 passed; scenarios 13/13, identical to committed results.

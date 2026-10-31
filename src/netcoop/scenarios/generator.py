@@ -1,9 +1,11 @@
 """Seeded runner for the organizer's synthetic telemetry generator.
 
-The organizer's Colab notebook (``SRC-1 p4 §5``) is vendored *unchanged* under
-``sample_data/generator/``. This module extracts the notebook's code cell, checks the
-file's SHA-256 so a modified copy can never be run by mistake, and executes the
-organizer's ``generate_telemetry`` with:
+The organizer's Colab notebook (``SRC-1 p4 §5``) carries no licence, so it is **not
+redistributed** with this repository. :func:`ensure_notebook` downloads it on first use
+from the organizers' public link into ``sample_data/generator/`` (git-ignored) and keeps
+it only if its SHA-256 matches the copy inspected on 2026-10-31. This module extracts the
+notebook's code cell, checks the hash so a modified copy can never be run by mistake, and
+executes the organizer's ``generate_telemetry`` with:
 
 * a seeded ``random.Random`` instead of the global ``random`` module, and
 * a fixed clock instead of ``datetime.utcnow()``,
@@ -26,6 +28,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+from urllib.request import urlopen
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_NOTEBOOK = REPO_ROOT / "sample_data" / "generator" / "organizer_generator.ipynb"
@@ -35,8 +38,44 @@ EXPECTED_SHA256 = "f245012f96a878a10653d14df95bdb45cbd6c59f42c8fe61d33efebf70aea
 FAULT_TYPES: tuple[str, ...] = ("normal", "latency_spike", "hardware_failure")
 
 
+#: Public export of the Colab notebook linked from the hackathon PDF (no sign-in needed).
+DOWNLOAD_URL = "https://drive.google.com/uc?export=download&id=1xFOtO114qWICAxGisK9K6oOHoOxwvGi1"
+DOWNLOAD_TIMEOUT_S = 30.0
+
+
 class GeneratorIntegrityError(RuntimeError):
-    """The notebook on disk is not the vendored organizer generator."""
+    """The notebook is not the organizer generator that was inspected (hash mismatch)."""
+
+
+class GeneratorUnavailable(RuntimeError):
+    """The notebook is not present locally and could not be downloaded."""
+
+
+def ensure_notebook(path: Path = DEFAULT_NOTEBOOK) -> Path:
+    """Return ``path``, downloading and verifying the organizer notebook if it is absent.
+
+    The download is written only after its SHA-256 matches :data:`EXPECTED_SHA256`, so an
+    altered or different notebook is never stored or executed."""
+    if path.is_file():
+        return path
+    try:
+        with urlopen(DOWNLOAD_URL, timeout=DOWNLOAD_TIMEOUT_S) as response:
+            data = response.read()
+    except OSError as exc:
+        raise GeneratorUnavailable(
+            f"organizer generator not found at {path} and the download failed ({exc}). "
+            "Run `uv run python scripts/fetch_generator.py` with internet access, or place "
+            "the notebook there manually."
+        ) from exc
+    digest = hashlib.sha256(data).hexdigest()
+    if digest != EXPECTED_SHA256:
+        raise GeneratorIntegrityError(
+            f"downloaded notebook has SHA-256 {digest}, expected {EXPECTED_SHA256}; "
+            "the organizers' file has changed - re-inspect it before use (doc 06)"
+        )
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(data)
+    return path
 
 
 def _fixed_clock(at: datetime) -> type:
@@ -78,12 +117,13 @@ class GeneratorHandle:
 
 
 def load_generator(path: Path = DEFAULT_NOTEBOOK) -> GeneratorHandle:
-    """Load the vendored notebook, verifying its hash first."""
-    raw = path.read_bytes()
+    """Load the organizer notebook (fetching it if absent), verifying its hash first."""
+    raw = (ensure_notebook(path) if path == DEFAULT_NOTEBOOK else path).read_bytes()
     digest = hashlib.sha256(raw).hexdigest()
     if digest != EXPECTED_SHA256:
         raise GeneratorIntegrityError(
-            f"{path} has SHA-256 {digest}, expected {EXPECTED_SHA256} (vendored organizer copy)"
+            f"{path} has SHA-256 {digest}, expected {EXPECTED_SHA256} "
+            "(the organizer copy inspected on 2026-10-31)"
         )
     notebook = json.loads(raw)
     cells = [

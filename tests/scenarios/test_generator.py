@@ -66,3 +66,54 @@ def test_unknown_fault_type_is_rejected() -> None:
     # the runner refuses instead so a typo can never produce a mislabelled scenario.
     with pytest.raises(ValueError, match="unknown fault_type"):
         load_generator().generate("dns_failure", seed=1, at=AT)
+
+
+# ------------------------------------------------------------------ fetch on demand
+# The organizers' notebook has no stated licence, so it is NOT redistributed in the
+# repository: it is downloaded from their public link and verified by SHA-256.
+
+
+def test_missing_notebook_is_fetched_and_verified(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import io
+
+    from netcoop.scenarios import generator as g
+
+    original = DEFAULT_NOTEBOOK.read_bytes()
+    urls: list[str] = []
+
+    def fake_urlopen(url: str, timeout: float) -> io.BytesIO:
+        urls.append(url)
+        return io.BytesIO(original)
+
+    monkeypatch.setattr(g, "urlopen", fake_urlopen)
+    target = tmp_path / "gen" / "organizer_generator.ipynb"
+    assert g.ensure_notebook(target) == target
+    assert target.read_bytes() == original
+    assert urls == [g.DOWNLOAD_URL]
+    g.ensure_notebook(target)  # already present: no second download
+    assert len(urls) == 1
+
+
+def test_tampered_download_is_refused(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import io
+
+    from netcoop.scenarios import generator as g
+
+    monkeypatch.setattr(g, "urlopen", lambda url, timeout: io.BytesIO(b'{"cells": []}'))
+    target = tmp_path / "organizer_generator.ipynb"
+    with pytest.raises(GeneratorIntegrityError, match="SHA-256"):
+        g.ensure_notebook(target)
+    assert not target.exists()  # nothing unverified is ever written
+
+
+def test_offline_gives_actionable_error(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from netcoop.scenarios import generator as g
+
+    def offline(url: str, timeout: float) -> None:
+        raise OSError("network unreachable")
+
+    monkeypatch.setattr(g, "urlopen", offline)
+    with pytest.raises(g.GeneratorUnavailable, match="fetch_generator"):
+        g.ensure_notebook(tmp_path / "organizer_generator.ipynb")

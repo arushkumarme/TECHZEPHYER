@@ -4,7 +4,7 @@
 
 > **Status (2026-10-31): all twelve official components and both extensions are implemented and verified on synthetic data** — 318 automated tests, 13/13 scenarios, clean-clone verification in [`docs/results/release-verification.md`](docs/results/release-verification.md). Not done: demo video, real LLM provider, Telegram channel (see the report's honest list).
 > Team size, roles and deadline are **TBD**.
-> The organizer's generator was inspected and vendored; field names are `OBSERVED` ([`docs/06`](docs/06-field-dictionary.md)).
+> The organizer's generator was inspected (fetched on demand and hash-verified, not redistributed); field names are `OBSERVED` ([`docs/06`](docs/06-field-dictionary.md)).
 
 ## What NetCoop AI is
 
@@ -71,6 +71,7 @@ Where sources disagree, the disagreement is recorded in [`docs/00`](docs/00-scop
 
 ```bash
 uv sync                                    # Python 3.12 + locked dependencies
+uv run python scripts/fetch_generator.py   # one-time: download + verify the organizers' generator
 uv run netcoop run --scenario S-02 --trace # diagnose the link-congestion scenario, show the agent trace
 uv run netcoop scenarios run-all           # all 13 scenarios with expected-outcome checks
 uv run pytest -q                           # full test suite
@@ -83,4 +84,8 @@ npm --prefix dashboard ci && npm --prefix dashboard run build
 NETCOOP_ENABLE=community_signals,geospatial NETCOOP_DASHBOARD_DIST=dashboard/dist uv run fastapi run   # http://127.0.0.1:8000
 ```
 
-Full instructions: [`docs/13-setup-and-operations.md`](docs/13-setup-and-operations.md). Latest suite results: [`docs/results/scenario-results.md`](docs/results/scenario-results.md).
+Full instructions: [`docs/13-setup-and-operations.md`](docs/13-setup-and-operations.md).
+
+Continuous integration: [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs lint, strict type checks, all tests, the 13-scenario suite, the dashboard build and unit tests, and the browser end-to-end tests on every push and pull request.
+
+**Third-party data generator.** The organizers' synthetic-telemetry notebook has no stated licence, so it is not included here; it is downloaded from the link in the hackathon PDF and verified by SHA-256 ([`sample_data/generator/PROVENANCE.md`](sample_data/generator/PROVENANCE.md)). The committed scenario inputs work without it. Latest suite results: [`docs/results/scenario-results.md`](docs/results/scenario-results.md).

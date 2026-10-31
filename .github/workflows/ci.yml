@@ -1,0 +1,96 @@
+# NetCoop AI continuous integration. Simulation mode only: no secrets, no network devices.
+name: CI
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # The organizers' generator notebook has no stated licence, so it is not in the repo.
+  # It is downloaded from their public link and verified by SHA-256 (see
+  # sample_data/generator/PROVENANCE.md); the cache avoids re-downloading on every run.
+  GENERATOR_PATH: sample_data/generator/organizer_generator.ipynb
+  GENERATOR_KEY: organizer-generator-f245012f96a878a10653d14df95bdb45cbd6c59f42c8fe61d33efebf70aea460
+
+jobs:
+  backend:
+    name: Backend - lint, types, tests, scenarios
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+      - name: Install (locked)
+        run: uv sync --locked
+      - name: Cache organizer generator
+        uses: actions/cache@v6
+        with:
+          path: ${{ env.GENERATOR_PATH }}
+          key: ${{ env.GENERATOR_KEY }}
+      - name: Fetch and verify organizer generator
+        run: uv run python scripts/fetch_generator.py
+      - name: Ruff
+        run: |
+          uv run ruff check .
+          uv run ruff format --check .
+      - name: Mypy (strict)
+        run: uv run mypy
+      - name: Tests (unit, contract, integration, end-to-end)
+        run: uv run pytest -q
+      - name: Scenario suite (13 scenarios, expected outcomes)
+        run: uv run netcoop --db "$RUNNER_TEMP/ci.sqlite3" scenarios run-all --report scenario-results.md
+      - name: Upload scenario results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: scenario-results
+          path: scenario-results.md
+
+  dashboard:
+    name: Dashboard - build, unit tests, browser E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: dashboard/package-lock.json
+      - name: Install dashboard dependencies
+        run: npm --prefix dashboard ci
+      - name: Type-check and build
+        run: npm --prefix dashboard run build
+      - name: Unit tests (Vitest)
+        run: npm --prefix dashboard test
+      - uses: astral-sh/setup-uv@v7
+      - name: Install backend (locked)
+        run: uv sync --locked
+      - name: Cache organizer generator
+        uses: actions/cache@v6
+        with:
+          path: ${{ env.GENERATOR_PATH }}
+          key: ${{ env.GENERATOR_KEY }}
+      - name: Fetch and verify organizer generator
+        run: uv run python scripts/fetch_generator.py
+      - name: Install Chromium for Playwright
+        run: uv run playwright install --with-deps chromium
+      - name: Browser end-to-end tests
+        env:
+          NETCOOP_SCREENSHOTS: ${{ runner.temp }}/screenshots
+        run: uv run pytest -m ui -q
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: dashboard-screenshots
+          path: ${{ runner.temp }}/screenshots

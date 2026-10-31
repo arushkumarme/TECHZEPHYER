@@ -1,9 +1,10 @@
 """Scenario packages S-01..S-12 (doc 09 §2-§3), built deterministically.
 
-Every input is built from the organizer generator with fixed seeds and a fixed clock;
-team-authored variants then *mutate* that output (doc 05 §6.4) and say so in their
-metadata. ``scripts/build_scenarios.py`` writes them to ``sample_data/scenarios/``; a test
-regenerates them and requires byte-identical files, so inputs are frozen AND reproducible.
+Every input is built from the organizer generator (fetched and hash-verified) with fixed
+seeds and a fixed clock; team-authored variants then *mutate* that output (doc 05 §6.4)
+and say so in their metadata. ``scripts/build_scenarios.py`` writes them to
+``sample_data/scenarios/``; a test regenerates them and requires byte-identical files, so
+inputs are frozen AND reproducible.
 
 Ground truth is "by construction" (doc 09 §3): the generator labels only its own
 ``fault_type`` argument; the expected outcomes below are our documented interpretation.

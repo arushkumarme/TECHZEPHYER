@@ -1,6 +1,6 @@
 # 06 — Field Dictionary
 
-> Version 0.2 · 2026-10-31 · **STATUS: OBSERVED** — filled from the organizer generator (`SRC-4`), vendored verbatim at [`sample_data/generator/`](../sample_data/generator/PROVENANCE.md).
+> Version 0.2 · 2026-10-31 · **STATUS: OBSERVED** — filled from the organizer generator (`SRC-4`), fetched on demand and hash-verified (not redistributed: no stated licence) — see [`sample_data/generator/PROVENANCE.md`](../sample_data/generator/PROVENANCE.md).
 > Machine-readable twin: [`config/telemetry_fields.toml`](../config/telemetry_fields.toml). Test `T-DOC-01` (`tests/config/test_fields.py`) checks that every entry cites a generator line containing the field verbatim, and that the dictionary and the generator's actual output contain exactly the same fields.
 > Citations `gen:L<n>` = line *n* of the notebook's single code cell.
 
@@ -67,4 +67,4 @@ Units are taken from the field-name suffixes (`_pct`, `_ms`), which the values a
 
 - Names are copied exactly from the generator; nothing is renamed. Aliases for incompatible variants live in `config/` with their own provenance (team-authored, doc 05 §6.4).
 - Protocol fields (envelope, observations, hypotheses) are not telemetry fields; they live in docs 05 and 07.
-- Any change to the vendored generator changes its hash and fails the test suite; this file must then be re-verified.
+- Any change to the organizers' generator changes its hash: the download is refused and the tests fail; this file must then be re-verified.
