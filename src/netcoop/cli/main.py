@@ -187,6 +187,61 @@ def cmd_decide(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_community(args: argparse.Namespace) -> int:
+    """Extension A from the command line (synthetic complaints only)."""
+    from datetime import UTC, datetime
+
+    from netcoop.community.pipeline import CommunityPipeline
+
+    store = LogStore(Path(args.db))
+    pipe = CommunityPipeline(store)
+    if args.action == "submit":
+        r = pipe.submit(
+            args.text, channel="web_form", reporter=args.reporter, received_at=datetime.now(UTC)
+        )
+        print(json.dumps(r.__dict__, default=list))
+        return 0 if r.accepted else 1
+    if args.action == "load":
+        data = json.loads(Path(args.text).read_text(encoding="utf-8"))
+        for c in data["complaints"]:
+            at = datetime.fromisoformat(c["received_at"].replace("Z", "+00:00"))
+            r = pipe.submit(
+                c["text"],
+                channel=c.get("channel", "web_form"),
+                reporter=c["reporter"],
+                received_at=at,
+            )
+            print(
+                f"{r.complaint_id}: accepted={r.accepted} duplicate={r.duplicate} "
+                f"zone={r.zone} {r.reason or ''}"
+            )
+        print(json.dumps(pipe.stats()))
+        return 0
+    if args.action == "candidates":
+        for c in pipe.candidates():
+            print(
+                f"{c.candidate_id} {c.zone} devices={c.entities} reporters="
+                f"{c.distinct_reporters} complaints={c.complaint_count} {c.trust_label}"
+            )
+        return 0
+    if args.action == "stats":
+        print(json.dumps(pipe.stats()))
+        return 0
+    if not args.scenario:
+        print("error: investigate needs --scenario", file=sys.stderr)
+        return 1
+    try:
+        result = pipe.investigate(
+            args.text,
+            Orchestrator(store, settings=load_settings()),
+            load_scenario(args.scenario).input_bytes,
+        )
+    except KeyError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    return _emit(args, store, result)
+
+
 def cmd_trace(args: argparse.Namespace) -> int:
     print(render_trace(LogStore(Path(args.db)), args.incident), end="")
     return 0
@@ -245,6 +300,18 @@ def build_parser() -> argparse.ArgumentParser:
 
     inc = sub.add_parser("incidents", help="list incidents with their current state")
     inc.set_defaults(func=cmd_incidents)
+
+    cm = sub.add_parser("community", help="Extension A: synthetic complaints")
+    cm.add_argument("action", choices=["submit", "load", "candidates", "stats", "investigate"])
+    cm.add_argument(
+        "text",
+        nargs="?",
+        default="",
+        help="complaint text (submit), JSON file (load) or candidate id (investigate)",
+    )
+    cm.add_argument("--reporter", default="cli-test-reporter")
+    cm.add_argument("--scenario", help="telemetry scenario to investigate against")
+    cm.set_defaults(func=cmd_community)
 
     rv = sub.add_parser("review", help="list an incident's recommendations and decisions")
     rv.add_argument("incident")

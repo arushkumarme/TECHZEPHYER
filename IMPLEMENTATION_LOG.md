@@ -173,3 +173,13 @@ Newest entry last. Each entry records actual commands and results. See `IMPLEMEN
 - **Process note:** a first attempt to stop the server used a broad process kill and was (correctly) blocked by the permission classifier; redone by running the server as a tracked background task and stopping only that task.
 - **Gates:** G1–G7 ✔.
 - **Next:** M15 Extension A — community signal intelligence.
+
+## M15 — Extension A: Community Signal Intelligence · 2026-10-31 · VERIFIED
+
+- **Objective:** doc 10 pipeline: web-form intake, pseudonymization, PII stripping, screening, extraction (rules + validated optional LLM), zone resolution, distinct-reporter clustering, candidate → orchestrator via `community_candidate`, trust labels.
+- **Files:** `src/netcoop/community/`, `src/netcoop/api/community.py`, `LogStore.add_tables/insert_row/rows`, orchestrator `_admit_community`, report `_community` trust labels, CLI `community`, `config/community.toml`, `sample_data/complaints/hostel_a_demo.json`, tests `tests/community/` (23), doc 10 §11, doc 01, KI-06/07.
+- **Executed:** red (collection) → `uv run pytest -q` → 299 passed; ruff, format, mypy strict clean (63 files).
+- **Failures met:** two shell heredoc quoting failures (no partial writes) → patches via scratch scripts; a local `import netcoop.api.community` shadowed the module-level `netcoop` name inside `create_app` → `importlib.import_module`; mypy implicit re-export.
+- **Not built (recorded):** Telegram stretch channel, WhatsApp (future).
+- **Gates:** G1–G7 ✔ (G6: real orchestrator, real bus message, API and CLI subprocess).
+- **Next:** M16 Extension B — geospatial backend.

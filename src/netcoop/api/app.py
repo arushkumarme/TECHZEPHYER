@@ -11,6 +11,7 @@ The database path comes from ``NETCOOP_DB`` (default ``var/netcoop.sqlite3``).
 
 from __future__ import annotations
 
+import importlib
 import json
 import os
 from collections.abc import Callable
@@ -351,6 +352,9 @@ def create_app(*, db_path: Path | str | None = None, settings: Settings | None =
     )
     for router in (system, scenarios, incidents):
         app.include_router(router)
+    # Feature-flagged extensions register themselves on import; each checks its own flag.
+    importlib.import_module("netcoop.api.community")
+
     for extension in EXTENSIONS:
         extension(app, app.state.backend)
     return app

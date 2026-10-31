@@ -1,0 +1,41 @@
+# Extension A - Community Signal Intelligence (doc 10). ALL CONTENT IS SYNTHETIC.
+# Zone names are placeholders matching the SIMULATED topology (sample_data/topology/
+# campus_v1.json); they are not claims about IIT Bhubaneswar naming (doc 12 §1).
+
+provenance = "TEAM-AUTHORED SYNTHETIC gazetteer and symptom lexicon (hackathon mode)"
+
+[clustering]
+window_minutes = 60          # D-10 default: complaints within an hour can join a candidate
+min_distinct_reporters = 2   # D-10 demo value: one person can never create an incident
+candidate_topology = "campus_v1"
+
+[screening]
+min_chars = 5
+max_chars = 500
+max_per_reporter_per_window = 5
+
+# Lower-case phrases -> zone. Longest match wins.
+[gazetteer]
+"hostel a" = "ZONE_HOSTEL_A"
+"hostel-a" = "ZONE_HOSTEL_A"
+"hostel b" = "ZONE_HOSTEL_B"
+"hostel-b" = "ZONE_HOSTEL_B"
+"library" = "ZONE_LIBRARY"
+"academic block" = "ZONE_ACADEMIC_BLOCK"
+"lecture hall" = "ZONE_LECTURE_HALLS"
+"lecture halls" = "ZONE_LECTURE_HALLS"
+"dept lab" = "ZONE_DEPT_LAB"
+"department lab" = "ZONE_DEPT_LAB"
+"admin" = "ZONE_ADMIN"
+"admin block" = "ZONE_ADMIN"
+
+# What people report (not telemetry causes): category -> trigger phrases.
+[symptoms]
+disconnects = ["disconnect", "disconnecting", "keeps dropping", "drops out", "cutting out", "keeps cutting"]
+slow = ["slow", "lag", "laggy", "buffering", "takes forever", "high ping"]
+no_connection = ["no internet", "can't connect", "cannot connect", "not working", "no wifi", "no wi-fi", "is down", "offline"]
+intermittent = ["on and off", "intermittent", "sometimes works", "comes and goes"]
+
+[severity]   # ordinal 1..3; default 2 when a symptom is present, 1 otherwise
+"3" = ["completely", "urgent", "exam", "can't work", "cannot work", "all day", "entire"]
+"1" = ["a bit", "slightly", "occasionally"]

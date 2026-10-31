@@ -39,6 +39,8 @@ def reporting_context(
     mode: str,
     missing_agents: list[str] | None = None,
     generated_at: str | None = None,
+    community: list[dict[str, Any]] | None = None,
+    community_errors: list[str] | None = None,
 ) -> dict[str, Any]:
     dq = bundle.data_quality
     return {
@@ -57,6 +59,8 @@ def reporting_context(
         "mode": mode,
         "missing_agents": missing_agents or [],
         "generated_at": generated_at,
+        "community": community or [],
+        "community_errors": community_errors or [],
     }
 
 
@@ -113,6 +117,8 @@ class ReportingAgent:
             mode=ctx.get("mode", "simulation"),
             missing_agents=ctx.get("missing_agents", []),
             generated_at=at,
+            community=ctx.get("community", []),
+            community_errors=ctx.get("community_errors", []),
         )
         problems = validate_report(
             report,

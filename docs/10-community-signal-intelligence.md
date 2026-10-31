@@ -84,3 +84,16 @@ Symptom categories and the severity scale (ordinal) are defined at implementatio
 - Zone names and the zone-to-device mapping are synthetic until real data is authorised (D-09).
 - English-language text first; mixed-language reports are not planned in the hackathon.
 - Complaint counts and thresholds mean little with synthetic submissions; they demonstrate the mechanism, not real prevalence.
+
+## 11. Implementation (M15, 2026-10-31) — `IMPLEMENTED`, `TESTED`, `SIMULATED` data
+
+Code: `src/netcoop/community/{extract,pipeline}.py`, API `src/netcoop/api/community.py` (registered only when `features.community_signals = true`), CLI `netcoop community submit|load|candidates|stats|investigate`, config `config/community.toml` (synthetic gazetteer, symptom lexicon, D-10 values), demo data `sample_data/complaints/hostel_a_demo.json` (synthetic). Tests: `tests/community/`.
+
+- **Channels:** web form (API `POST /api/community/complaints`) — built. Telegram (stretch) — **not built**; the API accepts `channel = telegram_test` so an adapter can be added without changing the pipeline. WhatsApp — `FUTURE`, not built.
+- **Privacy:** reporter ids → HMAC-SHA256 pseudonyms (`anon-…`; salt from `NETCOOP_PSEUDONYM_SALT`, a labelled simulation default otherwise); emails, phone numbers and "my name is …" phrases stripped before storage; API returns aggregates and pseudonymous data only.
+- **Screening:** length 5–500, minimum readable letters (spam), ≤5 reports per reporter per 60 min, same-reporter same-text duplicates merged. Rejected/limited/duplicate complaints are stored and counted, never clustered.
+- **Extraction:** rules (gazetteer longest match, closed symptom list `disconnects|slow|no_connection|intermittent`, ordinal severity 1–3). Optional LLM extraction must return JSON naming only gazetteer zones and listed symptoms, else rules are used. Instruction-like text is flagged `injection_suspected` and treated as data.
+- **Clustering:** zone + 60-min window; a candidate needs ≥2 **distinct** pseudonyms (D-10 demo values). Zone → devices through the SIMULATED topology (`ZONE_HOSTEL_A → SW_CAMPUS_4`).
+- **Investigation:** `investigate(candidate, telemetry)` runs the five agents; the candidate enters as a logged `community_candidate` message. Complaints add at most γ_max = 0.05 to displayed confidence and never change ranking or decision (doc 08 §11 ID-15).
+- **Trust labels** in `netcoop_extensions.community_signals` / `community_trust`: `corroborated`, `reported_unverified` (with the limitation "reported, not technically verified … causes outside the telemetry are possible but not asserted"), `detected`. Complaint data never appears in `supporting_evidence` or `evidence_sources` (tested).
+- **Isolation:** with the flag off the routes do not exist (T-ISO-01); malformed community input is dropped with a limitation and the core result is unchanged (T-ISO-02).

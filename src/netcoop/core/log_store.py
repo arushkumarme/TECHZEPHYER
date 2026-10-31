@@ -125,6 +125,7 @@ class LogStore:
         if path != ":memory:":
             self._conn.execute("PRAGMA journal_mode=WAL")
         self._lock = threading.RLock()
+        self._extension_tables: set[str] = set()
         with self._lock:
             self._conn.executescript(_SCHEMA)
             for stmt in _APPEND_ONLY:
@@ -359,6 +360,38 @@ class LogStore:
             if tail.isdigit():
                 best = max(best, int(tail))
         return best
+
+    # ------------------------------------------------------------------ extension tables
+    def add_tables(self, schema_sql: str, append_only: tuple[str, ...]) -> None:
+        """Let a feature-flagged extension keep its own append-only tables in the same
+        database without the core knowing their names (doc 02 §6 isolation)."""
+        with self._lock:
+            self._conn.executescript(schema_sql)
+            for table in append_only:
+                for op in ("UPDATE", "DELETE"):
+                    self._conn.execute(
+                        f"CREATE TRIGGER IF NOT EXISTS {table}_no_{op.lower()} BEFORE {op} ON "
+                        f"{table} BEGIN SELECT RAISE(ABORT, '{table} is append-only'); END;"
+                    )
+                self._extension_tables.add(table)
+
+    def insert_row(self, table: str, row: dict[str, Any]) -> None:
+        if table not in self._extension_tables:
+            raise ValueError(f"{table} is not a registered extension table")
+        cols = ", ".join(row)
+        marks = ", ".join("?" for _ in row)
+        with self._lock:
+            self._conn.execute(
+                f"INSERT INTO {table} ({cols}) VALUES ({marks})", tuple(row.values())
+            )
+
+    def rows(self, table: str) -> list[dict[str, Any]]:
+        if table not in self._extension_tables:
+            raise ValueError(f"{table} is not a registered extension table")
+        with self._lock:
+            cur = self._conn.execute(f"SELECT * FROM {table} ORDER BY seq")
+            names = [d[0] for d in cur.description]
+            return [dict(zip(names, r, strict=True)) for r in cur.fetchall()]
 
     def execute_unsafe_for_tests(self, sql: str) -> None:
         """Run raw SQL (tests use it to prove the append-only triggers fire)."""

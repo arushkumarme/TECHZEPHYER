@@ -214,6 +214,8 @@ def build_report(
     mode: str,
     missing_agents: list[str] | None = None,
     generated_at: datetime | None = None,
+    community: list[dict[str, Any]] | None = None,
+    community_errors: list[str] | None = None,
 ) -> dict[str, Any]:
     obs = _observations(findings)
     evidence = _evidence(decision, obs)
@@ -257,6 +259,8 @@ def build_report(
                 )
     if any(o.metric in ("queue_drops", "interface_errors") for o in evidence):
         limitations.append(COUNTER_NOTE)
+    signals, trust, community_notes = _community(decision, community or [])
+    limitations += community_notes + list(community_errors or [])
     limitations += [HEURISTIC_NOTE, SIMULATION_NOTE]
     conn = findings.get("connectivity_agent")
     facts = conn.facts if conn else {}
@@ -349,7 +353,8 @@ def build_report(
             }
             for a in actions
         ],
-        "community_signals": [],
+        "community_signals": signals,
+        "community_trust": trust,
         "llm_assistance": [],
         "narrative": "",
         "top_cause_type": top.cause_type,
@@ -377,6 +382,50 @@ def template_narrative(report: dict[str, Any]) -> str:
             + "."
         )
     return " ".join(parts)
+
+
+def _community(
+    decision: Decision, candidates: list[dict[str, Any]]
+) -> tuple[list[dict[str, Any]], dict[str, str], list[str]]:
+    """Trust labels (doc 08 §6, doc 10 §6). Complaints stay out of every official key.
+
+    * ``corroborated`` - a technical fault was diagnosed on a device the reports map to;
+    * ``reported_unverified`` - reports exist but telemetry shows no matching fault;
+    * ``detected`` - a diagnosed device that no candidate refers to.
+    """
+    if not candidates:
+        return [], {}, []
+    affected = set(decision.affected_entities) if decision.decision == "diagnosed" else set()
+    signals: list[dict[str, Any]] = []
+    notes: list[str] = []
+    covered: set[str] = set()
+    for c in candidates:
+        hit = sorted(set(c["entities"]) & affected)
+        label = "corroborated" if hit else "reported_unverified"
+        covered |= set(hit)
+        signals.append(
+            {
+                "candidate_id": c["candidate_id"],
+                "zone": c["zone"],
+                "entities": c["entities"],
+                "symptom_categories": c.get("symptom_categories", []),
+                "complaint_count": c["complaint_count"],
+                "distinct_reporters": c["distinct_reporters"],
+                "window": {"start": c["start"], "end": c["end"]},
+                "trust_label": label,
+                "provenance": "synthetic complaints (test submissions); unverified user reports",
+            }
+        )
+        if label == "reported_unverified":
+            devices = ", ".join(c["entities"]) or "no mapped device"
+            notes.append(
+                f"Users reported problems in {c['zone']} ({c['distinct_reporters']} distinct "
+                f"synthetic reporters) - reported, not technically verified: telemetry for "
+                f"{devices} shows no matching fault. Causes outside the telemetry (a monitoring "
+                "gap or a non-network cause) are possible but not asserted."
+            )
+    trust = {e: ("corroborated" if e in covered else "detected") for e in sorted(affected)}
+    return signals, trust, notes
 
 
 def build_failure_report(

@@ -33,12 +33,14 @@ from netcoop.agents.infrastructure import InfrastructureAgent
 from netcoop.agents.performance import PerformanceAgent
 from netcoop.agents.reporting import ReportingAgent, reporting_context
 from netcoop.config.settings import Settings, load_settings
+from netcoop.core.blocks import TimeWindow
 from netcoop.core.bus import Handler, MessageBus
 from netcoop.core.ids import Clock, IdFactory, SystemClock
 from netcoop.core.log_store import LogStore
 from netcoop.core.messages import (
     AgentError,
     ClarificationRequest,
+    CommunityCandidate,
     Decision,
     Finding,
     MessageValidationError,
@@ -50,7 +52,7 @@ from netcoop.core.vocab import SPECIALIST_AGENTS, AgentId
 from netcoop.diagnosis.params import DiagnosisParams, load_diagnosis_params
 from netcoop.ingestion.issues import IngestIssue
 from netcoop.ingestion.models import NormalizedBundle
-from netcoop.ingestion.normalize import ingest
+from netcoop.ingestion.normalize import ingest, parse_timestamp
 from netcoop.llm.gateway import LLMGateway, NullProvider
 from netcoop.orchestrator.faults import SimulatedCrash, inject
 from netcoop.orchestrator.states import RESUMABLE, TERMINAL, check_transition
@@ -101,6 +103,7 @@ class _Run:
     incident: str
     raw: bytes
     community: list[dict[str, Any]]
+    community_errors: list[str] = field(default_factory=list)
     issues: list[IngestIssue] = field(default_factory=list)
     bundle: NormalizedBundle | None = None
     topology: Topology | None = None
@@ -291,6 +294,7 @@ class Orchestrator:
         elif self._validate(run) is not None:  # pragma: no cover - input was accepted before
             raise RuntimeError("stored input no longer validates")
         self._setup_agents(run)
+        self._admit_community(run)
 
         if self._state.get(incident) in _PHASE1_STATES:
             self._phase1(run)
@@ -333,6 +337,50 @@ class Orchestrator:
             detail={"status": report["status"]},
         )
         return self._finish(run, report, markdown=markdown)
+
+    def _admit_community(self, run: _Run) -> None:
+        """Extension A input (doc 04 §8): each valid candidate enters through the protocol
+        as a ``community_candidate`` message. A malformed entry is dropped and recorded -
+        an extension problem must never break or change the core run (T-ISO-02)."""
+        assert run.bus is not None
+        valid: list[dict[str, Any]] = []
+        payloads: list[CommunityCandidate] = []
+        run.community_errors = []
+        for entry in run.community:
+            try:
+                start, end = parse_timestamp(entry["start"]), parse_timestamp(entry["end"])
+                if start is None or end is None:
+                    raise ValueError("start/end must be ISO timestamps with a timezone")
+                payloads.append(
+                    CommunityCandidate(
+                        candidate_id=str(entry["candidate_id"]),
+                        zone=str(entry["zone"]),
+                        symptom_categories=list(entry.get("symptom_categories", [])),
+                        window=TimeWindow(start=start, end=end),
+                        complaint_count=int(entry["complaint_count"]),
+                        distinct_reporters=int(entry["distinct_reporters"]),
+                    )
+                )
+                valid.append(entry)
+            except (KeyError, TypeError, ValueError) as exc:
+                cid = entry.get("candidate_id", "?") if isinstance(entry, dict) else "?"
+                run.community_errors.append(
+                    f"Community input {cid} ignored (invalid: {str(exc).splitlines()[0]}); "
+                    "the core diagnosis is unaffected."
+                )
+        run.community = valid
+        already = any(
+            m.message_type == "community_candidate" for m in self.store.messages(run.incident)
+        )
+        if not already:
+            for payload in payloads:
+                run.bus.notify(
+                    sender="community_module",
+                    recipient="orchestrator",
+                    message_type="community_candidate",
+                    payload=payload,
+                    incident_id=run.incident,
+                )
 
     def _validate(self, run: _Run) -> IncidentResult | None:
         result = ingest(run.raw, settings=self.settings)
@@ -634,6 +682,8 @@ class Orchestrator:
             mode=self.settings.mode,
             missing_agents=missing,
             generated_at=self.clock.now().isoformat(),
+            community=run.community,
+            community_errors=run.community_errors,
         )
         reply = self._request_with_retry(
             run,
@@ -659,6 +709,8 @@ class Orchestrator:
             mode=self.settings.mode,
             missing_agents=missing,
             generated_at=self.clock.now(),
+            community=run.community,
+            community_errors=run.community_errors,
         )
         problems = validate_report(
             report,

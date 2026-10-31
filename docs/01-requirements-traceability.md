@@ -168,4 +168,7 @@ Never counted toward the mandatory rows. Disabled → core must still pass (`T-I
 | O-03 persistent state / pause-resume | TESTED | `tests/orchestrator/test_persistence.py` (pause/resume after restart, crash recovery, CLI) |
 | O-04 dashboard | PARTIAL — backend API TESTED (`tests/api/test_api.py`); React UI is M17 | |
 | O-05 simulated remediation | TESTED | `test_approval_is_recorded_and_outcome_simulated`, `test_simulator_has_no_write_path` |
-| X-CSI-*, X-GEO-* | NOT_STARTED (M15–M17) | |
+| X-CSI-01, 04..08 | TESTED | `tests/community/` (web form, extraction, clustering, orchestrator entry, trust labels, separation from official evidence) |
+| X-CSI-02 Telegram | NOT_BUILT (stretch) — channel value reserved | |
+| X-CSI-03 WhatsApp | FUTURE (not built) | |
+| X-GEO-* | NOT_STARTED (M16–M17) | |
