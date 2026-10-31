@@ -106,6 +106,8 @@ class ScoredHypothesis(ProtocolModel):
     contradiction: float = Field(ge=0.0, le=1.0)
     corroboration: float = Field(ge=0.0)
     community_bonus: float = Field(default=0.0, ge=0.0)
+    unexplained: float = Field(default=0.0, ge=0.0, le=1.0)
+    base: float = Field(default=0.0, ge=0.0, le=1.0, description="Score before the ceiling")
     ceiling: float = Field(ge=0.0, le=1.0)
     supporting_observation_ids: list[str] = Field(default_factory=list)
     contradicting_observation_ids: list[str] = Field(default_factory=list)

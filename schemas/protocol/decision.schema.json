@@ -119,6 +119,14 @@
     "ScoredHypothesis": {
       "description": "A hypothesis after scoring by the correlation agent (doc 08 \u00a74).",
       "properties": {
+        "base": {
+          "default": 0.0,
+          "description": "Score before the ceiling",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Base",
+          "type": "number"
+        },
         "cause_type": {
           "enum": [
             "normal_operation",
@@ -224,6 +232,13 @@
           },
           "title": "Supporting Sources",
           "type": "array"
+        },
+        "unexplained": {
+          "default": 0.0,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Unexplained",
+          "type": "number"
         }
       },
       "required": [

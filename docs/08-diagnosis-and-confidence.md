@@ -197,3 +197,21 @@ All values live in `config/`, are `PENDING`, and are set and justified at implem
 | `γ_max` | Cap on the community corroboration term |
 | Freshness tolerance | Age beyond which data is stale |
 | Clarification rounds / tool budget | Limits from doc 03 §3 |
+
+## 11. Implementation (M5, 2026-10-31) — `IMPLEMENTED`, `TESTED`, still `heuristic`
+
+Code: `src/netcoop/diagnosis/` (`catalog`, `severity`, `evidence`, `scoring`, `params`); values: [`config/diagnosis.toml`](../config/diagnosis.toml) (every value with its basis); tests: `tests/diagnosis/test_scoring.py`.
+
+**Parameter values (§10 register filled).** Severity thresholds: *elevated* starts just above the generator's `normal`-profile maximum; *critical* is a team-chosen level (ID-05). Weights key/supporting/weak = 3/2/1; contradiction strong/moderate = 1/0.5; e_mid 0.5; λ 0.5; β 0.1; γ_max 0.05; Q_cap bands ≥0.85→0.95, ≥0.70→0.85, ≥0.50→0.70, ≥0.30→0.50, else 0.30; missing topology −0.10; each missing agent −0.15; τ_diag 0.55; n_min 2; s_min 2; δ 0.10; coverage_min 0.60; c_insuff_cap 0.40; t_high 0.75; t_med 0.55; freshness tolerance 300 s. **All are heuristic; tuned against the same generator that produces the test data (circularity, §8).**
+
+**Refinements found necessary while testing** (each was a failing test first):
+
+| ID | Change | Why |
+|---|---|---|
+| ID-11 | **Unexplained-anomaly penalty** `− μ·U_h` (μ = 0.5): U_h = share of the entity's abnormal items that h's signature does not explain | The generator's `hardware_failure` profile drives every metric to critical; support alone scores congestion, overload, interface fault and device failure all ≈ 1. Parsimony separates them |
+| ID-12 | **Margin uses `base`** (before the ceiling) | Two strong candidates both capped at Q_cap would otherwise look tied |
+| ID-13 | **Key evidence required** (gate check `key_evidence_present`) and a cause is only a candidate for an entity showing at least one abnormal symptom it predicts | Without this, "local utilization normal" alone made every healthy device an upstream-congestion candidate |
+| ID-14 | **`no_fault_detected` also requires no abnormal assessed measurement** (`no_abnormal_measurements`); failed probes count as abnormal | PDF p4: normal = "measurements remain within expected ranges"; a single elevated reading previously yielded "no fault" |
+| ID-15 | **Community term excluded from ranking and from every gate condition**; `community_bonus` records the increment actually applied | A 0.05 bonus could lift a 0.50 score to the 0.55 threshold — violating "complaints can never alone produce diagnosed". Property test now asserts the decision *and* gate checks are identical with and without complaints |
+
+**Behaviour on the generator's own profiles (unit level, synthetic severities):** `normal` → `no_fault_detected`; `latency_spike` → link congestion is the top cause; `hardware_failure` → device/hardware failure, with interface fault among the alternatives. Weak Wi-Fi is never output (no wireless data); DNS/DHCP is diagnosable only when probe data is supplied.

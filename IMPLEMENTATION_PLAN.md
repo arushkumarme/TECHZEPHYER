@@ -45,6 +45,7 @@ These refine the design docs; each is mirrored into the relevant doc when its mi
 | ID-07 | Report status values: `diagnosed`, `insufficient_evidence`, `no_fault_detected`, `failed`; `supporting_evidence[].value` number or string; extension block `netcoop_extensions` | D-03/D-04/D-05 defaults |
 | ID-08 | Python 3.12 (uv-managed), `uv` for env/lock; Pydantic v2; SQLite (stdlib `sqlite3`); `networkx`; `pytest`, `hypothesis` (property tests), `ruff`, `mypy`. Node 22 + Vite + React + Leaflet for the dashboard | D-14 |
 | ID-09 | Phase-1 specialists run in a thread pool with per-agent deadlines; results are always processed in fixed agent order, so the log is deterministic | Doc 04 §4 |
+| ID-11..15 | Scoring refinements found by tests: unexplained-anomaly penalty, margin on pre-ceiling base, key-evidence requirement, strict no-fault rule, community excluded from ranking/gate — doc 08 §11 | Each fixed a failing test that exposed a real flaw |
 | ID-10 | LLM gateway: null provider default; any real provider is optional and off; no external account required for any test | CD-1, D-07 |
 
 ## 4. Milestones
@@ -56,7 +57,7 @@ These refine the design docs; each is mirrored into the relevant doc when its mi
 | M2 | Message bus + append-only SQLite log store (messages, state transitions), replay reader | R-09, O-03 | T-PROTO-BUS-*, T-LOG-* | VERIFIED |
 | M3 | Ingestion: sim_source, parse, structure, field mapping/aliases, units, timestamps, plausibility, dedupe, data-quality note, bundle acceptance, error taxonomy | R-13, R-19, M-04, P-11 | T-ING-*, T-ERR-01..13 | VERIFIED |
 | M4 | Simulated topology + read-only tool layer (telemetry query, coverage, neighbours/path, what-if, data-quality) with call budget + records | R-02, R-20 | T-TOOL-*, T-SAFE-01 | VERIFIED |
-| M5 | Diagnosis knowledge: hypothesis catalog, evidence availability matrix, scoring, ceiling, margin, decision gate, conflict rules | R-01, R-04, R-05, R-07, R-16 | T-DIAG-*, property tests | NOT_STARTED |
+| M5 | Diagnosis knowledge: hypothesis catalog, evidence availability matrix, scoring, ceiling, margin, decision gate, conflict rules | R-01, R-04, R-05, R-07, R-16 | T-DIAG-*, property tests | VERIFIED |
 | M6 | Specialist agents: performance, infrastructure, connectivity (task → tool calls → finding) | R-02, R-08, R-11, P-08 | T-AGT-*, T-AGT-BEHAV-* | NOT_STARTED |
 | M7 | Correlation agent (incl. clarification requests) + reporting agent; report builder, schema validation, Markdown | R-03..R-06, R-12, R-15, P-09 | T-AGT-CORR-*, T-RPT-* | NOT_STARTED |
 | M8 | Orchestrator state machine: dispatch, collect, deadlines/retries, clarification loop, degraded operation, failure reports | R-10, M-01, M-03 | T-ORCH-*, T-ORCH-COLLAB-* | NOT_STARTED |

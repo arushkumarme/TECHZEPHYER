@@ -56,3 +56,14 @@ Newest entry last. Each entry records actual commands and results. See `IMPLEMEN
 - **Failure met (real bug, caught by test):** degraded nodes were never detected because every path to the core shared one virtual sink edge (edge connectivity always 1). Fixed by a max-flow with unlimited capacity on core→sink edges. Also: lint findings, networkx stubs/generics.
 - **Gates:** G1–G7 ✔ (G6: tool layer over a real ingested bundle + real topology file).
 - **Next:** M5 diagnosis knowledge (catalog, scoring, gate, conflict rules).
+
+## M5 — Diagnosis knowledge · 2026-10-31 · VERIFIED
+
+- **Objective:** hypothesis catalog, availability matrix, severity grading, conflict rules, heuristic scoring with ceiling, decision gate, confidence category.
+- **Requirements:** R-01, R-04, R-05, R-07, R-16, P-07, P-10 (T-DIAG-*, T-DNS-01/03, T-CSI-COR-01 unit level).
+- **Files:** `src/netcoop/diagnosis/{params,severity,catalog,evidence,scoring}.py`, `config/diagnosis.toml`, `tests/diagnosis/test_scoring.py`; `ScoredHypothesis` gained `base`, `unexplained` (additive, schemas re-exported); doc 08 §11.
+- **Tests added:** 33 (grading ×10, outcomes for normal/congestion/hardware/spike/interface/insufficient/upstream/weak-Wi-Fi/DNS ±probes/ambiguity/partial explanation, ceiling, missing agent, 3 conflict rules, community bound + 2 Hypothesis property tests, determinism).
+- **Executed:** `uv run pytest -q` → 139 passed; ruff, format, mypy strict clean (28 files).
+- **Process deviation:** scoring code was written before its tests in this milestone (TDD order broken). Mitigation: tests were written from doc 08's stated behaviour, and they caught 5 real design flaws (ID-11..ID-15) plus a float-rounding bug at the threshold — all fixed in code, not by relaxing tests. One test fixture (the "ambiguous" case) was replaced because the original fixture had a defensible single answer; the replacement is a true two-candidate tie.
+- **Gates:** G1–G7 ✔ (G6 integration with real agents comes in M6/M7).
+- **Next:** M6 specialist agents.

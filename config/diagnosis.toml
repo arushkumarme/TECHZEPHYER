@@ -1,0 +1,77 @@
+# NetCoop AI - diagnosis parameters (doc 08 §10 parameter register).
+#
+# EVERY value here is a team-chosen HEURISTIC (CD-6), not a calibrated quantity.
+# Severity thresholds are derived from the organizer generator's own value ranges
+# (decision ID-05, doc 06 §2): "elevated" starts just above the generator's `normal`
+# profile maximum; "critical" is a team-chosen level that the generator's fault profiles
+# reach. CIRCULARITY RISK (doc 08 §8): tuning on the same generator that produces the
+# test data shows consistency, not real-world skill. Team-authored variants mitigate.
+
+schema = "netcoop.diagnosis/1"
+
+# ---------------------------------------------------------------- severity thresholds
+# value > elevated_above  -> "elevated";  value >= critical_at -> "critical"
+[severity.cpu_utilization_pct]
+elevated_above = 35      # generator normal max 35 (gen:L34)
+critical_at = 85         # team-chosen; hardware_failure emits 99.9 (gen:L24)
+[severity.link_utilization_pct]
+elevated_above = 50      # generator normal max 50 (gen:L35)
+critical_at = 90         # team-chosen; hardware_failure emits 100.0 (gen:L25)
+[severity.packet_loss_pct]
+elevated_above = 0.0     # generator normal is exactly 0.0 (gen:L36)
+critical_at = 5.0        # team-chosen; hardware_failure 15-30 (gen:L26)
+[severity.latency_ms]
+elevated_above = 20      # generator normal max 20 (gen:L37)
+critical_at = 100        # team-chosen (5x the normal maximum)
+[severity.jitter_ms]
+elevated_above = 5       # generator normal max 5 (gen:L38)
+critical_at = 30         # team-chosen; latency_spike 30-80 (gen:L18)
+[severity.queue_drops]
+elevated_above = 0       # generator normal is exactly 0 (gen:L39)
+critical_at = 1000       # team-chosen; hardware_failure 5000-15000 (gen:L28)
+[severity.interface_errors]
+elevated_above = 0       # any error counted (no normal-profile value exists, gen:L29)
+critical_at = 100        # team-chosen; hardware_failure 100-500 (gen:L29)
+
+# Device status values map directly (gen:L21,L31,L41).
+[status_severity]
+Healthy = "normal"
+Warning = "elevated"
+Critical = "critical"
+
+# ---------------------------------------------------------------- scoring (doc 08 §4)
+[weights]           # importance class -> w_i
+key = 3.0
+supporting = 2.0
+weak = 1.0
+
+[contradiction_weights]   # class -> v_j
+strong = 1.0
+moderate = 0.5
+
+[scoring]
+e_mid = 0.5               # evidence strength of an "elevated" observation
+lambda = 0.5              # contradiction penalty
+mu = 0.5                  # unexplained-anomaly penalty (ID-11, doc 08 §4.2 addendum)
+beta = 0.1                # corroboration bonus (>= 2 independent sources)
+gamma_max = 0.05          # cap on community corroboration term (doc 08 §6)
+
+[ceiling]                 # data quality Q -> maximum score (doc 08 §4.3); first match wins
+bands = [[0.85, 0.95], [0.70, 0.85], [0.50, 0.70], [0.30, 0.50], [0.0, 0.30]]
+missing_topology_penalty = 0.10
+missing_agent_penalty = 0.15
+
+[gate]                    # doc 08 §4.5
+tau_diag = 0.55
+n_min = 2
+s_min = 2
+delta = 0.10
+coverage_min = 0.60
+c_insuff_cap = 0.40
+
+[categories]              # doc 08 §4.6
+t_high = 0.75
+t_med = 0.55
+
+[conflicts]
+freshness_tolerance_s = 300
