@@ -39,24 +39,44 @@ The four 1.1 fields are optional so 1.0 messages still parse (compatibility test
 
 | Type | Direction | Payload summary |
 |---|---|---|
-| `task_request` | Orchestrator → agent | Goal; scope (entities); time window; tool-call budget; deadline |
-| `finding` | Agent → Orchestrator | Observations; hypotheses; not-assessable items; limitations; tool-call records; self-assessment (completeness) |
-| `clarification_request` | Agent → Orchestrator → target | Question type (closed list, doc 03 §3); parameters; reason; round number |
-| `clarification_response` | Target → Orchestrator → requester | Answer (observations or what-if result) or "cannot answer" with reason |
-| `decision` | A-CORR → Orchestrator | Ranked hypotheses with scores; decision (`diagnosed` / `insufficient_evidence` / `no_fault_detected`); conflict trail |
-| `report_ready` | A-REPT → Orchestrator | The report (doc 07) |
-| `agent_error` | Any | Error code (§7), message, recoverable? |
-| `community_candidate` | Community module → Orchestrator | Candidate incident (extension, doc 10) |
+| `task_request` | Orchestrator → agent | Goal; scope (entities); time window; tool-call budget; deadline. 1.1: `task_id` (`TASK-0001`, per incident), `task_kind` (`investigate` / `correlate` / `report`), `input_message_ids` (the findings/decision a correlate or report task works from: references, not copies), `incident_context` (description, zone, trigger `telemetry_bundle` / `community_candidate`, incident time) |
+| `finding` | Agent → Orchestrator | Observations; hypotheses; not-assessable items; limitations; tool-call records; self-assessment (completeness). 1.1: `task_id` echoed from the task |
+| `clarification_request` | Agent → Orchestrator → target | Question type (closed list, doc 03 §3); parameters, checked per question type (`recheck_metric`: entity + metric; `what_if_cause`: entity; the others: entities); reason; round number. 1.1: `clarification_id` (`CLR-0001` = round 1) |
+| `clarification_response` | Target → Orchestrator → requester | Answer (observations or what-if result) or "cannot answer" with reason. 1.1: `clarification_id`, `answerable` (`yes` / `no` / `partial`, consistent with `answered`), `source` |
+| `decision` | A-CORR → Orchestrator | Ranked hypotheses with scores; decision (`diagnosed` / `insufficient_evidence` / `no_fault_detected`); conflict trail. 1.1: `decision_id` (`DEC-0001`, one per incident), `score_method` (`heuristic`), `abstention` {`reasons` (abstention_reason terms), `evidence_that_would_change_decision`}: **required** for `insufficient_evidence`, **forbidden** for `diagnosed` |
+| `report_ready` | A-REPT → Orchestrator | The report (doc 07). 1.1: `recommendations` (structured `Recommendation`s, §4) |
+| `agent_error` | Any | Error code (§7), message, recoverable? 1.1: `related_message_id`, `details` |
+| `community_candidate` | Community module → Orchestrator | Candidate incident (extension, doc 10). 1.1: `complaint_ids` |
+
+All 1.1 payload fields are optional or derived, so 1.0 payloads still parse. Where a 1.0 sender omits them, the parser derives the new form from the old one: hypothesis evidence refs from the observation-id lists, `answerable` from `answered`, and the abstention block from the failed gate checks. A validator checks that old and new forms agree. Each message type maps to one payload model (`PAYLOAD_TYPES` in `core/messages.py`).
 
 ## 4. Payload building blocks
 
-Names are protocol design choices. Metric categories are written in words until doc 06 exists.
+Names are protocol design choices. Models live in `core/blocks.py`.
 
 **Observation** — a measured or derived fact.
-`observation_id` · `entity` (device, link, or zone as identified in the normalized data) · `metric_category` · `value` · `unit` · `window` (start, end) · `severity` (`normal`, `elevated`, `critical`, `unknown`) · `assessability` (`assessed`, `assessed_with_caveat`, `not_assessable`) · `quality_flags` · `source_ref` (pointer to normalized record(s), and through them the raw record)
+`observation_id` · `entity` (device, link, or zone as identified in the normalized data) · `metric` (a doc 06 field name, e.g. `latency_ms`; its problem-statement category, unit and dimension come from the `metric` vocabulary) · `metric_category` (display label) · `value` · `unit` · `window` (start, end) · `severity` (`normal`, `elevated`, `critical`, `unknown`) · `assessability` (`assessed`, `assessed_with_caveat`, `not_assessable`) · `quality_flags` · `source_ref` (pointer to normalized record(s), and through them the raw record). 1.1 (optional): `aggregation` · `sample_count` · `baseline_ref` (threshold id in config) · `not_assessable_reason`
 
 **Hypothesis** — an interpretation, never a fact.
-`hypothesis_id` · `cause_type` (from the catalog, doc 08 §3) · `entities` · `supporting_observation_ids` · `contradicting_observation_ids` · `missing_expected_evidence` · `local_score` (agent-local heuristic, not the final confidence) · `rationale_code`
+`hypothesis_id` · `cause_type` (from the catalog, doc 08 §3) · `entities` · `supporting_observation_ids` · `contradicting_observation_ids` · `missing_expected_evidence` · `local_score` (agent-local heuristic, not the final confidence) · `rationale_code`. 1.1: `supporting` / `contradicting` (lists of **EvidenceRef**) · `score_method` (`agent_local_heuristic`)
+
+**EvidenceRef** — a typed pointer to evidence: `evidence_type` (`observation`, `hypothesis`, `normalized_record`, `community_report`, `tool_result`, `topology_element`) · `evidence_id` (its prefix must match the type: `OBS-`, `HYP-`, `REC-`, `CAND-`) · `stance` (`supports`, `contradicts`, `neutral`) · `strength` (0..1, optional) · `note`.
+
+**EntityRef** — `entity_type` (`device`, `link`, `zone`) · `entity_id` (non-empty).
+
+**Recommendation** — `recommendation_id` (`RCM-0001`; `REC-` is taken by records) · `action_text` · `kind` (recommendation_mode) · `target_entities` · `reason` · `priority` (`high` / `medium` / `low`; by order, PROVISIONAL D-24) · `precautions` · `requires_human_approval` and `simulated` (always `true`; `false` is rejected) · `verification_step` · `linked_hypothesis_id`.
+
+**Official report** — `report/official.py` `OfficialReport`: exactly the ten keys of doc 07 §1 in the PDF's order and types, strict (an eleventh key or a boolean confidence is rejected). The PDF example validates against it.
+
+**Semantic rules** (each a registered error code, reported by `try_parse` with the field path):
+1. A `not_assessable` observation has no value, severity `unknown` and a `not_assessable_reason`; an assessed one has a value (`ASSESSABILITY_VALUE_MISMATCH`).
+2. A declared unit must exist and fit the dimension of the observation's metric (`UNIT_INCOMPATIBLE`).
+3. A hypothesis cites a supporting EvidenceRef or names missing expected evidence (`HYPOTHESIS_WITHOUT_EVIDENCE`); refs in the supporting list have stance `supports`, in the contradicting list `contradicts` (`EVIDENCE_STANCE_MISMATCH`).
+4. Every score carries its `score_method`; `calibrated` is a blocked term (`UNKNOWN_TERM`).
+5. Evidence ids carry the prefix of their type (`EVIDENCE_PREFIX_MISMATCH`).
+6. Recommendations cannot set `requires_human_approval` or `simulated` to false (`RECOMMENDATION_SAFETY_VIOLATION`).
+7. The official report has exactly ten keys (strict `OfficialReport`).
+Also: `ABSTENTION_MISMATCH`, `CLARIFICATION_PARAMETERS_INVALID`, `CLARIFICATION_ANSWER_MISMATCH`, `EVIDENCE_REFS_DISAGREE`.
 
 **Not-assessable item** — an unknown, stated explicitly.
 `entity` · `metric_category` · `reason` (`MISSING`, `MALFORMED`, `UNMAPPED_FIELD`, `UNIT_AMBIGUOUS`, `STALE`, `INSUFFICIENT_SAMPLES`, `NO_TOPOLOGY`, `OUT_OF_SCOPE`) · `detail`
@@ -211,6 +231,10 @@ The "interpret" half of `R-09`: every agent uses the same defined terms. Each vo
 - **Trace.** Every message line shows `seq=N` and `[SNAP-… provenance]`.
 - **Evidence:** `tests/core/test_envelope_v11.py`, `tests/core/test_snapshot.py`, `tests/orchestrator/test_stamping.py` (real S-09 run: every message carries the snapshot, mode and provenance, `seq` is 1..N without gaps, also after pause/resume, and parallel = sequential).
 
+## 14. Payload models and semantic rules (protocol upgrade, Prompt 3) — `IMPLEMENTED`, `TESTED`
+
+§3 and §4 describe the 1.1 payloads. The real agents fill the new fields. The orchestrator stamps task ids and kinds and points correlate/report tasks at earlier messages by id. Specialists echo the task id and give the reason for every not-assessable observation. The correlation agent numbers clarifications (`CLR-<round>`) and decisions (`DEC-0001`) and writes a real abstention block: failed gate checks mapped to abstention reasons, plus the evidence that would change the decision. The reporting agent sends one `Recommendation` per official recommended action. Telemetry is never placed in a payload. Evidence: `tests/core/test_payload_rules.py` (the 7 rules, every model, round trips, the PDF example), `tests/e2e/test_payloads_in_runs.py` (real S-02, S-07, S-08, S-09, S-12 runs; every logged message re-validates).
+
 ## Appendix A: Controlled vocabularies
 
 <!-- BEGIN GENERATED: vocabulary -->
@@ -232,7 +256,7 @@ _Generated by `scripts/generate_docs.py` from `config/vocabulary/*.toml`; do not
 | [`decision_kind`](#vocabulary-decision-kind) | 3 | closed | `netcoop.core.vocab:DecisionKind` |
 | [`dimension`](#vocabulary-dimension) | 6 | closed | registry only |
 | [`entity_type`](#vocabulary-entity-type) | 3 | closed | registry only |
-| [`error_code`](#vocabulary-error-code) | 44 | closed | registry only |
+| [`error_code`](#vocabulary-error-code) | 54 | closed | registry only |
 | [`evidence_class`](#vocabulary-evidence-class) | 3 | closed | `netcoop.core.vocab:EvidenceClass` |
 | [`evidence_stance`](#vocabulary-evidence-stance) | 3 | closed | registry only |
 | [`evidence_type`](#vocabulary-evidence-type) | 6 | closed | registry only |
@@ -460,6 +484,16 @@ Every error, warning and limitation code the system emits. Severity: fatal stops
 | `MODE_NOT_ALLOWED` | Mode not allowed | The envelope declares a mode other than simulation; it is never defaulted to live. | active | doc 05 §2 (P2) | severity=error, kind=protocol |
 | `UNKNOWN_TERM` | Unknown term | A field holds a value that is not a registered (or is a blocked) vocabulary term. | active | doc 05 App. A (P2) | severity=error, kind=protocol |
 | `PROTOCOL_MINOR_NEWER` | Protocol minor newer | The sender uses a newer minor protocol version; the message is accepted and unknown fields are ignored. | active | doc 05 §5 (P2) | severity=warning, kind=protocol |
+| `ASSESSABILITY_VALUE_MISMATCH` | Assessability and value disagree | Rule 1: a not_assessable observation carries a value, a severity other than unknown, or no reason; or an assessed observation has no value. | active | doc 05 §14 (P3) | severity=error, kind=protocol |
+| `UNIT_INCOMPATIBLE` | Unit incompatible | Rule 2: the declared unit is unknown or does not fit the dimension of the observation's metric. | active | doc 05 §14 (P3) | severity=error, kind=protocol |
+| `HYPOTHESIS_WITHOUT_EVIDENCE` | Hypothesis without evidence | Rule 3: a hypothesis cites no supporting evidence and names no missing expected evidence. | active | doc 05 §14 (P3) | severity=error, kind=protocol |
+| `EVIDENCE_STANCE_MISMATCH` | Evidence stance mismatch | Rule 3: a supporting reference without stance supports, or a contradicting one without stance contradicts. | active | doc 05 §14 (P3) | severity=error, kind=protocol |
+| `EVIDENCE_REFS_DISAGREE` | Evidence references disagree | A hypothesis's evidence references and its observation-id lists name different observations. | active | doc 05 §14 (P3) | severity=error, kind=protocol |
+| `EVIDENCE_PREFIX_MISMATCH` | Evidence id prefix mismatch | Rule 5: the evidence id does not start with the prefix of its evidence type. | active | doc 05 §14 (P3) | severity=error, kind=protocol |
+| `RECOMMENDATION_SAFETY_VIOLATION` | Recommendation safety violation | Rule 6: a recommendation tried to set requires_human_approval or simulated to false. | active | doc 05 §14 (P3) | severity=error, kind=protocol |
+| `ABSTENTION_MISMATCH` | Abstention block mismatch | An insufficient_evidence decision has no abstention block, or a diagnosed decision has one. | active | doc 05 §14 (P3) | severity=error, kind=protocol |
+| `CLARIFICATION_PARAMETERS_INVALID` | Clarification parameters invalid | A clarification request lacks a parameter its question type needs. | active | doc 05 §14 (P3) | severity=error, kind=protocol |
+| `CLARIFICATION_ANSWER_MISMATCH` | Clarification answer mismatch | A clarification response's answerable value contradicts its answered flag. | active | doc 05 §14 (P3) | severity=error, kind=protocol |
 
 ### Vocabulary: evidence_class
 

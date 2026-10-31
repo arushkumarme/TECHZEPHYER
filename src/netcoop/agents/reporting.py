@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from netcoop.core.blocks import Recommendation
 from netcoop.core.bus import MessageBus
 from netcoop.core.messages import (
     AgentError,
@@ -81,7 +82,11 @@ class ReportingAgent:
             return self.bus.reply(
                 msg,
                 message_type="report_ready",
-                payload=ReportReady(report=report, markdown=render_markdown(report)),
+                payload=ReportReady(
+                    report=report,
+                    markdown=render_markdown(report),
+                    recommendations=recommendations_for(report),
+                ),
             )
         except Exception as exc:
             return self.bus.reply(
@@ -149,3 +154,31 @@ class ReportingAgent:
         if result.reason:
             entry["reason"] = result.reason
         ext["llm_assistance"] = [entry]
+
+
+#: PROVISIONAL (D-24): priority follows the order of the official recommended_actions.
+_PRIORITY_BY_ORDER = ("high", "medium")
+
+
+def recommendations_for(report: dict[str, Any]) -> list[Recommendation]:
+    """The official report's recommended_actions as structured, always-simulated,
+    approval-gated recommendations (same order as ``recommendation_status``)."""
+    ext = report.get("netcoop_extensions", {})
+    kind = ext.get("recommendation_mode") or "diagnostic_next_steps"
+    return [
+        Recommendation(
+            recommendation_id=f"RCM-{i:04d}",
+            action_text=action,
+            kind=kind,
+            target_entities=list(report["affected_devices"]),
+            reason=report["suspected_root_cause"],
+            priority=_PRIORITY_BY_ORDER[i - 1] if i <= len(_PRIORITY_BY_ORDER) else "low",
+            precautions=[
+                "Simulated only: nothing is executed on a network.",
+                "Requires human approval before any real-world use.",
+            ],
+            verification_step="Re-run the diagnosis on fresh simulated data and check that "
+            "the suspected cause no longer passes the decision gate.",
+        )
+        for i, action in enumerate(report["recommended_actions"], start=1)
+    ]

@@ -1,5 +1,26 @@
 {
   "$defs": {
+    "Abstention": {
+      "description": "Why the system declined to name a single cause, and what would change that.",
+      "properties": {
+        "evidence_that_would_change_decision": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence That Would Change Decision",
+          "type": "array"
+        },
+        "reasons": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Reasons",
+          "type": "array"
+        }
+      },
+      "title": "Abstention",
+      "type": "object"
+    },
     "ClarificationRecord": {
       "properties": {
         "answered": {
@@ -204,6 +225,11 @@
           "title": "Score",
           "type": "number"
         },
+        "score_method": {
+          "default": "heuristic",
+          "title": "Score Method",
+          "type": "string"
+        },
         "support": {
           "maximum": 1.0,
           "minimum": 0.0,
@@ -255,6 +281,17 @@
     }
   },
   "properties": {
+    "abstention": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Abstention"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
     "affected_entities": {
       "items": {
         "type": "string"
@@ -303,6 +340,19 @@
       "title": "Decision",
       "type": "string"
     },
+    "decision_id": {
+      "anyOf": [
+        {
+          "pattern": "^DEC-\\d{4,}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Decision Id"
+    },
     "gate_checks": {
       "additionalProperties": {
         "type": "boolean"
@@ -334,6 +384,11 @@
       },
       "title": "Ranked",
       "type": "array"
+    },
+    "score_method": {
+      "default": "heuristic",
+      "title": "Score Method",
+      "type": "string"
     }
   },
   "required": [

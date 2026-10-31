@@ -54,7 +54,7 @@ Every official requirement from `SRC-1` (`Agentic_AI_Hackathon.pdf`) is listed w
 | ID | Criterion | Satisfied through | Test | Demo |
 |---|---|---|---|---|
 | M-01 | At least two collaborating agents with distinct responsibilities | R-08 | T-ORCH-COLLAB-01 | Demo-2 |
-| M-02 | Structured communication between agents | R-09 | T-PROTO-*, `tests/orchestrator/test_stamping.py` | Demo-2 |
+| M-02 | Structured communication between agents | R-09 | T-PROTO-*, `tests/orchestrator/test_stamping.py`, `tests/e2e/test_payloads_in_runs.py` | Demo-2 |
 | M-03 | Evidence from multiple agents contributes to a single diagnosis | R-08, R-11 | T-DIAG-MULTI-01 | Demo-2 |
 | M-04 | At least one malformed, missing or incompatible input case is handled | R-13 | T-ERR-* | Demo-3, 4 |
 | M-05 | A report with probable root cause, supporting evidence and recommended action | R-12 | T-RPT-* | Demo-2 |
@@ -144,19 +144,19 @@ Never counted toward the mandatory rows. Disabled → core must still pass (`T-I
 |---|---|---|
 | R-01 probable root cause | TESTED | `tests/diagnosis/test_scoring.py`, `tests/e2e/test_scenarios.py` (S-02, S-04, S-05) |
 | R-02 affected devices | TESTED | `tests/agents/test_specialists.py` (connectivity what-if), e2e `affected_devices` checks |
-| R-03 supporting evidence | TESTED | `test_evidence_traces_to_observations` |
+| R-03 supporting evidence | TESTED | `test_evidence_traces_to_observations`; typed evidence refs and rule 3/5: `tests/core/test_payload_rules.py`, `tests/e2e/test_payloads_in_runs.py` (P3) |
 | R-04 alternatives / uncertainty | TESTED | `test_hardware_failure_profile_prefers_device_failure` (alternatives), S-09 |
 | R-05 confidence + category | TESTED | `test_congestion_is_diagnosed_from_two_agents`, `test_low_data_quality_caps_confidence` |
 | R-06 corrective actions | TESTED | `test_actions_adapt_to_uncertainty` |
 | R-07 no exact cause when insufficient | TESTED | `test_single_weak_symptom_is_insufficient`, S-08, S-09 |
 | R-08 collaborating agents | TESTED | `test_full_run` (5 agents, ≥2 evidence sources) |
-| R-09 interoperability protocol | TESTED | `tests/core/test_messages.py`, `test_bus_log.py`, `schemas/protocol/`; field meanings and units: `tests/core/test_vocabulary.py`, `tests/e2e/test_vocabulary_in_runs.py` (protocol upgrade P1); envelope 1.1, data snapshot, safe parsing: `tests/core/test_envelope_v11.py`, `tests/core/test_snapshot.py`, `tests/orchestrator/test_stamping.py` (P2) |
+| R-09 interoperability protocol | TESTED | `tests/core/test_messages.py`, `test_bus_log.py`, `schemas/protocol/`; field meanings and units: `tests/core/test_vocabulary.py`, `tests/e2e/test_vocabulary_in_runs.py` (protocol upgrade P1); envelope 1.1, data snapshot, safe parsing: `tests/core/test_envelope_v11.py`, `tests/core/test_snapshot.py`, `tests/orchestrator/test_stamping.py` (P2); payload models and semantic rules: `tests/core/test_payload_rules.py`, `tests/e2e/test_payloads_in_runs.py` (P3) |
 | R-10 orchestration | TESTED | `tests/orchestrator/test_workflow.py` |
 | R-11 fault diagnosis from telemetry | TESTED | e2e S-01..S-12 |
-| R-12 unified report | TESTED | `test_official_keys_exact_and_typed` |
+| R-12 unified report | TESTED | `test_official_keys_exact_and_typed`; strict `OfficialReport` model: `test_rule7_the_pdf_example_validates_and_an_eleventh_key_does_not`, `test_every_scenario_report_validates_as_official_report` (P3) |
 | R-13 validation / error handling | TESTED | `tests/ingestion/test_ingest.py` (E-01..E-12), S-06, S-06b, S-10 |
 | R-14 reproducible testing & docs | TESTED | `test_committed_scenarios_are_reproducible`, `test_scenario_runs_are_deterministic`, doc 13 |
-| R-15 structured JSON report (+ Markdown) | TESTED | `test_cli_run_and_validate` |
+| R-15 structured JSON report (+ Markdown) | TESTED | `test_cli_run_and_validate`; `test_validate_report_uses_the_official_model` (P3) |
 | R-16 documented scoring; report insufficiency | TESTED | doc 08 §11, `test_scoring.py` |
 | R-17 synthetic data / simulation mode | TESTED | `test_other_modes_are_refused`, `test_live_mode_refused` |
 | R-18 suggested scenarios | TESTED (S-03 as "not assessable"; S-05 via team-authored probes) | e2e |

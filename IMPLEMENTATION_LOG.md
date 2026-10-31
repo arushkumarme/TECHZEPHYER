@@ -236,3 +236,12 @@ Newest entry last. Each entry records actual commands and results. See `IMPLEMEN
 - Determinism: specialist replies are now logged by the orchestrator in fixed agent order (handlers still run in parallel), so `seq` is identical in parallel and sequential runs. Late replies after a timeout are no longer logged (the timeout stays as `agent_error`).
 - New error codes registered: `MESSAGE_TOO_LARGE`, `MODE_NOT_ALLOWED`, `UNKNOWN_TERM`, `PROTOCOL_MINOR_NEWER`. Decisions D-22 (incident id), D-23 (size limit).
 - No existing test changed. `docs/results/example-S-02-report.json` refreshed to the current output (it also lacked the earlier `narrative` and `community_trust` keys).
+
+## Protocol upgrade P3 — payload models and semantic rules (2026-11-01)
+
+- New building blocks: `EntityRef`, `EvidenceRef`, `Abstention`, `IncidentContext`, `Recommendation`; strict ten-key `OfficialReport` (`report/official.py`), used by `validate_report`.
+- 1.1 optional payload fields (no renames); 1.0 payloads still parse (evidence refs, `answerable`, abstention derived from the old fields, with agreement checks).
+- The 7 semantic rules plus clarification/abstention rules, each a registered error code reported with its field path.
+- Real agents fill the new fields: task ids/kinds/input references, not-assessable reasons, clarification and decision ids, abstention block, structured recommendations.
+- Existing test changed (setup only, listed before the change): `tests/diagnosis/test_scoring.py::_obs` fixture `value=None` -> `value=1.0` (rule 1; scoring reads severity only). No assertion changed.
+- Decision D-24 (recommendation priority by order).

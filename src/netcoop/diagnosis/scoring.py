@@ -20,8 +20,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from netcoop.core.blocks import Limitation, ScoredHypothesis
-from netcoop.core.messages import Decision
+from netcoop.core.blocks import Abstention, Limitation, ScoredHypothesis
+from netcoop.core.messages import Decision, abstention_from_gates
 from netcoop.core.vocab import ConfidenceCategory, DecisionKind
 from netcoop.diagnosis.catalog import (
     CATALOG,
@@ -590,7 +590,13 @@ def decide(
     category: ConfidenceCategory = (
         "insufficient" if kind == "insufficient_evidence" else _category(top.score, p)
     )
+    abstention = (
+        Abstention.model_validate(abstention_from_gates(checks, _would_change(checks, ranked)))
+        if kind == "insufficient_evidence"
+        else None
+    )
     return Decision(
+        abstention=abstention,
         decision=kind,
         ranked=ranked,
         margin=margin,
@@ -601,3 +607,29 @@ def decide(
         limitations=limitations,
         affected_entities=[] if top.cause_type == "normal_operation" else top.entities,
     )
+
+
+#: What evidence would let each failed decision-gate check pass (abstention block).
+_GATE_WOULD_CHANGE = {
+    "score_at_least_tau": "stronger evidence for the leading cause (its heuristic score is "
+    "below the decision threshold)",
+    "margin_at_least_delta": "evidence that separates the two leading causes (their scores "
+    "are too close to choose)",
+    "coverage_at_least_min": "data for more of the devices and metrics in scope",
+    "min_independent_sources": "corroboration from another specialist agent",
+    "no_abnormal_measurements": "an explanation for the abnormal measurements that remain",
+    "not_telemetry_unreliable": "telemetry that passes the data-quality checks",
+    "diagnosable": "the data the leading cause needs before it can be assessed",
+    "key_evidence_present": "the key signature measurement of the leading cause",
+    "min_signature_items": "more of the expected symptoms of the leading cause",
+}
+
+
+def _would_change(checks: dict[str, bool], ranked: list[ScoredHypothesis]) -> list[str]:
+    out = [
+        _GATE_WOULD_CHANGE[k] for k in sorted(checks) if not checks[k] and k in _GATE_WOULD_CHANGE
+    ]
+    top = next((h for h in ranked if h.diagnosable), None)
+    if top is not None:
+        out += [f"missing expected evidence: {m}" for m in top.missing_expected_evidence]
+    return out

@@ -445,3 +445,103 @@ source = "doc 05 §5 (P2)"
 [terms.attributes]
 severity = "warning"
 kind = "protocol"
+
+[[terms]]
+id = "ASSESSABILITY_VALUE_MISMATCH"
+label = "Assessability and value disagree"
+definition = "Rule 1: a not_assessable observation carries a value, a severity other than unknown, or no reason; or an assessed observation has no value."
+status = "active"
+source = "doc 05 §14 (P3)"
+[terms.attributes]
+severity = "error"
+kind = "protocol"
+
+[[terms]]
+id = "UNIT_INCOMPATIBLE"
+label = "Unit incompatible"
+definition = "Rule 2: the declared unit is unknown or does not fit the dimension of the observation's metric."
+status = "active"
+source = "doc 05 §14 (P3)"
+[terms.attributes]
+severity = "error"
+kind = "protocol"
+
+[[terms]]
+id = "HYPOTHESIS_WITHOUT_EVIDENCE"
+label = "Hypothesis without evidence"
+definition = "Rule 3: a hypothesis cites no supporting evidence and names no missing expected evidence."
+status = "active"
+source = "doc 05 §14 (P3)"
+[terms.attributes]
+severity = "error"
+kind = "protocol"
+
+[[terms]]
+id = "EVIDENCE_STANCE_MISMATCH"
+label = "Evidence stance mismatch"
+definition = "Rule 3: a supporting reference without stance supports, or a contradicting one without stance contradicts."
+status = "active"
+source = "doc 05 §14 (P3)"
+[terms.attributes]
+severity = "error"
+kind = "protocol"
+
+[[terms]]
+id = "EVIDENCE_REFS_DISAGREE"
+label = "Evidence references disagree"
+definition = "A hypothesis's evidence references and its observation-id lists name different observations."
+status = "active"
+source = "doc 05 §14 (P3)"
+[terms.attributes]
+severity = "error"
+kind = "protocol"
+
+[[terms]]
+id = "EVIDENCE_PREFIX_MISMATCH"
+label = "Evidence id prefix mismatch"
+definition = "Rule 5: the evidence id does not start with the prefix of its evidence type."
+status = "active"
+source = "doc 05 §14 (P3)"
+[terms.attributes]
+severity = "error"
+kind = "protocol"
+
+[[terms]]
+id = "RECOMMENDATION_SAFETY_VIOLATION"
+label = "Recommendation safety violation"
+definition = "Rule 6: a recommendation tried to set requires_human_approval or simulated to false."
+status = "active"
+source = "doc 05 §14 (P3)"
+[terms.attributes]
+severity = "error"
+kind = "protocol"
+
+[[terms]]
+id = "ABSTENTION_MISMATCH"
+label = "Abstention block mismatch"
+definition = "An insufficient_evidence decision has no abstention block, or a diagnosed decision has one."
+status = "active"
+source = "doc 05 §14 (P3)"
+[terms.attributes]
+severity = "error"
+kind = "protocol"
+
+[[terms]]
+id = "CLARIFICATION_PARAMETERS_INVALID"
+label = "Clarification parameters invalid"
+definition = "A clarification request lacks a parameter its question type needs."
+status = "active"
+source = "doc 05 §14 (P3)"
+[terms.attributes]
+severity = "error"
+kind = "protocol"
+
+[[terms]]
+id = "CLARIFICATION_ANSWER_MISMATCH"
+label = "Clarification answer mismatch"
+definition = "A clarification response's answerable value contradicts its answered flag."
+status = "active"
+source = "doc 05 §14 (P3)"
+[terms.attributes]
+severity = "error"
+kind = "protocol"

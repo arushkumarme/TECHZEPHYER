@@ -4,6 +4,11 @@
       "title": "Code",
       "type": "string"
     },
+    "details": {
+      "additionalProperties": true,
+      "title": "Details",
+      "type": "object"
+    },
     "message": {
       "title": "Message",
       "type": "string"
@@ -11,6 +16,18 @@
     "recoverable": {
       "title": "Recoverable",
       "type": "boolean"
+    },
+    "related_message_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Related Message Id"
     }
   },
   "required": [

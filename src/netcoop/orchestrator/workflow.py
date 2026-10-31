@@ -35,7 +35,7 @@ from netcoop.agents.infrastructure import InfrastructureAgent
 from netcoop.agents.performance import PerformanceAgent
 from netcoop.agents.reporting import ReportingAgent, reporting_context
 from netcoop.config.settings import Settings, load_settings
-from netcoop.core.blocks import TimeWindow
+from netcoop.core.blocks import IncidentContext, TimeWindow
 from netcoop.core.bus import Handler, MessageBus
 from netcoop.core.ids import Clock, IdFactory, SystemClock
 from netcoop.core.log_store import LogStore
@@ -557,6 +557,7 @@ class Orchestrator:
                             tool_budget=cfg.tool_budgets.get(agent, 20),
                             deadline_s=deadline,
                             context={"attempt": attempt + 1},
+                            **self._task_meta(run, "investigate"),
                         ),
                         incident_id=incident,
                     )
@@ -603,6 +604,23 @@ class Orchestrator:
         self._checkpoint(run, "phase1", {"missing": run.missing})
         run.findings = {a: run.findings[a] for a in SPECIALIST_AGENTS if a in run.findings}
 
+    def _task_meta(self, run: _Run, kind: str, inputs: tuple[str, ...] = ()) -> dict[str, Any]:
+        """Protocol 1.1 task fields: a per-incident task id, the task kind, the incident
+        context, and REFERENCES (message ids) to the earlier messages the task works from."""
+        assert run.bundle is not None
+        logged = [m for m in self.store.messages(run.incident) if m.valid]
+        n = sum(1 for m in logged if m.message_type == "task_request") + 1
+        return {
+            "task_id": f"TASK-{n:04d}",
+            "task_kind": kind,
+            "input_message_ids": [m.message_id for m in logged if m.message_type in inputs],
+            "incident_context": IncidentContext(
+                description=run.label,
+                trigger="telemetry_bundle",
+                incident_time=run.bundle.window.end,
+            ),
+        }
+
     def _agent_error(
         self, run: _Run, agent: str, sent: ParsedMessage, failure: _AgentFailure, attempt: int
     ) -> None:
@@ -615,6 +633,7 @@ class Orchestrator:
                 code=failure.code,
                 message=f"attempt {attempt + 1}: {failure.detail}",
                 recoverable=attempt < self.settings.orchestration.agent_retries,
+                related_message_id=sent.envelope.message_id,
             ),
             incident_id=run.incident,
             in_reply_to=sent.envelope.message_id,
@@ -649,7 +668,10 @@ class Orchestrator:
                     recipient=recipient,
                     message_type="agent_error",
                     payload=AgentError(
-                        code=f.code, message=f"attempt {attempt + 1}: {f.detail}", recoverable=True
+                        code=f.code,
+                        message=f"attempt {attempt + 1}: {f.detail}",
+                        recoverable=True,
+                        related_message_id=sent.envelope.message_id,
                     ),
                     incident_id=run.incident,
                     in_reply_to=sent.envelope.message_id,
@@ -692,6 +714,7 @@ class Orchestrator:
                     tool_budget=0,
                     deadline_s=60,
                     context=ctx,
+                    **self._task_meta(run, "correlate", ("finding",)),
                 ),
             )
             if reply is None:
@@ -760,6 +783,7 @@ class Orchestrator:
                 tool_budget=0,
                 deadline_s=60,
                 context=ctx,
+                **self._task_meta(run, "report", ("finding", "decision")),
             ),
         )
         if reply is not None and isinstance(reply.payload, ReportReady):

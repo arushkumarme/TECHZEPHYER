@@ -1,4 +1,83 @@
 {
+  "$defs": {
+    "Recommendation": {
+      "description": "A suggested action. Always simulated and always needs human approval (doc 12 \u00a73):\nneither flag can be set to False.",
+      "properties": {
+        "action_text": {
+          "minLength": 1,
+          "title": "Action Text",
+          "type": "string"
+        },
+        "kind": {
+          "title": "Kind",
+          "type": "string"
+        },
+        "linked_hypothesis_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Linked Hypothesis Id"
+        },
+        "precautions": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Precautions",
+          "type": "array"
+        },
+        "priority": {
+          "title": "Priority",
+          "type": "string"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        },
+        "recommendation_id": {
+          "pattern": "^RCM-\\d{4,}$",
+          "title": "Recommendation Id",
+          "type": "string"
+        },
+        "requires_human_approval": {
+          "default": true,
+          "title": "Requires Human Approval",
+          "type": "boolean"
+        },
+        "simulated": {
+          "default": true,
+          "title": "Simulated",
+          "type": "boolean"
+        },
+        "target_entities": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Target Entities",
+          "type": "array"
+        },
+        "verification_step": {
+          "title": "Verification Step",
+          "type": "string"
+        }
+      },
+      "required": [
+        "recommendation_id",
+        "action_text",
+        "kind",
+        "reason",
+        "priority",
+        "verification_step"
+      ],
+      "title": "Recommendation",
+      "type": "object"
+    }
+  },
   "properties": {
     "markdown": {
       "anyOf": [
@@ -11,6 +90,13 @@
       ],
       "default": null,
       "title": "Markdown"
+    },
+    "recommendations": {
+      "items": {
+        "$ref": "#/$defs/Recommendation"
+      },
+      "title": "Recommendations",
+      "type": "array"
     },
     "report": {
       "additionalProperties": true,

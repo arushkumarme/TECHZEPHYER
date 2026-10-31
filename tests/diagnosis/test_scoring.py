@@ -126,7 +126,9 @@ def _obs(oid: str, e: str, item: str, sev: str, **kw: Any) -> Observation:
         entity=e,
         metric=item,
         metric_category=item,
-        value=None,
+        # Placeholder: scoring reads severity, never the value. Protocol rule 1 (Prompt 3)
+        # requires an assessed observation to carry a value. (Setup only.)
+        value=1.0,
         unit="",
         window=kw.pop("window", W),
         severity=sev,  # type: ignore[arg-type]

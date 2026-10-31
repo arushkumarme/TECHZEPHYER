@@ -95,7 +95,9 @@ class SpecialistAgent:
     def handle(self, msg: ParsedMessage) -> Envelope:
         try:
             if isinstance(msg.payload, TaskRequest):
-                finding = self.investigate(msg.payload, msg)
+                finding = self.investigate(msg.payload, msg).model_copy(
+                    update={"task_id": msg.payload.task_id}
+                )
                 return self.bus.reply(
                     msg,
                     message_type="finding",
@@ -106,7 +108,12 @@ class SpecialistAgent:
                 return self.bus.reply(
                     msg,
                     message_type="clarification_response",
-                    payload=self.clarify(msg.payload, msg),
+                    payload=self.clarify(msg.payload, msg).model_copy(
+                        update={
+                            "clarification_id": msg.payload.clarification_id,
+                            "source": self.agent_id,
+                        }
+                    ),
                 )
             raise ValueError(f"{self.agent_id} cannot handle {msg.envelope.message_type}")
         except Exception as exc:  # an agent never crashes the bus; it reports
@@ -298,6 +305,7 @@ class SpecialistAgent:
                                 window=inv.window,
                                 severity="unknown",
                                 assessability="not_assessable",
+                                not_assessable_reason=reason,
                                 quality_flags=[f"status unknown ({reason})"],
                                 agent=self.agent_id,
                             )

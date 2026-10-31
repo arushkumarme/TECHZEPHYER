@@ -16,6 +16,18 @@
           "title": "Agent",
           "type": "string"
         },
+        "aggregation": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Aggregation"
+        },
         "assessability": {
           "enum": [
             "assessed",
@@ -24,6 +36,19 @@
           ],
           "title": "Assessability",
           "type": "string"
+        },
+        "baseline_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Id of the threshold in config/diagnosis.toml it was judged by",
+          "title": "Baseline Ref"
         },
         "entity": {
           "title": "Entity",
@@ -48,6 +73,29 @@
           "title": "Metric Category",
           "type": "string"
         },
+        "not_assessable_reason": {
+          "anyOf": [
+            {
+              "enum": [
+                "MISSING",
+                "MALFORMED",
+                "UNMAPPED_FIELD",
+                "UNIT_AMBIGUOUS",
+                "STALE",
+                "INSUFFICIENT_SAMPLES",
+                "NO_TOPOLOGY",
+                "OUT_OF_SCOPE",
+                "IMPLAUSIBLE"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Not Assessable Reason"
+        },
         "observation_id": {
           "title": "Observation Id",
           "type": "string"
@@ -58,6 +106,19 @@
           },
           "title": "Quality Flags",
           "type": "array"
+        },
+        "sample_count": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sample Count"
         },
         "severity": {
           "enum": [
@@ -139,9 +200,39 @@
     }
   },
   "properties": {
+    "answerable": {
+      "anyOf": [
+        {
+          "enum": [
+            "yes",
+            "no",
+            "partial"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Answerable"
+    },
     "answered": {
       "title": "Answered",
       "type": "boolean"
+    },
+    "clarification_id": {
+      "anyOf": [
+        {
+          "pattern": "^CLR-\\d{4,}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Clarification Id"
     },
     "observations": {
       "items": {
@@ -174,6 +265,27 @@
       ],
       "default": null,
       "title": "Result"
+    },
+    "source": {
+      "anyOf": [
+        {
+          "enum": [
+            "orchestrator",
+            "performance_agent",
+            "infrastructure_agent",
+            "connectivity_agent",
+            "correlation_agent",
+            "reporting_agent",
+            "community_module"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Source"
     }
   },
   "required": [

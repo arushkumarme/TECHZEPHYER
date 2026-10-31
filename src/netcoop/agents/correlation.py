@@ -105,7 +105,11 @@ class CorrelationAgent:
                 raise ValueError(f"correlation_agent cannot handle {msg.envelope.message_type}")
             reply = self.correlate(msg.payload.context)
             if isinstance(reply, ClarificationRequest):
+                # One question per round, so the round number identifies it.
+                reply = reply.model_copy(update={"clarification_id": f"CLR-{reply.round:04d}"})
                 return self.bus.reply(msg, message_type="clarification_request", payload=reply)
+            # One decision per incident (doc 04 §5).
+            reply = reply.model_copy(update={"decision_id": "DEC-0001"})
             return self.bus.reply(msg, message_type="decision", payload=reply)
         except Exception as exc:
             return self.bus.reply(

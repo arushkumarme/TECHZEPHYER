@@ -1,5 +1,50 @@
 {
   "$defs": {
+    "IncidentContext": {
+      "properties": {
+        "description": {
+          "default": "",
+          "title": "Description",
+          "type": "string"
+        },
+        "incident_time": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Incident Time"
+        },
+        "trigger": {
+          "default": "telemetry_bundle",
+          "enum": [
+            "telemetry_bundle",
+            "community_candidate"
+          ],
+          "title": "Trigger",
+          "type": "string"
+        },
+        "zone": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Zone"
+        }
+      },
+      "title": "IncidentContext",
+      "type": "object"
+    },
     "TimeWindow": {
       "properties": {
         "end": {
@@ -36,12 +81,56 @@
       "title": "Goal",
       "type": "string"
     },
+    "incident_context": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/IncidentContext"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "input_message_ids": {
+      "description": "Earlier messages (findings, decision) this task works from: references",
+      "items": {
+        "type": "string"
+      },
+      "title": "Input Message Ids",
+      "type": "array"
+    },
     "scope_entities": {
       "items": {
         "type": "string"
       },
       "title": "Scope Entities",
       "type": "array"
+    },
+    "task_id": {
+      "anyOf": [
+        {
+          "pattern": "^TASK-\\d{4,}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Task Id"
+    },
+    "task_kind": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Task Kind"
     },
     "tool_budget": {
       "minimum": 0,

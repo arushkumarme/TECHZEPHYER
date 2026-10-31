@@ -132,6 +132,7 @@ Headings 1, 9 and 10 are absent; heading 6 ("Be rigorous about diagnosis and evi
 | D-21 | `cause_type` is **closed** (the prompt pack proposed extensible) | Doc 08 | **PROVISIONAL**: a new cause needs a catalog signature and scoring, so `x-` extensions are not accepted; `rationale_code` is the extensible vocabulary instead |
 | D-22 | Incident ID format | Doc 05 §5 | **PROVISIONAL**: `<prefix>-NNNN`, prefix `INC` (configurable `[protocol] incident_prefix`); the PDF mandates no format |
 | D-23 | Maximum message size | Doc 05 §13 | **PROVISIONAL**: 1 MiB (`[protocol] max_message_bytes`), about 20x the largest message of the scenario suite (~47 KB); larger messages are rejected with `MESSAGE_TOO_LARGE` |
+| D-24 | Recommendation priority | Doc 05 §4, doc 07 §5 | **PROVISIONAL**: by order of the official `recommended_actions` (1st `high`, 2nd `medium`, rest `low`); the PDF defines no priority |
 
 ## 8. Assumptions and explicit non-assumptions
 

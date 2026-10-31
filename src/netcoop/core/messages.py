@@ -18,16 +18,20 @@ from typing import Annotated, Any, Literal, Self
 from pydantic import AwareDatetime, BaseModel, Field, model_validator
 
 from netcoop.core.blocks import (
+    Abstention,
     ClarificationRecord,
     ConflictRecord,
+    IncidentContext,
     Limitation,
     NotAssessableItem,
     Observation,
     ProtocolModel,
+    Recommendation,
     ScoredHypothesis,
     SelfAssessment,
     TimeWindow,
     ToolCallRecord,
+    rule_error,
 )
 from netcoop.core.blocks import Hypothesis as Hypothesis
 from netcoop.core.versioning import PAYLOAD_SCHEMA_VERSION as PAYLOAD_SCHEMA_VERSION
@@ -45,7 +49,7 @@ from netcoop.core.vocab import (
     QuestionType,
     TrustLabel,
 )
-from netcoop.core.vocabulary import VocabTerm
+from netcoop.core.vocabulary import VocabTerm, get_vocabulary
 
 # Version constants live in versioning.py (re-exported above for existing importers).
 
@@ -69,6 +73,14 @@ class TaskRequest(ProtocolModel):
     tool_budget: int = Field(ge=0)
     deadline_s: float = Field(gt=0)
     context: dict[str, Any] = Field(default_factory=dict)
+    # ---- protocol 1.1 (optional) ----
+    task_id: str | None = Field(default=None, pattern=r"^TASK-\d{4,}$")
+    task_kind: Annotated[str, VocabTerm("task_kind")] | None = None
+    input_message_ids: list[str] = Field(
+        default_factory=list,
+        description="Earlier messages (findings, decision) this task works from: references",
+    )
+    incident_context: IncidentContext | None = None
 
 
 class Finding(ProtocolModel):
@@ -82,6 +94,16 @@ class Finding(ProtocolModel):
         default_factory=dict,
         description="Structured non-metric facts, e.g. topology scope from connectivity_agent",
     )
+    task_id: str | None = Field(default=None, pattern=r"^TASK-\d{4,}$")
+
+
+#: Parameters each question type needs (any one key of a tuple is enough).
+QUESTION_PARAMETERS: dict[str, list[tuple[str, ...]]] = {
+    "recheck_metric": [("entity",), ("metric",)],
+    "what_if_cause": [("entity",)],
+    "assess_additional_entities": [("entities", "entity")],
+    "widen_time_window": [("entities", "entity")],
+}
 
 
 class ClarificationRequest(ProtocolModel):
@@ -90,6 +112,17 @@ class ClarificationRequest(ProtocolModel):
     parameters: dict[str, Any] = Field(default_factory=dict)
     reason: ClarificationReason
     round: int = Field(ge=1)
+    clarification_id: str | None = Field(default=None, pattern=r"^CLR-\d{4,}$")
+
+    @model_validator(mode="after")
+    def _parameters_fit_question(self) -> Self:
+        for keys in QUESTION_PARAMETERS[self.question_type]:
+            if not any(self.parameters.get(k) for k in keys):
+                raise rule_error(
+                    "CLARIFICATION_PARAMETERS_INVALID",
+                    f"{self.question_type} needs parameter {' or '.join(keys)}",
+                )
+        return self
 
 
 class ClarificationResponse(ProtocolModel):
@@ -97,6 +130,26 @@ class ClarificationResponse(ProtocolModel):
     observations: list[Observation] = Field(default_factory=list)
     result: dict[str, Any] | None = None
     reason: str | None = None
+    # ---- protocol 1.1 ----
+    clarification_id: str | None = Field(default=None, pattern=r"^CLR-\d{4,}$")
+    answerable: Literal["yes", "no", "partial"] | None = None
+    source: AgentId | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def _derive_answerable(cls, data: Any) -> Any:
+        if isinstance(data, dict) and data.get("answerable") is None and "answered" in data:
+            data = {**data, "answerable": "yes" if data["answered"] else "no"}
+        return data
+
+    @model_validator(mode="after")
+    def _consistent(self) -> Self:
+        if (self.answerable in ("yes", "partial")) is not self.answered:
+            raise rule_error(
+                "CLARIFICATION_ANSWER_MISMATCH",
+                f"answerable={self.answerable!r} contradicts answered={self.answered}",
+            )
+        return self
 
 
 class Decision(ProtocolModel):
@@ -110,17 +163,64 @@ class Decision(ProtocolModel):
     clarifications: list[ClarificationRecord] = Field(default_factory=list)
     limitations: list[Limitation] = Field(default_factory=list)
     affected_entities: list[str] = Field(default_factory=list)
+    # ---- protocol 1.1 ----
+    decision_id: str | None = Field(default=None, pattern=r"^DEC-\d{4,}$")
+    score_method: Annotated[str, VocabTerm("score_method")] = "heuristic"
+    abstention: Abstention | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def _derive_abstention(cls, data: Any) -> Any:
+        """A 1.0 sender has no abstention block: derive its reasons from the failed gate
+        checks. An explicit null is NOT filled in (and is then rejected below)."""
+        if (
+            isinstance(data, dict)
+            and data.get("decision") == "insufficient_evidence"
+            and "abstention" not in data
+        ):
+            data = {**data, "abstention": abstention_from_gates(data.get("gate_checks") or {})}
+        return data
+
+    @model_validator(mode="after")
+    def _abstention_rule(self) -> Self:
+        if self.decision == "insufficient_evidence" and self.abstention is None:
+            raise rule_error(
+                "ABSTENTION_MISMATCH", "an insufficient_evidence decision needs an abstention block"
+            )
+        if self.decision == "diagnosed" and self.abstention is not None:
+            raise rule_error(
+                "ABSTENTION_MISMATCH", "a diagnosed decision must not carry an abstention block"
+            )
+        return self
+
+
+def abstention_from_gates(
+    gate_checks: dict[str, Any], would_change: list[str] | None = None
+) -> dict[str, Any]:
+    """Map failed decision-gate checks onto abstention reasons (registry attribute
+    ``gate_check`` of the abstention_reason vocabulary)."""
+    by_gate = {
+        str(t.attributes.get("gate_check")): t.id for t in get_vocabulary("abstention_reason").terms
+    }
+    failed = sorted(k for k, v in gate_checks.items() if v is False)
+    return {
+        "reasons": [by_gate[k] for k in failed if k in by_gate],
+        "evidence_that_would_change_decision": list(would_change or []),
+    }
 
 
 class ReportReady(ProtocolModel):
     report: dict[str, Any]
     markdown: str | None = None
+    recommendations: list[Recommendation] = Field(default_factory=list)
 
 
 class AgentError(ProtocolModel):
     code: str
     message: str
     recoverable: bool
+    related_message_id: str | None = None
+    details: dict[str, Any] = Field(default_factory=dict)
 
 
 class CommunityCandidate(ProtocolModel):
@@ -131,6 +231,7 @@ class CommunityCandidate(ProtocolModel):
     complaint_count: int = Field(ge=1)
     distinct_reporters: int = Field(ge=1)
     trust_label: TrustLabel = "reported_unverified"
+    complaint_ids: list[str] = Field(default_factory=list)
 
 
 PAYLOAD_TYPES: dict[str, type[ProtocolModel]] = {

@@ -1,5 +1,18 @@
 {
   "properties": {
+    "clarification_id": {
+      "anyOf": [
+        {
+          "pattern": "^CLR-\\d{4,}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Clarification Id"
+    },
     "parameters": {
       "additionalProperties": true,
       "title": "Parameters",

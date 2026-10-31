@@ -31,6 +31,13 @@
       "title": "Complaint Count",
       "type": "integer"
     },
+    "complaint_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Complaint Ids",
+      "type": "array"
+    },
     "distinct_reporters": {
       "minimum": 1,
       "title": "Distinct Reporters",

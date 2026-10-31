@@ -66,7 +66,10 @@ def _issues(exc: ValidationError, prefix: str = "") -> list[ParseIssue]:
             err["type"] == "value_error"
             and ("is not a term of vocabulary" in msg or "is blocked" in msg)
         )
-        code = "UNKNOWN_TERM" if vocabulary_problem else "MESSAGE_INVALID"
+        if err["type"].isupper():  # a semantic rule: its type IS a registered error code
+            code = err["type"]
+        else:
+            code = "UNKNOWN_TERM" if vocabulary_problem else "MESSAGE_INVALID"
         reason = msg if "input" not in err else f"{msg} (got {err['input']!r})"
         out.append(ParseIssue(code, reason, path))
     return out

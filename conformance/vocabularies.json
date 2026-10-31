@@ -1143,6 +1143,116 @@
         "label": "Protocol minor newer",
         "source": "doc 05 \u00a75 (P2)",
         "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "protocol",
+          "severity": "error"
+        },
+        "definition": "Rule 1: a not_assessable observation carries a value, a severity other than unknown, or no reason; or an assessed observation has no value.",
+        "id": "ASSESSABILITY_VALUE_MISMATCH",
+        "label": "Assessability and value disagree",
+        "source": "doc 05 \u00a714 (P3)",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "protocol",
+          "severity": "error"
+        },
+        "definition": "Rule 2: the declared unit is unknown or does not fit the dimension of the observation's metric.",
+        "id": "UNIT_INCOMPATIBLE",
+        "label": "Unit incompatible",
+        "source": "doc 05 \u00a714 (P3)",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "protocol",
+          "severity": "error"
+        },
+        "definition": "Rule 3: a hypothesis cites no supporting evidence and names no missing expected evidence.",
+        "id": "HYPOTHESIS_WITHOUT_EVIDENCE",
+        "label": "Hypothesis without evidence",
+        "source": "doc 05 \u00a714 (P3)",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "protocol",
+          "severity": "error"
+        },
+        "definition": "Rule 3: a supporting reference without stance supports, or a contradicting one without stance contradicts.",
+        "id": "EVIDENCE_STANCE_MISMATCH",
+        "label": "Evidence stance mismatch",
+        "source": "doc 05 \u00a714 (P3)",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "protocol",
+          "severity": "error"
+        },
+        "definition": "A hypothesis's evidence references and its observation-id lists name different observations.",
+        "id": "EVIDENCE_REFS_DISAGREE",
+        "label": "Evidence references disagree",
+        "source": "doc 05 \u00a714 (P3)",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "protocol",
+          "severity": "error"
+        },
+        "definition": "Rule 5: the evidence id does not start with the prefix of its evidence type.",
+        "id": "EVIDENCE_PREFIX_MISMATCH",
+        "label": "Evidence id prefix mismatch",
+        "source": "doc 05 \u00a714 (P3)",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "protocol",
+          "severity": "error"
+        },
+        "definition": "Rule 6: a recommendation tried to set requires_human_approval or simulated to false.",
+        "id": "RECOMMENDATION_SAFETY_VIOLATION",
+        "label": "Recommendation safety violation",
+        "source": "doc 05 \u00a714 (P3)",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "protocol",
+          "severity": "error"
+        },
+        "definition": "An insufficient_evidence decision has no abstention block, or a diagnosed decision has one.",
+        "id": "ABSTENTION_MISMATCH",
+        "label": "Abstention block mismatch",
+        "source": "doc 05 \u00a714 (P3)",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "protocol",
+          "severity": "error"
+        },
+        "definition": "A clarification request lacks a parameter its question type needs.",
+        "id": "CLARIFICATION_PARAMETERS_INVALID",
+        "label": "Clarification parameters invalid",
+        "source": "doc 05 \u00a714 (P3)",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "protocol",
+          "severity": "error"
+        },
+        "definition": "A clarification response's answerable value contradicts its answered flag.",
+        "id": "CLARIFICATION_ANSWER_MISMATCH",
+        "label": "Clarification answer mismatch",
+        "source": "doc 05 \u00a714 (P3)",
+        "status": "active"
       }
     ],
     "version": "1.0"

@@ -1,5 +1,49 @@
 {
   "$defs": {
+    "EvidenceRef": {
+      "description": "A typed pointer to evidence (never a copy of it).",
+      "properties": {
+        "evidence_id": {
+          "minLength": 1,
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "evidence_type": {
+          "title": "Evidence Type",
+          "type": "string"
+        },
+        "note": {
+          "default": "",
+          "title": "Note",
+          "type": "string"
+        },
+        "stance": {
+          "title": "Stance",
+          "type": "string"
+        },
+        "strength": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Strength"
+        }
+      },
+      "required": [
+        "evidence_type",
+        "evidence_id",
+        "stance"
+      ],
+      "title": "EvidenceRef",
+      "type": "object"
+    },
     "Hypothesis": {
       "description": "An agent-local interpretation; never a fact and never the final confidence.",
       "properties": {
@@ -17,6 +61,13 @@
           ],
           "title": "Cause Type",
           "type": "string"
+        },
+        "contradicting": {
+          "items": {
+            "$ref": "#/$defs/EvidenceRef"
+          },
+          "title": "Contradicting",
+          "type": "array"
         },
         "contradicting_observation_ids": {
           "items": {
@@ -52,6 +103,18 @@
         "rationale_code": {
           "title": "Rationale Code",
           "type": "string"
+        },
+        "score_method": {
+          "default": "agent_local_heuristic",
+          "title": "Score Method",
+          "type": "string"
+        },
+        "supporting": {
+          "items": {
+            "$ref": "#/$defs/EvidenceRef"
+          },
+          "title": "Supporting",
+          "type": "array"
         },
         "supporting_observation_ids": {
           "items": {
@@ -144,6 +207,18 @@
           "title": "Agent",
           "type": "string"
         },
+        "aggregation": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Aggregation"
+        },
         "assessability": {
           "enum": [
             "assessed",
@@ -152,6 +227,19 @@
           ],
           "title": "Assessability",
           "type": "string"
+        },
+        "baseline_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Id of the threshold in config/diagnosis.toml it was judged by",
+          "title": "Baseline Ref"
         },
         "entity": {
           "title": "Entity",
@@ -176,6 +264,29 @@
           "title": "Metric Category",
           "type": "string"
         },
+        "not_assessable_reason": {
+          "anyOf": [
+            {
+              "enum": [
+                "MISSING",
+                "MALFORMED",
+                "UNMAPPED_FIELD",
+                "UNIT_AMBIGUOUS",
+                "STALE",
+                "INSUFFICIENT_SAMPLES",
+                "NO_TOPOLOGY",
+                "OUT_OF_SCOPE",
+                "IMPLAUSIBLE"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Not Assessable Reason"
+        },
         "observation_id": {
           "title": "Observation Id",
           "type": "string"
@@ -186,6 +297,19 @@
           },
           "title": "Quality Flags",
           "type": "array"
+        },
+        "sample_count": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sample Count"
         },
         "severity": {
           "enum": [
@@ -352,6 +476,19 @@
     },
     "self_assessment": {
       "$ref": "#/$defs/SelfAssessment"
+    },
+    "task_id": {
+      "anyOf": [
+        {
+          "pattern": "^TASK-\\d{4,}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Task Id"
     },
     "tool_calls": {
       "items": {
