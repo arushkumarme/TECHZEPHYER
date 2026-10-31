@@ -171,4 +171,5 @@ Never counted toward the mandatory rows. Disabled → core must still pass (`T-I
 | X-CSI-01, 04..08 | TESTED | `tests/community/` (web form, extraction, clustering, orchestrator entry, trust labels, separation from official evidence) |
 | X-CSI-02 Telegram | NOT_BUILT (stretch) — channel value reserved | |
 | X-CSI-03 WhatsApp | FUTURE (not built) | |
-| X-GEO-* | NOT_STARTED (M16–M17) | |
+| X-GEO-02..05 (backend) | TESTED | `tests/geo/test_geo.py` |
+| X-GEO-01 interactive map (UI) | NOT_STARTED (M17) | |

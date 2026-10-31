@@ -1,0 +1,30 @@
+{
+  "layout_id": "campus_v1_layout",
+  "topology_id": "campus_v1",
+  "provenance": "SIMULATED",
+  "provenance_note": "Team-authored SCHEMATIC layout (non-geographic x/y units, 0-1000 by 0-600). Positions are illustrative only and say nothing about real IIT Bhubaneswar buildings or wiring (doc 11 §2, decision D-08 / ID-17).",
+  "crs": "schematic",
+  "bounds": [[0, 0], [600, 1000]],
+  "zones": [
+    {"zone": "ZONE_DATA_CENTRE", "label": "Data centre (placeholder)", "polygon": [[260, 420], [260, 580], [340, 580], [340, 420]]},
+    {"zone": "ZONE_HOSTEL_A", "label": "Hostel A (placeholder)", "polygon": [[420, 60], [420, 220], [560, 220], [560, 60]]},
+    {"zone": "ZONE_HOSTEL_B", "label": "Hostel B (placeholder)", "polygon": [[420, 260], [420, 400], [560, 400], [560, 260]]},
+    {"zone": "ZONE_ADMIN", "label": "Admin block (placeholder)", "polygon": [[420, 440], [420, 560], [560, 560], [560, 440]]},
+    {"zone": "ZONE_LECTURE_HALLS", "label": "Lecture halls (placeholder)", "polygon": [[420, 620], [420, 780], [560, 780], [560, 620]]},
+    {"zone": "ZONE_ACADEMIC_BLOCK", "label": "Academic block (placeholder)", "polygon": [[40, 600], [40, 760], [180, 760], [180, 600]]},
+    {"zone": "ZONE_LIBRARY", "label": "Library (placeholder)", "polygon": [[40, 800], [40, 960], [180, 960], [180, 800]]},
+    {"zone": "ZONE_DEPT_LAB", "label": "Department lab (placeholder)", "polygon": [[40, 400], [40, 560], [180, 560], [180, 400]]}
+  ],
+  "devices": [
+    {"id": "SW_CAMPUS_1", "position": [300, 500]},
+    {"id": "SW_CAMPUS_2", "position": [330, 450]},
+    {"id": "SW_CAMPUS_3", "position": [270, 550]},
+    {"id": "SW_CAMPUS_4", "position": [490, 140]},
+    {"id": "SW_CAMPUS_5", "position": [490, 330]},
+    {"id": "SW_CAMPUS_10", "position": [490, 500]},
+    {"id": "SW_CAMPUS_8", "position": [490, 700]},
+    {"id": "SW_CAMPUS_6", "position": [110, 680]},
+    {"id": "SW_CAMPUS_7", "position": [110, 880]},
+    {"id": "SW_CAMPUS_9", "position": [110, 480]}
+  ]
+}

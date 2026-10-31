@@ -354,6 +354,7 @@ def create_app(*, db_path: Path | str | None = None, settings: Settings | None =
         app.include_router(router)
     # Feature-flagged extensions register themselves on import; each checks its own flag.
     importlib.import_module("netcoop.api.community")
+    importlib.import_module("netcoop.api.geo")
 
     for extension in EXTENSIONS:
         extension(app, app.state.backend)

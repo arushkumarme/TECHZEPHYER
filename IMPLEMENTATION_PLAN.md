@@ -46,6 +46,7 @@ These refine the design docs; each is mirrored into the relevant doc when its mi
 | ID-08 | Python 3.12 (uv-managed), `uv` for env/lock; Pydantic v2; SQLite (stdlib `sqlite3`); `networkx`; `pytest`, `hypothesis` (property tests), `ruff`, `mypy`. Node 22 + Vite + React + Leaflet for the dashboard | D-14 |
 | ID-09 | Phase-1 specialists run in a thread pool with per-agent deadlines; results are always processed in fixed agent order, so the log is deterministic | Doc 04 §4 |
 | ID-11..15 | Scoring refinements found by tests: unexplained-anomaly penalty, margin on pre-ceiling base, key-evidence requirement, strict no-fault rule, community excluded from ranking/gate — doc 08 §11 | Each fixed a failing test that exposed a real flaw |
+| ID-17 | Schematic (non-geographic) campus map, Leaflet CRS.Simple | No verified coordinates (D-08); offline-capable (doc 11 §8) |
 | ID-10 | LLM gateway: null provider default; any real provider is optional and off; no external account required for any test | CD-1, D-07 |
 
 ## 4. Milestones
@@ -68,7 +69,7 @@ These refine the design docs; each is mirrored into the relevant doc when its mi
 | M13 | LLM gateway: provider interface, null provider, grounding check, template fallback | P-01, P-15 | T-LLM-OFF-01, T-LLM-GROUND-* | VERIFIED |
 | M14 | FastAPI backend: incidents, runs, trace, reports, topology, approvals, scenarios | O-04, P-03 | T-API-* | VERIFIED |
 | M15 | Extension A — community signals: intake, pseudonymize, screen, extract, gazetteer, cluster, candidate → orchestrator, trust labels | X-CSI-01..08 | T-CSI-*, T-ISO-* | VERIFIED |
-| M16 | Extension B — geo backend: campus layers with provenance, blast radius isolated/degraded/unknown, map API | X-GEO-01..05 | T-GEO-* | NOT_STARTED |
+| M16 | Extension B — geo backend: campus layers with provenance, blast radius isolated/degraded/unknown, map API | X-GEO-01..05 | T-GEO-* | VERIFIED |
 | M17 | React + Leaflet dashboard: incidents, trace, report, approvals, complaint form, map layers, banner | O-04, X-GEO-*, X-CSI-08 | T-UI-*, Playwright E2E | NOT_STARTED |
 | M18 | Release verification: clean install, all suites, demo reproducibility, docs + traceability final | §11 of brief | T-REPRO-01, full checklist | NOT_STARTED |
 

@@ -183,3 +183,13 @@ Newest entry last. Each entry records actual commands and results. See `IMPLEMEN
 - **Not built (recorded):** Telegram stretch channel, WhatsApp (future).
 - **Gates:** G1–G7 ✔ (G6: real orchestrator, real bus message, API and CLI subprocess).
 - **Next:** M16 Extension B — geospatial backend.
+
+## M16 — Extension B: geospatial backend · 2026-10-31 · VERIFIED
+
+- **Objective:** doc 11 map data: provenance-labelled layers, reported vs detected vs corroborated, blast radius, incident panel, API behind `features.geospatial`.
+- **Decision ID-17:** schematic non-geographic layout (no verified coordinates; offline-capable).
+- **Files:** `sample_data/topology/campus_v1_layout.json`, `src/netcoop/geo/layers.py`, `src/netcoop/api/geo.py`, `tests/geo/test_geo.py` (10), doc 11 §11.
+- **Executed:** red (collection) → `uv run pytest -q` → 309 passed; ruff, format, mypy strict clean (66 files).
+- **Test-quality fix:** replaced a tautological zone assertion with a concrete expected-zone test.
+- **Gates:** G1–G7 ✔.
+- **Next:** M17 React + Leaflet dashboard.

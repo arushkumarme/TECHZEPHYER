@@ -70,3 +70,11 @@ Read-only resources served by FastAPI, consumed by React: incident list and deta
 - Real building geometry and positions: unavailable without verified sources (D-08).
 - Topology realism: simulated, so blast radius demonstrates the method, not the real campus.
 - Performance with large topologies is not a goal.
+
+## 11. Implementation (M16 backend, 2026-10-31) — `IMPLEMENTED`, `TESTED`, `SIMULATED`
+
+- **ID-17: schematic map.** No verified building coordinates exist (D-08), so `sample_data/topology/campus_v1_layout.json` is a team-authored *schematic, non-geographic* layout (x/y units; Leaflet `CRS.Simple`). It needs no tile server (offline, §8) and cannot be mistaken for real campus geography. Zone labels say "(placeholder)".
+- Code: `src/netcoop/geo/layers.py` (`campus_layers`, `blast_radius`, `incident_overlay`), API `src/netcoop/api/geo.py` (`GET /api/geo/layers`, `GET /api/geo/blast-radius/{entity}`, `GET /api/geo/incidents/{id}`), registered only when `features.geospatial = true`.
+- Layers: zones, devices, links (each with `provenance: SIMULATED`), `reported_areas` (style `reported`, from community signals), `detected_faults` (style `detected`, only for `diagnosed` reports), `corroborated`, `blast_radius` (isolated / degraded / unaffected / unknown + affected zones; basis "structural reach … not measured impact"), and the incident `panel` (§5 fields incl. recommendations marked simulated and approval-gated, community summary, trace link).
+- Tests: `tests/geo/test_geo.py` (provenance on every layer, layout ↔ topology, S-16 isolated vs degraded, unknown without topology, reported vs detected separation, corroborated, panel fields, API behind the flag).
+- The React/Leaflet rendering is M17.
