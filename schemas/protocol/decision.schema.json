@@ -1,0 +1,331 @@
+{
+  "$defs": {
+    "ClarificationRecord": {
+      "properties": {
+        "answered": {
+          "title": "Answered",
+          "type": "boolean"
+        },
+        "question_type": {
+          "title": "Question Type",
+          "type": "string"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        },
+        "round": {
+          "minimum": 1,
+          "title": "Round",
+          "type": "integer"
+        },
+        "summary": {
+          "title": "Summary",
+          "type": "string"
+        },
+        "target": {
+          "enum": [
+            "orchestrator",
+            "performance_agent",
+            "infrastructure_agent",
+            "connectivity_agent",
+            "correlation_agent",
+            "reporting_agent",
+            "community_module"
+          ],
+          "title": "Target",
+          "type": "string"
+        }
+      },
+      "required": [
+        "round",
+        "question_type",
+        "target",
+        "reason",
+        "answered",
+        "summary"
+      ],
+      "title": "ClarificationRecord",
+      "type": "object"
+    },
+    "ConflictRecord": {
+      "properties": {
+        "conflict_id": {
+          "title": "Conflict Id",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "disregarded": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "observation_id -> reason it was given less weight",
+          "title": "Disregarded",
+          "type": "object"
+        },
+        "observation_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Observation Ids",
+          "type": "array"
+        },
+        "resolution": {
+          "title": "Resolution",
+          "type": "string"
+        },
+        "rule": {
+          "enum": [
+            "evidence_class",
+            "freshness",
+            "topology_consistency",
+            "unresolved"
+          ],
+          "title": "Rule",
+          "type": "string"
+        }
+      },
+      "required": [
+        "conflict_id",
+        "description",
+        "observation_ids",
+        "rule",
+        "resolution"
+      ],
+      "title": "ConflictRecord",
+      "type": "object"
+    },
+    "Limitation": {
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "text"
+      ],
+      "title": "Limitation",
+      "type": "object"
+    },
+    "ScoredHypothesis": {
+      "description": "A hypothesis after scoring by the correlation agent (doc 08 \u00a74).",
+      "properties": {
+        "cause_type": {
+          "enum": [
+            "normal_operation",
+            "link_congestion",
+            "upstream_congestion",
+            "weak_wifi",
+            "interface_fault",
+            "device_overload",
+            "device_failure",
+            "dns_dhcp_failure",
+            "telemetry_unreliable"
+          ],
+          "title": "Cause Type",
+          "type": "string"
+        },
+        "ceiling": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Ceiling",
+          "type": "number"
+        },
+        "community_bonus": {
+          "default": 0.0,
+          "minimum": 0.0,
+          "title": "Community Bonus",
+          "type": "number"
+        },
+        "contradicting_observation_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Contradicting Observation Ids",
+          "type": "array"
+        },
+        "contradiction": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Contradiction",
+          "type": "number"
+        },
+        "corroboration": {
+          "minimum": 0.0,
+          "title": "Corroboration",
+          "type": "number"
+        },
+        "diagnosable": {
+          "default": true,
+          "title": "Diagnosable",
+          "type": "boolean"
+        },
+        "entities": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Entities",
+          "type": "array"
+        },
+        "matched_signature_items": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Matched Signature Items",
+          "type": "array"
+        },
+        "missing_expected_evidence": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Missing Expected Evidence",
+          "type": "array"
+        },
+        "score": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Score",
+          "type": "number"
+        },
+        "support": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Support",
+          "type": "number"
+        },
+        "supporting_observation_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Supporting Observation Ids",
+          "type": "array"
+        },
+        "supporting_sources": {
+          "items": {
+            "enum": [
+              "orchestrator",
+              "performance_agent",
+              "infrastructure_agent",
+              "connectivity_agent",
+              "correlation_agent",
+              "reporting_agent",
+              "community_module"
+            ],
+            "type": "string"
+          },
+          "title": "Supporting Sources",
+          "type": "array"
+        }
+      },
+      "required": [
+        "cause_type",
+        "entities",
+        "score",
+        "support",
+        "contradiction",
+        "corroboration",
+        "ceiling"
+      ],
+      "title": "ScoredHypothesis",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "affected_entities": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Affected Entities",
+      "type": "array"
+    },
+    "clarifications": {
+      "items": {
+        "$ref": "#/$defs/ClarificationRecord"
+      },
+      "title": "Clarifications",
+      "type": "array"
+    },
+    "confidence": {
+      "default": 0.0,
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "title": "Confidence",
+      "type": "number"
+    },
+    "confidence_category": {
+      "default": "insufficient",
+      "enum": [
+        "high",
+        "medium",
+        "low",
+        "insufficient"
+      ],
+      "title": "Confidence Category",
+      "type": "string"
+    },
+    "conflicts": {
+      "items": {
+        "$ref": "#/$defs/ConflictRecord"
+      },
+      "title": "Conflicts",
+      "type": "array"
+    },
+    "decision": {
+      "enum": [
+        "diagnosed",
+        "insufficient_evidence",
+        "no_fault_detected"
+      ],
+      "title": "Decision",
+      "type": "string"
+    },
+    "gate_checks": {
+      "additionalProperties": {
+        "type": "boolean"
+      },
+      "title": "Gate Checks",
+      "type": "object"
+    },
+    "limitations": {
+      "items": {
+        "$ref": "#/$defs/Limitation"
+      },
+      "title": "Limitations",
+      "type": "array"
+    },
+    "margin": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Margin"
+    },
+    "ranked": {
+      "items": {
+        "$ref": "#/$defs/ScoredHypothesis"
+      },
+      "title": "Ranked",
+      "type": "array"
+    }
+  },
+  "required": [
+    "decision",
+    "ranked",
+    "margin"
+  ],
+  "title": "Decision",
+  "type": "object"
+}

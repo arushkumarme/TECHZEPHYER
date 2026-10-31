@@ -1,0 +1,23 @@
+{
+  "properties": {
+    "code": {
+      "title": "Code",
+      "type": "string"
+    },
+    "message": {
+      "title": "Message",
+      "type": "string"
+    },
+    "recoverable": {
+      "title": "Recoverable",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "code",
+    "message",
+    "recoverable"
+  ],
+  "title": "AgentError",
+  "type": "object"
+}

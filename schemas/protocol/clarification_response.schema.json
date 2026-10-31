@@ -1,0 +1,184 @@
+{
+  "$defs": {
+    "Observation": {
+      "description": "A measured or derived fact about one entity and one metric.",
+      "properties": {
+        "agent": {
+          "enum": [
+            "orchestrator",
+            "performance_agent",
+            "infrastructure_agent",
+            "connectivity_agent",
+            "correlation_agent",
+            "reporting_agent",
+            "community_module"
+          ],
+          "title": "Agent",
+          "type": "string"
+        },
+        "assessability": {
+          "enum": [
+            "assessed",
+            "assessed_with_caveat",
+            "not_assessable"
+          ],
+          "title": "Assessability",
+          "type": "string"
+        },
+        "entity": {
+          "title": "Entity",
+          "type": "string"
+        },
+        "evidence_class": {
+          "default": "direct_measurement",
+          "enum": [
+            "direct_measurement",
+            "derived",
+            "user_report"
+          ],
+          "title": "Evidence Class",
+          "type": "string"
+        },
+        "metric": {
+          "description": "Canonical metric name (doc 06), e.g. 'latency_ms'",
+          "title": "Metric",
+          "type": "string"
+        },
+        "metric_category": {
+          "title": "Metric Category",
+          "type": "string"
+        },
+        "observation_id": {
+          "title": "Observation Id",
+          "type": "string"
+        },
+        "quality_flags": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Quality Flags",
+          "type": "array"
+        },
+        "severity": {
+          "enum": [
+            "normal",
+            "elevated",
+            "critical",
+            "unknown"
+          ],
+          "title": "Severity",
+          "type": "string"
+        },
+        "source_ref": {
+          "description": "Normalized record IDs",
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Ref",
+          "type": "array"
+        },
+        "unit": {
+          "title": "Unit",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Value"
+        },
+        "window": {
+          "$ref": "#/$defs/TimeWindow"
+        }
+      },
+      "required": [
+        "observation_id",
+        "entity",
+        "metric",
+        "metric_category",
+        "value",
+        "unit",
+        "window",
+        "severity",
+        "assessability",
+        "agent"
+      ],
+      "title": "Observation",
+      "type": "object"
+    },
+    "TimeWindow": {
+      "properties": {
+        "end": {
+          "format": "date-time",
+          "title": "End",
+          "type": "string"
+        },
+        "start": {
+          "format": "date-time",
+          "title": "Start",
+          "type": "string"
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ],
+      "title": "TimeWindow",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "answered": {
+      "title": "Answered",
+      "type": "boolean"
+    },
+    "observations": {
+      "items": {
+        "$ref": "#/$defs/Observation"
+      },
+      "title": "Observations",
+      "type": "array"
+    },
+    "reason": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Reason"
+    },
+    "result": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Result"
+    }
+  },
+  "required": [
+    "answered"
+  ],
+  "title": "ClarificationResponse",
+  "type": "object"
+}

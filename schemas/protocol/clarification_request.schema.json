@@ -1,0 +1,54 @@
+{
+  "properties": {
+    "parameters": {
+      "additionalProperties": true,
+      "title": "Parameters",
+      "type": "object"
+    },
+    "question_type": {
+      "enum": [
+        "widen_time_window",
+        "assess_additional_entities",
+        "what_if_cause",
+        "recheck_metric"
+      ],
+      "title": "Question Type",
+      "type": "string"
+    },
+    "reason": {
+      "enum": [
+        "conflict",
+        "narrow_margin",
+        "missing_expected_evidence"
+      ],
+      "title": "Reason",
+      "type": "string"
+    },
+    "round": {
+      "minimum": 1,
+      "title": "Round",
+      "type": "integer"
+    },
+    "target": {
+      "enum": [
+        "orchestrator",
+        "performance_agent",
+        "infrastructure_agent",
+        "connectivity_agent",
+        "correlation_agent",
+        "reporting_agent",
+        "community_module"
+      ],
+      "title": "Target",
+      "type": "string"
+    }
+  },
+  "required": [
+    "question_type",
+    "target",
+    "reason",
+    "round"
+  ],
+  "title": "ClarificationRequest",
+  "type": "object"
+}

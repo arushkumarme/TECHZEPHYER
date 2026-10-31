@@ -146,3 +146,24 @@ Severity: **fatal** stops the incident; **error** degrades it; **warning** is re
 - Whether the data carries a schema version.
 - Plausibility ranges and freshness limit.
 - Whether any wireless, service-level (DNS/DHCP) or link-state signals exist.
+
+## 10. Implementation status (M1, 2026-10-31) — `IMPLEMENTED`, `TESTED`
+
+| Item | Where |
+|---|---|
+| Closed vocabularies (agents, message types, cause types, severities, reasons…) | `src/netcoop/core/vocab.py` |
+| Building blocks (§4) | `src/netcoop/core/blocks.py` |
+| Envelope, eight payload types, `make_message`, `parse_message` | `src/netcoop/core/messages.py` |
+| Formal JSON Schemas (generated; a test fails if stale) | `schemas/protocol/*.schema.json` |
+| Deterministic ids and injectable clock | `src/netcoop/core/ids.py` |
+| Contract tests `T-PROTO-01..10`, `T-PROTO-SCHEMA-01` | `tests/core/` |
+
+Decisions made while implementing (additive to §2–§7):
+
+- `protocol_version` and `payload_schema_version` are both `"1.0"`; format `MAJOR.MINOR`. A different major is rejected with **`PROTOCOL_VERSION_UNSUPPORTED`** or **`PAYLOAD_SCHEMA_VERSION_UNSUPPORTED`** (new codes, severity *error*, handled like `MESSAGE_INVALID`).
+- `finding`, `clarification_response`, `decision` and `report_ready` must carry `in_reply_to`.
+- `sent_at` and all window timestamps must be timezone-aware.
+- Ignored unknown fields are reported with their path (e.g. `payload.observations[0].x_note`) so they can be logged.
+- Observation gains `metric` (canonical name from doc 06) next to `metric_category`, an `agent` field and an `evidence_class` (`direct_measurement` / `derived` / `user_report`) used by conflict rule 1 (doc 08 §5).
+- Not-assessable reasons gain `IMPLAUSIBLE` (doc 05 §7 `VALUE_IMPLAUSIBLE`).
+- `finding` carries an optional `facts` object for structured non-metric facts (e.g. dependency scope from `connectivity_agent`).
