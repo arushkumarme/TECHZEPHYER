@@ -1,0 +1,24 @@
+{
+  "id": "S-11",
+  "title": "Topology missing",
+  "pdf_suggested_scenario": null,
+  "provenance": "synthetic-generator",
+  "description": "S-02 input without a topology reference.",
+  "generator": {
+    "notebook_sha256": "f245012f96a878a10653d14df95bdb45cbd6c59f42c8fe61d33efebf70aea460",
+    "start": "2026-10-31T12:00:00+00:00",
+    "devices": 10,
+    "samples_per_device": 3
+  },
+  "run": {},
+  "ground_truth": "by construction (doc 09 \u00a73); generator labels only its fault_type",
+  "expected": {
+    "status": [
+      "diagnosed",
+      "insufficient_evidence"
+    ],
+    "limitations_contain": [
+      "No topology available"
+    ]
+  }
+}

@@ -1,57 +1,75 @@
 # 13 — Setup and Operations
 
-> Version 0.1 · 2026-10-31 · **SKELETON.** Nothing is implemented, so there are no verified commands. This file records the contract the real instructions must meet (`R-14`, `DLV-1`, `DLV-5`); commands and versions are added only after they have been run.
+> Version 0.2 · 2026-10-31 · Commands below were **actually run** on Windows 11 (Git Bash / PowerShell) with the versions listed. Sections marked `TBD` are not implemented yet.
 
-## 1. Setup contract
+## 1. Prerequisites (tested)
 
-A reviewer with a fresh checkout must be able to, following only this file:
+| Tool | Version tested | Notes |
+|---|---|---|
+| [uv](https://docs.astral.sh/uv/) | 0.11.2 | Installs Python and dependencies from `uv.lock` |
+| Python | 3.12.11 (installed by uv; `.python-version` pins 3.12) | `requires-python = ">=3.12,<3.13"` |
+| Node.js | 22.x | Only for the dashboard (M17, `TBD`) |
 
-1. install the backend and (for the dashboard) the frontend dependencies;
-2. run the core on a bundled scenario from the command line;
-3. see the JSON report, the Markdown report and the message trace;
-4. run the full test suite;
-5. optionally enable the LLM, the dashboard, and the extensions — each off by default.
+No internet connection is needed to run the core once dependencies are installed. Nothing connects to any real network.
 
-## 2. Prerequisites — `TBD`
+## 2. Install
 
-Python and Node versions, package manager and operating-system notes are decided at implementation (D-14) and listed here with the versions actually tested. No internet connection is required for the core run.
+```bash
+uv sync            # creates .venv and installs the locked dependencies (incl. dev tools)
+```
 
-## 3. Configuration
+## 3. Run the core (CLI)
 
-Configuration lives in `config/` (doc 02 §7). It will contain, as separate files or sections:
+```bash
+uv run netcoop scenarios list                         # the 13 frozen scenario packages
+uv run netcoop run --scenario S-02 --trace            # one diagnosis: report on stdout, trace on stderr
+uv run netcoop run path/to/bundle.json --json-out report.json --md-out report.md
+uv run netcoop run --scenario S-02 --strict           # only the ten official report keys
+uv run netcoop run --scenario S-02 --inject-fault performance_agent:timeout   # degraded run
+uv run netcoop scenarios run-all --report scenario-results.md                 # whole suite
+uv run netcoop trace INC-0001                         # replay a stored incident's trace
+uv run netcoop validate-report report.json            # check a report against doc 07 §8
+```
 
-- operating mode (only `simulation` is accepted; unknown values are refused);
-- feature flags: extensions A and B, LLM, dashboard;
-- field aliases and unit rules (empty until the generator is inspected; entries cite their source);
-- thresholds and baselines; scoring parameters (doc 08 §10);
-- orchestration limits: timeouts, retries, clarification rounds, tool budgets;
-- gazetteer and zone mapping (synthetic).
+- Exit codes: `0` success; `1` a scenario expectation failed (run-all) or a report is invalid; `2` the input was rejected (`status: failed`).
+- Every run prints `SIMULATED DATA - scenario playback` on stderr.
+- State lives in `var/netcoop.sqlite3` (git-ignored); use `--db PATH` for another file.
 
-Environment variables are used only for secrets (e.g. an LLM provider key). **The LLM is disabled by default.**
+## 4. Configuration (`config/`)
 
-## 4. Run modes — commands `TBD`
-
-| Mode | Purpose |
+| File | Content |
 |---|---|
-| CLI, single scenario | Core demo and tests; prints report and trace |
-| CLI, scenario suite | Runs all scenarios; produces the test and traceability report |
-| Backend API | Serves the dashboard and complaint form |
-| Dashboard | React app against the API |
+| `netcoop.toml` | `mode = "simulation"` (anything else is refused); feature flags (community, geospatial, LLM — all off); ingestion and orchestration limits |
+| `telemetry_fields.toml` | Field dictionary observed in the organizer generator (doc 06) |
+| `aliases.toml` | Team-authored aliases and unit rules for incompatible variants |
+| `diagnosis.toml` | Thresholds, weights and gate parameters (doc 08 §11) — all heuristic |
 
-## 5. Outputs and logs
+Environment variables are reserved for secrets (none are needed today).
 
-- JSON report (strict-official or extended) and Markdown report per incident.
-- Append-only message and state log (SQLite and/or JSONL) per incident.
-- Suite summary: pass/fail by test ID.
-- Locations to be fixed at implementation.
+## 5. Tests and quality checks
 
-## 6. Reproducibility rules
+```bash
+uv run pytest -q                 # unit, contract, integration, e2e (scenarios + CLI)
+uv run pytest -q -m e2e          # end-to-end only
+uv run ruff check . && uv run ruff format --check .
+uv run mypy                      # strict
+uv run python scripts/build_scenarios.py   # regenerate scenario packages (byte-identical)
+uv run python -m netcoop.core.schema_export   # regenerate protocol JSON Schemas
+```
 
-- Scenario inputs are frozen in `sample_data/scenarios/`; tests never depend on regeneration.
-- Dependency versions are pinned once chosen.
-- Whether the generator can be re-run deterministically is `UNKNOWN` (doc 06 §3, item 7).
-- A clean-checkout run is part of the test suite (`T-REPRO-01`).
+## 6. Outputs
 
-## 7. Troubleshooting — `TBD`
+- JSON report (extended, or `--strict` official-only) and Markdown report per incident; also stored in the SQLite `reports` table.
+- Append-only `messages`, `transitions`, `incidents`, `reports` tables (database triggers forbid UPDATE/DELETE).
+- Example artefacts from a real run: [`docs/results/`](results/).
 
-Filled in from problems actually encountered.
+## 7. Reproducibility
+
+- Scenario inputs are frozen in `sample_data/scenarios/` **and** regenerable byte-for-byte from the vendored generator with fixed seeds (test `test_committed_scenarios_are_reproducible`).
+- Dependencies are pinned in `uv.lock`.
+- Runs are deterministic: same input and configuration give the same states, decision, scores and report (apart from `generated_at`), in parallel or sequential mode.
+
+## 8. Troubleshooting (from problems actually met)
+
+- **`ruff` flags the vendored notebook** — it is excluded on purpose (`extend-exclude`); the organizer's code is never edited.
+- **Python 3.15 on the machine** — uv uses the pinned 3.12; do not run with a system Python outside the venv.

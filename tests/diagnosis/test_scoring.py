@@ -443,3 +443,15 @@ def test_determinism() -> None:  # T-REPRO (unit level)
     a = scenario({"SW_CAMPUS_4": HW})
     b = scenario({"SW_CAMPUS_4": HW})
     assert a.model_dump() == b.model_dump()
+
+
+def test_unresolved_conflict_with_critical_reading_blocks_no_fault() -> None:  # S-12 shape
+    d = scenario(
+        {"SW_CAMPUS_4": {k: v for k, v in NORMAL.items() if k != "latency_ms"}},
+        extra_obs=[
+            _obs("OBS-A", "SW_CAMPUS_4", "latency_ms", "critical"),
+            _obs("OBS-B", "SW_CAMPUS_4", "latency_ms", "normal"),
+        ],
+    )
+    assert d.decision == "insufficient_evidence"
+    assert not d.gate_checks["no_abnormal_measurements"]

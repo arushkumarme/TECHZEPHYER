@@ -133,7 +133,26 @@ def _label(h: ScoredHypothesis) -> str:
     return f"{spec.alternative_wording or spec.label}{where} (heuristic score {h.score:.2f})"
 
 
-def _root_cause(decision: Decision, coverage: float) -> str:
+def candidates(decision: Decision) -> list[ScoredHypothesis]:
+    """Causes worth naming when undetermined. "Normal operation" is excluded once any
+    abnormal measurement contradicts it - it has been ruled out, not left open."""
+    return [
+        h
+        for h in decision.ranked
+        if h.diagnosable
+        and h.score > 0
+        and not (h.cause_type == "normal_operation" and h.contradiction > 0)
+    ]
+
+
+def _anomalous_devices(decision: Decision, obs: dict[str, Observation]) -> list[str]:
+    normal = next((h for h in decision.ranked if h.cause_type == "normal_operation"), None)
+    if normal is None:
+        return []
+    return sorted({obs[i].entity for i in normal.contradicting_observation_ids if i in obs})
+
+
+def _root_cause(decision: Decision, coverage: float, obs: dict[str, Observation]) -> str:
     top = _top(decision)
     spec = CATALOG[top.cause_type]
     if decision.decision == "diagnosed":
@@ -144,8 +163,13 @@ def _root_cause(decision: Decision, coverage: float) -> str:
             "No fault detected: all assessed measurements are within expected ranges "
             f"({coverage:.0%} of device-metric pairs assessed)"
         )
-    candidates = [h for h in decision.ranked if h.diagnosable and h.score > 0][:2]
-    names = "; ".join(_label(h) for h in candidates) or "none with supporting evidence"
+    names = "; ".join(_label(h) for h in candidates(decision)[:2]) or "none"
+    anomalous = _anomalous_devices(decision, obs)
+    if anomalous:
+        return (
+            f"Undetermined - abnormal measurements on {', '.join(anomalous)} are not explained "
+            f"strongly enough by any single cause; leading candidates: {names}"
+        )
     return f"Undetermined - leading candidates: {names}"
 
 
@@ -164,18 +188,20 @@ def _actions(decision: Decision, not_assessable: list[dict[str, str]]) -> tuple[
             )
         return "monitoring", steps
     todo: list[str] = []
-    for h in [h for h in decision.ranked if h.diagnosable and h.score > 0][:2]:
+    leading = candidates(decision)[:2]
+    for h in leading:
         for s in CATALOG[h.cause_type].next_steps:
             line = f"{s} ({', '.join(h.entities)})" if h.entities else s
             if line not in todo:
                 todo.append(line)
-    if top.missing_expected_evidence:
+    if leading and leading[0].missing_expected_evidence:
         todo.append(
-            "Collect missing expected evidence: " + ", ".join(top.missing_expected_evidence[:4])
+            "Collect missing expected evidence: "
+            + ", ".join(leading[0].missing_expected_evidence[:4])
         )
     if not todo:
         todo.append("Collect additional telemetry for the affected scope and re-run diagnosis")
-    return "diagnostic_next_todo", todo
+    return "diagnostic_next_steps", todo
 
 
 def build_report(
@@ -206,7 +232,7 @@ def build_report(
     mode_name, actions = _actions(decision, na)
     top = _top(decision)
     if decision.decision == "insufficient_evidence":
-        alternatives = [_label(h) for h in decision.ranked if h.diagnosable and h.score > 0]
+        alternatives = [_label(h) for h in candidates(decision)]
     else:
         alternatives = [
             _label(h) for h in decision.ranked[1:] if h.diagnosable and h.score > 0 and h.entities
@@ -242,7 +268,7 @@ def build_report(
     report: dict[str, Any] = {
         "incident_id": incident_id,
         "status": decision.decision,
-        "suspected_root_cause": _root_cause(decision, coverage),
+        "suspected_root_cause": _root_cause(decision, coverage, obs),
         "confidence": float(decision.confidence),
         "affected_devices": list(decision.affected_entities),
         "supporting_evidence": [

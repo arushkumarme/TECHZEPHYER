@@ -300,3 +300,14 @@ def test_separate_issue_is_not_silently_dropped(make_bus: Callable[[], MessageBu
     _, report, _, _ = pipeline(bundle, make_bus())
     assert report["affected_devices"] == ["SW_CAMPUS_4"]
     assert any("SW_CAMPUS_6" in lim and "separate" in lim for lim in report["limitations"])
+
+
+def test_undetermined_report_wording(make_bus: Callable[[], MessageBus]) -> None:
+    _, report, _, _ = pipeline(_two_candidate_bundle(), make_bus(), max_rounds=0)
+    ext = report["netcoop_extensions"]
+    assert ext["recommendation_mode"] == "diagnostic_next_steps"
+    cause = report["suspected_root_cause"]
+    assert cause.startswith("Undetermined - abnormal measurements on SW_CAMPUS_4, SW_CAMPUS_6")
+    assert "Normal operation" not in cause  # ruled out by the anomalies, not a candidate
+    assert not any(a.startswith("Normal operation") for a in report["alternative_causes"])
+    assert not any("@" in lim for lim in report["limitations"])  # no internal item names

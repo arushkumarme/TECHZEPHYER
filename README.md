@@ -2,11 +2,9 @@
 
 **Multi-Agent Network Fault Diagnosis and Interoperability** — a project for the IIT Bhubaneswar Agentic AI Hackathon.
 
-> **Status (2026-10-31): design stage. Nothing is implemented yet.**
-> Every capability described here is a plan until its row in
-> [`docs/01-requirements-traceability.md`](docs/01-requirements-traceability.md) says otherwise.
+> **Status (2026-10-31): the mandatory core is implemented and tested** (five agents, orchestrator, protocol, validation, diagnosis, report, CLI, 13 scenarios). Optional components and extensions are in progress — see [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md) and [`IMPLEMENTATION_LOG.md`](IMPLEMENTATION_LOG.md).
 > Team size, roles and deadline are **TBD**.
-> The synthetic-data generator has **not** been inspected yet, so no telemetry field name, unit or topology field is defined anywhere in this repository (see [`docs/06-field-dictionary.md`](docs/06-field-dictionary.md)).
+> The organizer's generator has been inspected and vendored; field names are `OBSERVED` ([`docs/06`](docs/06-field-dictionary.md)).
 
 ## What NetCoop AI is
 
@@ -68,6 +66,13 @@ Suggested reading order: 00 → 01 → 02 → 03 → 04 → 05 → 07 → 08.
 
 Where sources disagree, the disagreement is recorded in [`docs/00`](docs/00-scope-and-decisions.md) §6 rather than silently resolved.
 
-## Quick start
+## Quick start (commands verified 2026-10-31)
 
-**TBD — not implemented.** The setup contract is in [`docs/13`](docs/13-setup-and-operations.md); real commands will be added only after they have been run.
+```bash
+uv sync                                    # Python 3.12 + locked dependencies
+uv run netcoop run --scenario S-02 --trace # diagnose the link-congestion scenario, show the agent trace
+uv run netcoop scenarios run-all           # all 13 scenarios with expected-outcome checks
+uv run pytest -q                           # full test suite
+```
+
+Full instructions: [`docs/13-setup-and-operations.md`](docs/13-setup-and-operations.md). Latest suite results: [`docs/results/scenario-results.md`](docs/results/scenario-results.md).

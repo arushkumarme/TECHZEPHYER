@@ -23,7 +23,13 @@ from datetime import datetime
 from netcoop.core.blocks import Limitation, ScoredHypothesis
 from netcoop.core.messages import Decision
 from netcoop.core.vocab import ConfidenceCategory, DecisionKind
-from netcoop.diagnosis.catalog import CATALOG, DERIVED_ITEMS, CauseSpec, SignatureItem
+from netcoop.diagnosis.catalog import (
+    CATALOG,
+    DERIVED_ITEMS,
+    REQUIREMENT_TEXT,
+    CauseSpec,
+    SignatureItem,
+)
 from netcoop.diagnosis.evidence import EvidenceView
 from netcoop.diagnosis.params import DiagnosisParams
 
@@ -329,7 +335,9 @@ def _score_normal(
                 ids.extend(ev.observation_ids)
                 sources.update(ev.agents)
                 matched.add(i)
-            elif ev.abnormal:
+            elif any(x in ("elevated", "critical") for x in ev.severities):
+                # Includes unresolved conflicts where only SOME readings are abnormal: a
+                # conflicting critical reading means "within expected ranges" is unproven.
                 contradiction += 1.0 if "critical" in ev.severities else 0.5
                 contra_ids.extend(ev.observation_ids)
     for (_, item), ev in view.items.items():
@@ -549,7 +557,7 @@ def decide(
                 Limitation(
                     code="CAUSE_NOT_ASSESSABLE",
                     text=f"{spec.label} cannot be assessed with the supplied data "
-                    f"(required evidence absent: {', '.join(spec.requires)}).",
+                    f"(missing: {', '.join(REQUIREMENT_TEXT.get(r, r) for r in spec.requires)}).",
                 )
             )
     for agent in ctx.missing_agents:

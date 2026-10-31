@@ -1,0 +1,28 @@
+{
+  "id": "S-12",
+  "title": "Conflicting and stale measurements",
+  "pdf_suggested_scenario": null,
+  "provenance": "team-authored",
+  "description": "Two different latency values for SW_CAMPUS_3 at the same timestamp; SW_CAMPUS_9 reports only data two hours older than the rest.",
+  "generator": {
+    "notebook_sha256": "f245012f96a878a10653d14df95bdb45cbd6c59f42c8fe61d33efebf70aea460",
+    "start": "2026-10-31T12:00:00+00:00",
+    "devices": 10,
+    "samples_per_device": 3
+  },
+  "run": {},
+  "ground_truth": "by construction (doc 09 \u00a73); generator labels only its fault_type",
+  "expected": {
+    "status": [
+      "insufficient_evidence"
+    ],
+    "warnings": [
+      "RECORD_CONFLICT",
+      "DATA_STALE"
+    ],
+    "limitations_contain": [
+      "SW_CAMPUS_3 latency_ms: observations disagree"
+    ],
+    "conflicts_min": 1
+  }
+}

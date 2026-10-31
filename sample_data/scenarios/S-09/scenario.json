@@ -1,0 +1,22 @@
+{
+  "id": "S-09",
+  "title": "Ambiguous: two near-equal explanations",
+  "pdf_suggested_scenario": null,
+  "provenance": "team-authored",
+  "description": "Interface-fault signature on SW_CAMPUS_4 and CPU-overload signature on SW_CAMPUS_6 with near-equal scores.",
+  "generator": {
+    "notebook_sha256": "f245012f96a878a10653d14df95bdb45cbd6c59f42c8fe61d33efebf70aea460",
+    "start": "2026-10-31T12:00:00+00:00",
+    "devices": 10,
+    "samples_per_device": 3
+  },
+  "run": {},
+  "ground_truth": "by construction (doc 09 \u00a73); generator labels only its fault_type",
+  "expected": {
+    "status": [
+      "insufficient_evidence"
+    ],
+    "clarifications_min": 1,
+    "root_cause_prefix": "Undetermined"
+  }
+}

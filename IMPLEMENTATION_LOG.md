@@ -103,3 +103,18 @@ Newest entry last. Each entry records actual commands and results. See `IMPLEMEN
 - **Failure met:** my test expected `READY` for a hardware-failure bundle; ingestion correctly reports `READY_WITH_WARNINGS` because the generator's hardware profile omits `jitter_ms` (METRIC_MISSING). Test corrected to assert that warning; a separate normal-run test asserts `READY`.
 - **Gates:** G1–G7 ✔ (G6: full real stack — ingestion, tools, five agents, bus, SQLite).
 - **Next:** M9 scenario packages, CLI, end-to-end + reproducibility.
+
+## M9 — Scenarios, CLI, end-to-end · 2026-10-31 · VERIFIED (mandatory core complete)
+
+- **Objective:** frozen + regenerable scenario packages S-01..S-12 (+S-06b), expected-outcome checker, CLI (`run`, `scenarios`, `trace`, `validate-report`), trace renderer, e2e and reproducibility tests, setup docs with verified commands.
+- **Requirements:** R-14, R-18, M-05, M-06, DLV-3, DLV-5 (T-SCN-*, T-REPRO-01/03, T-DNS-*).
+- **Files:** `src/netcoop/scenarios/{catalog,runner}.py`, `src/netcoop/cli/main.py`, `src/netcoop/orchestrator/trace.py`, `scripts/build_scenarios.py`, `sample_data/scenarios/*`, `tests/e2e/test_scenarios.py`, docs 01 §10, 09 §7, 13 v0.2, README quick start, `docs/results/`.
+- **Executed:** `uv run pytest -q` → 215 passed; `uv run netcoop scenarios run-all` → 13/13 PASS (exit 0); ruff, format, mypy strict clean (48 files).
+- **Defects found while checking outcomes for correctness (not just PASS):**
+  1. S-12 reported `no_fault_detected` despite an unresolved conflicting critical latency reading — normal-operation scoring ignored partially-abnormal conflicts. Fixed (+ unit test) and S-12's expectation tightened (it had been too permissive).
+  2. Undetermined reports listed "Normal operation" as a leading candidate although anomalies had ruled it out, and showed its missing-evidence list. Fixed: ruled-out normal operation excluded; anomalous devices named.
+  3. Internal item names (`@probe_failures`) leaked into limitations. Fixed (plain-language names).
+  4. Regression from an earlier blanket rename: recommendation mode `diagnostic_next_todo` instead of `diagnostic_next_steps`; the original test only checked it conditionally. Fixed and pinned by an unconditional test.
+  5. Malformed agent replies without their own header were logged without an incident id and vanished from the trace. Bus now attributes them to the request they answer (+ test).
+- **Gates:** G1–G7 ✔ (G6: CLI subprocess against the real stack; G7: docs 13/09/01 updated with run commands and results).
+- **Next:** M10 persistent workflow state / pause-resume.

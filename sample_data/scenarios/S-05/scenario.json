@@ -1,0 +1,24 @@
+{
+  "id": "S-05",
+  "title": "DNS failure (team-authored probe data)",
+  "pdf_suggested_scenario": "DNS or DHCP failure",
+  "provenance": "synthetic-generator + team-authored probes",
+  "description": "Normal generator telemetry plus TEAM-AUTHORED DNS probe results (doc 08 \u00a73.3): probes from SW_CAMPUS_4 time out or fail while the network is healthy.",
+  "generator": {
+    "notebook_sha256": "f245012f96a878a10653d14df95bdb45cbd6c59f42c8fe61d33efebf70aea460",
+    "start": "2026-10-31T12:00:00+00:00",
+    "devices": 10,
+    "samples_per_device": 3
+  },
+  "run": {},
+  "ground_truth": "by construction (doc 09 \u00a73); generator labels only its fault_type",
+  "expected": {
+    "status": [
+      "diagnosed"
+    ],
+    "top_cause": "dns_dhcp_failure",
+    "affected_devices": [
+      "SW_CAMPUS_4"
+    ]
+  }
+}

@@ -167,3 +167,12 @@ def test_unparseable_wire_text_is_logged(bus: MessageBus) -> None:
         bus.transmit("{broken")
     last = bus.store.messages()[-1]
     assert (last.valid, last.raw_json) == (False, "{broken")
+
+
+def test_malformed_reply_is_attributed_to_the_request(bus: MessageBus) -> None:
+    bus.register("performance_agent", lambda msg: '{"protocol_version": "1.0"}')
+    with pytest.raises(MessageValidationError):
+        _ask(bus)
+    bad = bus.store.messages("INC-0001")[-1]
+    assert (bad.valid, bad.sender, bad.recipient) == (False, "performance_agent", "orchestrator")
+    assert bad.in_reply_to == bus.store.messages("INC-0001")[0].message_id

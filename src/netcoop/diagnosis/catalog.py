@@ -28,6 +28,13 @@ DERIVED_ITEMS: dict[str, str] = {
 }
 
 
+#: Plain-language names for required evidence, used in report limitations.
+REQUIREMENT_TEXT: dict[str, str] = {
+    "wireless_signal": "wireless signal measurements",
+    "@probe_failures": "DNS/DHCP service probe results",
+}
+
+
 @dataclass(frozen=True)
 class SignatureItem:
     item: str

@@ -1,0 +1,38 @@
+{
+  "id": "S-07",
+  "title": "Partially missing metrics",
+  "pdf_suggested_scenario": null,
+  "provenance": "team-authored",
+  "description": "S-02 input with queue_drops removed for SW_CAMPUS_4 and cpu removed for SW_CAMPUS_8. Missing data must be listed and never treated as healthy.",
+  "generator": {
+    "notebook_sha256": "f245012f96a878a10653d14df95bdb45cbd6c59f42c8fe61d33efebf70aea460",
+    "start": "2026-10-31T12:00:00+00:00",
+    "devices": 10,
+    "samples_per_device": 3
+  },
+  "run": {},
+  "ground_truth": "by construction (doc 09 \u00a73); generator labels only its fault_type",
+  "expected": {
+    "status": [
+      "diagnosed",
+      "insufficient_evidence"
+    ],
+    "forbidden_causes_on_top": [
+      "normal_operation"
+    ],
+    "warnings": [
+      "METRIC_MISSING"
+    ],
+    "not_assessable_contains": [
+      [
+        "SW_CAMPUS_4",
+        "queue_drops"
+      ],
+      [
+        "SW_CAMPUS_8",
+        "cpu_utilization_pct"
+      ]
+    ],
+    "confidence_below_scenario": "S-02"
+  }
+}

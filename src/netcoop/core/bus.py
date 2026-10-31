@@ -112,6 +112,14 @@ class MessageBus:
         """Serialize, validate and log one message. Raises on any violation."""
         raw = wire.to_json() if isinstance(wire, Envelope) else wire
         header = _best_effort_header(raw)
+        if expect_reply_to is not None:
+            # A malformed reply may lack its own header; attribute it to the request it
+            # answers so it still appears in that incident's trace.
+            req = expect_reply_to.envelope
+            header.setdefault("incident_id", req.incident_id)
+            header.setdefault("sender", req.recipient)
+            header.setdefault("recipient", req.sender)
+            header.setdefault("in_reply_to", req.message_id)
         try:
             parsed = parse_message(raw)
             _check_route(parsed.envelope.sender, parsed.envelope.recipient)

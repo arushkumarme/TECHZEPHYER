@@ -1,0 +1,19 @@
+15:55:50.171  [state] - -> RECEIVED (scenario:S-02) {"label": "S-02"}
+15:55:50.172  [state] RECEIVED -> VALIDATING (auto)
+15:55:50.174  [state] VALIDATING -> READY (ingestion) {"q": 0.875, "topology": null, "warnings": []}
+15:55:50.179  [msg]   INC-0014-MSG-000001 orchestrator -> performance_agent task_request: goal=assess_performance scope=10 budget=30
+15:55:50.181  [msg]   INC-0014-MSG-000002 orchestrator -> infrastructure_agent task_request: goal=assess_device_health scope=10 budget=30
+15:55:50.183  [msg]   INC-0014-MSG-000003 orchestrator -> connectivity_agent task_request: goal=assess_connectivity_scope scope=10 budget=40
+15:55:50.185  [state] READY -> DISPATCHED (tasks_sent) {"agents": ["performance_agent", "infrastructure_agent", "connectivity_agent"], "deadline_s": 10.0}
+15:55:50.186  [state] DISPATCHED -> COLLECTING (auto)
+15:55:50.189  [msg]   INC-0014-MSG-000001.R performance_agent -> orchestrator finding: 40 observations, 0 not assessable, hypotheses=['link_congestion'], tool calls=['telemetry_query', 'coverage_query', 'telemetry_query']
+15:55:50.191  [msg]   INC-0014-MSG-000002.R infrastructure_agent -> orchestrator finding: 30 observations, 10 not assessable, hypotheses=['device_overload', 'link_congestion'], tool calls=['telemetry_query', 'coverage_query', 'telemetry_query']
+15:55:50.196  [msg]   INC-0014-MSG-000003.R connectivity_agent -> orchestrator finding: 0 observations, 0 not assessable, hypotheses=[], tool calls=['topology_info', 'telemetry_query', 'what_if_failure', 'topology_path', 'topology_path', 'topology_path', 'topology_path', 'topology_path', 'topology_path', 'topology_path', 'topology_path', 'topology_path', 'topology_path', 'probe_query']
+15:55:50.197  [state] COLLECTING -> CORRELATING (findings_collected) {"findings": ["connectivity_agent", "infrastructure_agent", "performance_agent"], "missing": []}
+15:55:50.198  [msg]   INC-0014-MSG-000004 orchestrator -> correlation_agent task_request: goal=correlate scope=10 budget=0
+15:55:50.201  [msg]   INC-0014-MSG-000004.R correlation_agent -> orchestrator decision: diagnosed top=link_congestion ['SW_CAMPUS_4'] confidence=0.6649 margin=0.1818
+15:55:50.203  [state] CORRELATING -> DECIDED (decision) {"confidence": 0.6649, "decision": "diagnosed", "entities": ["SW_CAMPUS_4"], "top": "link_congestion"}
+15:55:50.205  [state] DECIDED -> REPORTING (auto)
+15:55:50.207  [msg]   INC-0014-MSG-000005 orchestrator -> reporting_agent task_request: goal=report scope=10 budget=0
+15:55:50.210  [msg]   INC-0014-MSG-000005.R reporting_agent -> orchestrator report_ready: status=diagnosed cause='Likely link congestion causing egress queue drops on SW_CAMPUS_4'
+15:55:50.212  [state] REPORTING -> AWAITING_REVIEW (report_ready) {"status": "diagnosed"}

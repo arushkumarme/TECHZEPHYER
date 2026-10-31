@@ -101,3 +101,11 @@ Numeric limits (freshness, plausibility) come from config after data inspection.
 - Whether the generator supports fixed seeds is `UNKNOWN`. Regardless, scenario inputs are **frozen and committed**, so a run depends only on committed data and configuration.
 - A run's observable output (states, decision, score, report keys) must be identical across runs; free-text wording may differ only where an LLM is explicitly enabled.
 - A test report (pass/fail per ID against the traceability matrix) is produced for the submission (doc 14).
+
+## 7. Implementation status (M9, 2026-10-31) — `IMPLEMENTED`, `TESTED`
+
+- Packages: `sample_data/scenarios/S-01 … S-12` plus `S-06b` (unsupported schema major). Built by `src/netcoop/scenarios/catalog.py` from the vendored generator (fixed seeds, fixed clock) and labelled team-authored mutations; written by `scripts/build_scenarios.py`; a test requires byte-identical regeneration.
+- Each `scenario.json` holds provenance, description, generator parameters, run options (S-10 fault injection) and the expected outcome; `src/netcoop/scenarios/runner.py` checks it.
+- **S-03 (weak Wi-Fi):** the generator has no wireless signal. The package adds an *unmapped* team-authored `wifi_signal_dbm` field; the expected outcome is that weak Wi-Fi is never claimed and the report says it cannot be assessed.
+- **S-05 (DNS):** diagnosed only from separately labelled team-authored probe data.
+- Results of the last full run: [`results/scenario-results.md`](results/scenario-results.md) (13/13 PASS). Test files: `tests/e2e/test_scenarios.py` (scenario outcomes, reproducibility, determinism, trace content, CLI).

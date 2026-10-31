@@ -1,0 +1,31 @@
+{
+  "id": "S-03",
+  "title": "Weak Wi-Fi signal (not assessable from the supplied data)",
+  "pdf_suggested_scenario": "Weak Wi-Fi signal",
+  "provenance": "team-authored",
+  "description": "The generator has no wireless signal field. Team-authored records add an unmapped `wifi_signal_dbm` field and mild loss on SW_CAMPUS_5. NetCoop must not guess the field's meaning nor claim a weak-signal cause.",
+  "generator": {
+    "notebook_sha256": "f245012f96a878a10653d14df95bdb45cbd6c59f42c8fe61d33efebf70aea460",
+    "start": "2026-10-31T12:00:00+00:00",
+    "devices": 10,
+    "samples_per_device": 3
+  },
+  "run": {},
+  "ground_truth": "by construction (doc 09 \u00a73); generator labels only its fault_type",
+  "expected": {
+    "status": [
+      "insufficient_evidence",
+      "diagnosed",
+      "no_fault_detected"
+    ],
+    "forbidden_causes": [
+      "weak_wifi"
+    ],
+    "limitations_contain": [
+      "Weak Wi-Fi signal cannot be assessed"
+    ],
+    "warnings": [
+      "FIELD_UNMAPPED"
+    ]
+  }
+}

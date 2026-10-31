@@ -1,7 +1,7 @@
 # 01 — Requirements Traceability Matrix
 
 > Version 0.1 · 2026-10-31 · Draft for review
-> **Implementation status of every row: NOT STARTED (design only).** Test and demo IDs are *planned*; they do not exist yet.
+> **Implementation status: see §10** (updated 2026-10-31 after milestone M9). Rows in §2–§9 keep the original design mapping.
 
 Every official requirement from `SRC-1` (`Agentic_AI_Hackathon.pdf`) is listed with its page and section, and mapped to the architecture component, documentation file, planned implementation module, planned test and planned demonstration evidence. Official requirements are never merged with our extensions or project rules (§8–§9).
 
@@ -135,3 +135,37 @@ Never counted toward the mandatory rows. Disabled → core must still pass (`T-I
 | X-MODE-01 | Hackathon simulation mode | C-CFG, C-SRC | 00, 02 | T-MODE-01 | all |
 | X-MODE-02 | Future deployment mode — design only | C-SRC | 15 | — | — |
 | X-MODE-03 | Status labelling of implemented / simulated / future / needs-access items | docs, UI | 00, 12 | T-DOC-03 | — |
+
+## 10. Implementation status (2026-10-31, after M9)
+
+`TESTED` = implemented and covered by passing automated tests (file named). Demo evidence (video) does not exist yet, so no row is marked fully *done*.
+
+| ID | Status | Verified by (tests) |
+|---|---|---|
+| R-01 probable root cause | TESTED | `tests/diagnosis/test_scoring.py`, `tests/e2e/test_scenarios.py` (S-02, S-04, S-05) |
+| R-02 affected devices | TESTED | `tests/agents/test_specialists.py` (connectivity what-if), e2e `affected_devices` checks |
+| R-03 supporting evidence | TESTED | `test_evidence_traces_to_observations` |
+| R-04 alternatives / uncertainty | TESTED | `test_hardware_failure_profile_prefers_device_failure` (alternatives), S-09 |
+| R-05 confidence + category | TESTED | `test_congestion_is_diagnosed_from_two_agents`, `test_low_data_quality_caps_confidence` |
+| R-06 corrective actions | TESTED | `test_actions_adapt_to_uncertainty` |
+| R-07 no exact cause when insufficient | TESTED | `test_single_weak_symptom_is_insufficient`, S-08, S-09 |
+| R-08 collaborating agents | TESTED | `test_full_run` (5 agents, ≥2 evidence sources) |
+| R-09 interoperability protocol | TESTED | `tests/core/test_messages.py`, `test_bus_log.py`, `schemas/protocol/` |
+| R-10 orchestration | TESTED | `tests/orchestrator/test_workflow.py` |
+| R-11 fault diagnosis from telemetry | TESTED | e2e S-01..S-12 |
+| R-12 unified report | TESTED | `test_official_keys_exact_and_typed` |
+| R-13 validation / error handling | TESTED | `tests/ingestion/test_ingest.py` (E-01..E-12), S-06, S-06b, S-10 |
+| R-14 reproducible testing & docs | TESTED | `test_committed_scenarios_are_reproducible`, `test_scenario_runs_are_deterministic`, doc 13 |
+| R-15 structured JSON report (+ Markdown) | TESTED | `test_cli_run_and_validate` |
+| R-16 documented scoring; report insufficiency | TESTED | doc 08 §11, `test_scoring.py` |
+| R-17 synthetic data / simulation mode | TESTED | `test_other_modes_are_refused`, `test_live_mode_refused` |
+| R-18 suggested scenarios | TESTED (S-03 as "not assessable"; S-05 via team-authored probes) | e2e |
+| R-19 dataset categories | TESTED | `tests/config/test_fields.py` (T-DOC-01) |
+| R-20 remediation simulated, no write path | PARTIAL — no write tool exists (`test_no_state_changing_tool_exists`); approval workflow is M11 | |
+| M-01..M-06 minimum acceptance | TESTED | `test_full_run`, protocol tests, `test_congestion_is_diagnosed_from_two_agents`, ingestion tests, report tests, CLI test |
+| O-01 MCP | NOT_STARTED (M12; owner scope change ID-01) | |
+| O-02 HITL | NOT_STARTED (M11) | |
+| O-03 persistent state / pause-resume | PARTIAL — durable append-only log (M2/M8); pause/resume is M10 | |
+| O-04 dashboard | NOT_STARTED (M14/M17) — CLI works | |
+| O-05 simulated remediation | NOT_STARTED (M11) | |
+| X-CSI-*, X-GEO-* | NOT_STARTED (M15–M17) | |

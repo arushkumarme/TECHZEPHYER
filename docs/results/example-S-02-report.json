@@ -1,0 +1,480 @@
+{
+  "incident_id": "INC-0014",
+  "status": "diagnosed",
+  "suspected_root_cause": "Likely link congestion causing egress queue drops on SW_CAMPUS_4",
+  "confidence": 0.6649,
+  "affected_devices": [
+    "SW_CAMPUS_4"
+  ],
+  "supporting_evidence": [
+    {
+      "metric": "link_utilization_pct",
+      "value": 78.88,
+      "interpretation": "Elevated link utilization on SW_CAMPUS_4 (sustained)"
+    },
+    {
+      "metric": "queue_drops",
+      "value": 35,
+      "interpretation": "Elevated egress queue drops on SW_CAMPUS_4 (sustained)"
+    },
+    {
+      "metric": "latency_ms",
+      "value": 211.73,
+      "interpretation": "Critical latency on SW_CAMPUS_4 (sustained)"
+    },
+    {
+      "metric": "jitter_ms",
+      "value": 66.76,
+      "interpretation": "Critical jitter on SW_CAMPUS_4 (sustained)"
+    },
+    {
+      "metric": "packet_loss_pct",
+      "value": 1.5,
+      "interpretation": "Elevated packet loss on SW_CAMPUS_4 (sustained)"
+    },
+    {
+      "metric": "status",
+      "value": "Warning",
+      "interpretation": "Elevated device status on SW_CAMPUS_4 (sustained)"
+    }
+  ],
+  "alternative_causes": [
+    "Device or hardware failure on SW_CAMPUS_4 (heuristic score 0.48)",
+    "Device CPU overload on SW_CAMPUS_4 (heuristic score 0.47)",
+    "Ethernet or interface fault on SW_CAMPUS_4 (heuristic score 0.17)"
+  ],
+  "recommended_actions": [
+    "Inspect egress link utilization and traffic distribution on the affected device (SW_CAMPUS_4)",
+    "Review queue configuration and QoS policy on the congested interface (SW_CAMPUS_4)",
+    "Consider load balancing or capacity increase on the saturated link (SW_CAMPUS_4)"
+  ],
+  "evidence_sources": [
+    "infrastructure_agent",
+    "performance_agent"
+  ],
+  "limitations": [
+    "DNS / DHCP service failure cannot be assessed with the supplied data (missing: DNS/DHCP service probe results).",
+    "Weak Wi-Fi signal cannot be assessed with the supplied data (missing: wireless signal measurements).",
+    "Root cause requires further verification by an operator.",
+    "Whether queue_drops / interface_errors are per-sample or cumulative counters is unknown in the supplied generator; values are read as reported per sample.",
+    "Confidence is a heuristic score from a documented method (doc 08), not a probability.",
+    "Simulation mode: synthetic telemetry and a SIMULATED topology; NetCoop AI has no access to a real campus network."
+  ],
+  "netcoop_extensions": {
+    "schema_version": "1.0",
+    "mode": "simulation",
+    "data_provenance": "synthetic-generator",
+    "topology_provenance": "SIMULATED",
+    "confidence_method": "heuristic",
+    "confidence_category": "medium",
+    "decision_margin": 0.1818,
+    "gate_checks": {
+      "score_at_least_tau": true,
+      "key_evidence_present": true,
+      "min_signature_items": true,
+      "min_independent_sources": true,
+      "margin_at_least_delta": true,
+      "not_telemetry_unreliable": true,
+      "diagnosable": true
+    },
+    "data_quality": {
+      "completeness": 0.875,
+      "freshness": 1.0,
+      "consistency": 1.0,
+      "q": 0.875,
+      "acceptance": "READY",
+      "warnings": []
+    },
+    "not_assessable": [
+      {
+        "entity": "SW_CAMPUS_1",
+        "metric": "interface_errors",
+        "reason": "MISSING",
+        "detail": ""
+      },
+      {
+        "entity": "SW_CAMPUS_10",
+        "metric": "interface_errors",
+        "reason": "MISSING",
+        "detail": ""
+      },
+      {
+        "entity": "SW_CAMPUS_2",
+        "metric": "interface_errors",
+        "reason": "MISSING",
+        "detail": ""
+      },
+      {
+        "entity": "SW_CAMPUS_3",
+        "metric": "interface_errors",
+        "reason": "MISSING",
+        "detail": ""
+      },
+      {
+        "entity": "SW_CAMPUS_4",
+        "metric": "interface_errors",
+        "reason": "MISSING",
+        "detail": ""
+      },
+      {
+        "entity": "SW_CAMPUS_5",
+        "metric": "interface_errors",
+        "reason": "MISSING",
+        "detail": ""
+      },
+      {
+        "entity": "SW_CAMPUS_6",
+        "metric": "interface_errors",
+        "reason": "MISSING",
+        "detail": ""
+      },
+      {
+        "entity": "SW_CAMPUS_7",
+        "metric": "interface_errors",
+        "reason": "MISSING",
+        "detail": ""
+      },
+      {
+        "entity": "SW_CAMPUS_8",
+        "metric": "interface_errors",
+        "reason": "MISSING",
+        "detail": ""
+      },
+      {
+        "entity": "SW_CAMPUS_9",
+        "metric": "interface_errors",
+        "reason": "MISSING",
+        "detail": ""
+      }
+    ],
+    "hypotheses": [
+      {
+        "cause_type": "link_congestion",
+        "entities": [
+          "SW_CAMPUS_4"
+        ],
+        "score": 0.6649,
+        "support": 0.6364,
+        "contradiction": 0.0,
+        "corroboration": 0.1,
+        "community_bonus": 0.0,
+        "unexplained": 0.1429,
+        "base": 0.6649,
+        "ceiling": 0.95,
+        "missing_expected_evidence": [],
+        "matched_signature_items": [
+          "jitter_ms",
+          "latency_ms",
+          "link_utilization_pct",
+          "packet_loss_pct",
+          "queue_drops",
+          "status"
+        ],
+        "diagnosable": true
+      },
+      {
+        "cause_type": "device_failure",
+        "entities": [
+          "SW_CAMPUS_4"
+        ],
+        "score": 0.4831,
+        "support": 0.4545,
+        "contradiction": 0.0,
+        "corroboration": 0.1,
+        "community_bonus": 0.0,
+        "unexplained": 0.1429,
+        "base": 0.4831,
+        "ceiling": 0.95,
+        "missing_expected_evidence": [
+          "SW_CAMPUS_4:interface_errors"
+        ],
+        "matched_signature_items": [
+          "cpu_utilization_pct",
+          "latency_ms",
+          "link_utilization_pct",
+          "packet_loss_pct",
+          "queue_drops",
+          "status"
+        ],
+        "diagnosable": true
+      },
+      {
+        "cause_type": "device_overload",
+        "entities": [
+          "SW_CAMPUS_4"
+        ],
+        "score": 0.469,
+        "support": 0.5833,
+        "contradiction": 0.0,
+        "corroboration": 0.1,
+        "community_bonus": 0.0,
+        "unexplained": 0.4286,
+        "base": 0.469,
+        "ceiling": 0.95,
+        "missing_expected_evidence": [],
+        "matched_signature_items": [
+          "cpu_utilization_pct",
+          "latency_ms",
+          "queue_drops",
+          "status"
+        ],
+        "diagnosable": true
+      },
+      {
+        "cause_type": "normal_operation",
+        "entities": [],
+        "score": 0.3875,
+        "support": 0.7875,
+        "contradiction": 1.0,
+        "corroboration": 0.1,
+        "community_bonus": 0.0,
+        "unexplained": 0.0,
+        "base": 0.3875,
+        "ceiling": 0.95,
+        "missing_expected_evidence": [
+          "SW_CAMPUS_10:interface_errors",
+          "SW_CAMPUS_1:interface_errors",
+          "SW_CAMPUS_2:interface_errors",
+          "SW_CAMPUS_3:interface_errors",
+          "SW_CAMPUS_4:interface_errors",
+          "SW_CAMPUS_5:interface_errors",
+          "SW_CAMPUS_6:interface_errors",
+          "SW_CAMPUS_7:interface_errors",
+          "SW_CAMPUS_8:interface_errors",
+          "SW_CAMPUS_9:interface_errors"
+        ],
+        "matched_signature_items": [
+          "cpu_utilization_pct",
+          "jitter_ms",
+          "latency_ms",
+          "link_utilization_pct",
+          "packet_loss_pct",
+          "queue_drops",
+          "status"
+        ],
+        "diagnosable": true
+      },
+      {
+        "cause_type": "interface_fault",
+        "entities": [
+          "SW_CAMPUS_4"
+        ],
+        "score": 0.1714,
+        "support": 0.3571,
+        "contradiction": 0.0,
+        "corroboration": 0.1,
+        "community_bonus": 0.0,
+        "unexplained": 0.5714,
+        "base": 0.1714,
+        "ceiling": 0.95,
+        "missing_expected_evidence": [
+          "SW_CAMPUS_4:interface_errors"
+        ],
+        "matched_signature_items": [
+          "latency_ms",
+          "packet_loss_pct",
+          "status"
+        ],
+        "diagnosable": true
+      },
+      {
+        "cause_type": "upstream_congestion",
+        "entities": [
+          "SW_CAMPUS_4"
+        ],
+        "score": 0.0643,
+        "support": 0.35,
+        "contradiction": 0.0,
+        "corroboration": 0.0,
+        "community_bonus": 0.0,
+        "unexplained": 0.5714,
+        "base": 0.0643,
+        "ceiling": 0.95,
+        "missing_expected_evidence": [],
+        "matched_signature_items": [
+          "jitter_ms",
+          "latency_ms",
+          "packet_loss_pct"
+        ],
+        "diagnosable": true
+      },
+      {
+        "cause_type": "telemetry_unreliable",
+        "entities": [],
+        "score": 0.0,
+        "support": 0.0,
+        "contradiction": 0.0,
+        "corroboration": 0.0,
+        "community_bonus": 0.0,
+        "unexplained": 0.0,
+        "base": 0.0,
+        "ceiling": 1.0,
+        "missing_expected_evidence": [],
+        "matched_signature_items": [],
+        "diagnosable": true
+      },
+      {
+        "cause_type": "dns_dhcp_failure",
+        "entities": [],
+        "score": 0.0,
+        "support": 0.0,
+        "contradiction": 0.0,
+        "corroboration": 0.0,
+        "community_bonus": 0.0,
+        "unexplained": 0.0,
+        "base": 0.0,
+        "ceiling": 0.95,
+        "missing_expected_evidence": [
+          "*:@probe_failures"
+        ],
+        "matched_signature_items": [],
+        "diagnosable": false
+      },
+      {
+        "cause_type": "weak_wifi",
+        "entities": [],
+        "score": 0.0,
+        "support": 0.0,
+        "contradiction": 0.0,
+        "corroboration": 0.0,
+        "community_bonus": 0.0,
+        "unexplained": 0.0,
+        "base": 0.0,
+        "ceiling": 0.95,
+        "missing_expected_evidence": [
+          "*:wireless_signal"
+        ],
+        "matched_signature_items": [],
+        "diagnosable": false
+      }
+    ],
+    "evidence_trace": [
+      {
+        "metric": "link_utilization_pct",
+        "entity": "SW_CAMPUS_4",
+        "observation_id": "OBS-PERF-000001-020",
+        "agent": "performance_agent",
+        "source_ref": [
+          "REC-0004",
+          "REC-0014",
+          "REC-0024"
+        ]
+      },
+      {
+        "metric": "queue_drops",
+        "entity": "SW_CAMPUS_4",
+        "observation_id": "OBS-INFRA-000002-015",
+        "agent": "infrastructure_agent",
+        "source_ref": [
+          "REC-0004",
+          "REC-0014",
+          "REC-0024"
+        ]
+      },
+      {
+        "metric": "latency_ms",
+        "entity": "SW_CAMPUS_4",
+        "observation_id": "OBS-PERF-000001-017",
+        "agent": "performance_agent",
+        "source_ref": [
+          "REC-0004",
+          "REC-0014",
+          "REC-0024"
+        ]
+      },
+      {
+        "metric": "jitter_ms",
+        "entity": "SW_CAMPUS_4",
+        "observation_id": "OBS-PERF-000001-018",
+        "agent": "performance_agent",
+        "source_ref": [
+          "REC-0004",
+          "REC-0014",
+          "REC-0024"
+        ]
+      },
+      {
+        "metric": "packet_loss_pct",
+        "entity": "SW_CAMPUS_4",
+        "observation_id": "OBS-PERF-000001-019",
+        "agent": "performance_agent",
+        "source_ref": [
+          "REC-0004",
+          "REC-0014",
+          "REC-0024"
+        ]
+      },
+      {
+        "metric": "status",
+        "entity": "SW_CAMPUS_4",
+        "observation_id": "OBS-INFRA-000002-013",
+        "agent": "infrastructure_agent",
+        "source_ref": [
+          "REC-0004",
+          "REC-0014",
+          "REC-0024"
+        ]
+      }
+    ],
+    "agent_contributions": {
+      "connectivity_agent": {
+        "status": "ok",
+        "observations": 0,
+        "hypotheses": 0,
+        "tool_calls": 14,
+        "assessed_fraction": 1.0,
+        "budget_exhausted": false
+      },
+      "infrastructure_agent": {
+        "status": "ok",
+        "observations": 30,
+        "hypotheses": 2,
+        "tool_calls": 3,
+        "assessed_fraction": 0.75,
+        "budget_exhausted": false
+      },
+      "performance_agent": {
+        "status": "ok",
+        "observations": 40,
+        "hypotheses": 1,
+        "tool_calls": 3,
+        "assessed_fraction": 1.0,
+        "budget_exhausted": false
+      }
+    },
+    "clarifications": [],
+    "conflicts": [],
+    "blast_radius": {
+      "SW_CAMPUS_4": {
+        "isolated": [],
+        "degraded": [],
+        "basis": "structural reach, not measured impact"
+      }
+    },
+    "recommendation_mode": "corrective",
+    "recommendation_status": [
+      {
+        "action": "Inspect egress link utilization and traffic distribution on the affected device (SW_CAMPUS_4)",
+        "requires_human_approval": true,
+        "approval_state": "pending",
+        "simulated": true
+      },
+      {
+        "action": "Review queue configuration and QoS policy on the congested interface (SW_CAMPUS_4)",
+        "requires_human_approval": true,
+        "approval_state": "pending",
+        "simulated": true
+      },
+      {
+        "action": "Consider load balancing or capacity increase on the saturated link (SW_CAMPUS_4)",
+        "requires_human_approval": true,
+        "approval_state": "pending",
+        "simulated": true
+      }
+    ],
+    "community_signals": [],
+    "llm_assistance": [],
+    "top_cause_type": "link_congestion",
+    "generated_at": "2026-10-31T15:55:50.207794+00:00"
+  }
+}

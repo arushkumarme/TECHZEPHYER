@@ -1,0 +1,25 @@
+{
+  "id": "S-04",
+  "title": "Ethernet / interface fault",
+  "pdf_suggested_scenario": "Ethernet or interface fault",
+  "provenance": "team-authored",
+  "description": "Generator normal records; SW_CAMPUS_6 mutated with rising interface errors (40 -> 260) and packet loss, status Warning.",
+  "generator": {
+    "notebook_sha256": "f245012f96a878a10653d14df95bdb45cbd6c59f42c8fe61d33efebf70aea460",
+    "start": "2026-10-31T12:00:00+00:00",
+    "devices": 10,
+    "samples_per_device": 3
+  },
+  "run": {},
+  "ground_truth": "by construction (doc 09 \u00a73); generator labels only its fault_type",
+  "expected": {
+    "status": [
+      "diagnosed"
+    ],
+    "top_cause": "interface_fault",
+    "affected_devices": [
+      "SW_CAMPUS_6"
+    ],
+    "min_evidence_sources": 2
+  }
+}
