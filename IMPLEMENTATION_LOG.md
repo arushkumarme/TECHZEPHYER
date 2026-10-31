@@ -138,3 +138,17 @@ Newest entry last. Each entry records actual commands and results. See `IMPLEMEN
 - **Failures met:** a shell heredoc quoting error aborted one write step (nothing applied); redone with file tools.
 - **Gates:** G1–G7 ✔.
 - **Next:** M12 MCP server.
+
+## M12 — Model Context Protocol · 2026-10-31 · VERIFIED
+
+- **Objective:** official optional component 8: expose diagnostic tools/telemetry/resources via MCP, and let agents use them.
+- **Skill used:** mcp-builder (Python path; tool naming prefix, read-only annotations, actionable errors). SDK docs fetched with ctx7 for `mcp` 2.3.0 (v2 renamed FastMCP → `MCPServer`; in-memory `Client(server)` testing).
+- **Files:** `src/netcoop/mcp/{server,adapter}.py`, `netcoop-mcp` entry point, `tool_transport` setting, `ToolBox.window`, `mcp_gateway` permission profile, `tests/mcp/test_mcp.py`, doc 16, docs 01/README.
+- **Tests added:** 9 (+ updated pinned surface test). **Executed:** red (collection) → `uv run pytest -q` → 243 passed; ruff, format, mypy strict clean (54 files).
+- **Defects found and fixed:**
+  1. **False pass caught:** the orchestrator-over-MCP test first passed because `tool_transport` did not exist (`model_copy` skips validation) — both runs were direct. Implemented the setting and made the test assert the dispatch record says `mcp`.
+  2. MCP v2 hides unexpected exceptions, so the "call netcoop_list_sources" hint never reached clients → `SourceError` now subclasses the SDK's deliberate `ToolError`.
+  3. Circular import (MCP server → scenario runner → orchestrator → MCP server) → lazy import in the MCP transport branch.
+  4. Agent clarification read the raw bundle window; replaced by `ToolBox.window`, which the MCP toolbox also provides.
+- **Gates:** G1–G7 ✔ (G6: real stdio subprocess server; agents end-to-end through MCP).
+- **Next:** M13 LLM gateway.

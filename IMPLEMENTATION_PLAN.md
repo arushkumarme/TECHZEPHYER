@@ -64,7 +64,7 @@ These refine the design docs; each is mirrored into the relevant doc when its mi
 | M9 | Scenario packages S-01..S-12 (generator + team-authored variants, labelled), CLI, end-to-end + reproducibility | R-14, R-18, M-05, M-06, DLV-3, DLV-5 | T-SCN-*, T-REPRO-*, T-DNS-* | VERIFIED |
 | M10 | Persistent workflow state: checkpoint per transition, pause at review, resume after restart, crash recovery | Component 10 | T-PERSIST-* | VERIFIED |
 | M11 | HITL review + simulated remediation: approvals recorded, simulated outcomes, no write path | O-02, O-05, R-20 | T-HITL-*, T-SAFE-* | VERIFIED |
-| M12 | MCP server exposing read-only diagnostic tools + resources; MCP-backed tool adapter usable by agents | O-01 / component 8 | T-MCP-* | NOT_STARTED |
+| M12 | MCP server exposing read-only diagnostic tools + resources; MCP-backed tool adapter usable by agents | O-01 / component 8 | T-MCP-* | VERIFIED |
 | M13 | LLM gateway: provider interface, null provider, grounding check, template fallback | P-01, P-15 | T-LLM-OFF-01, T-LLM-GROUND-* | NOT_STARTED |
 | M14 | FastAPI backend: incidents, runs, trace, reports, topology, approvals, scenarios | O-04, P-03 | T-API-* | NOT_STARTED |
 | M15 | Extension A — community signals: intake, pseudonymize, screen, extract, gazetteer, cluster, candidate → orchestrator, trust labels | X-CSI-01..08 | T-CSI-*, T-ISO-* | NOT_STARTED |

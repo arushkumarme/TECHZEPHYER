@@ -54,6 +54,7 @@ Extensions are feature-flagged. The core must pass all of its tests with both ex
 | [`13-setup-and-operations.md`](docs/13-setup-and-operations.md) | How will it be installed and run? (skeleton until implementation) |
 | [`14-demo-and-submission.md`](docs/14-demo-and-submission.md) | Demo script, submission checklist, judge Q&A |
 | [`15-future-deployment.md`](docs/15-future-deployment.md) | What would real deployment need? |
+| [`16-mcp.md`](docs/16-mcp.md) | How is the MCP interface exposed and tested? |
 
 Suggested reading order: 00 → 01 → 02 → 03 → 04 → 05 → 07 → 08.
 

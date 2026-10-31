@@ -34,6 +34,9 @@ class OrchestrationSettings(BaseModel):
     agent_retries: int = Field(default=1, ge=0, le=3)
     max_clarification_rounds: int = Field(default=2, ge=0, le=5)
     parallel_specialists: bool = True
+    #: How agents read data: "direct" (in-process tool layer) or "mcp" (through the
+    #: NetCoop MCP server, component 8). Results are identical; "mcp" proves the interface.
+    tool_transport: Literal["direct", "mcp"] = "direct"
     tool_budgets: dict[str, int] = Field(
         default_factory=lambda: {
             "performance_agent": 30,

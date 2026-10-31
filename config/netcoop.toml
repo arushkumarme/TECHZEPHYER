@@ -21,6 +21,7 @@ specialist_deadline_s = 10.0
 agent_retries = 1                 # retry a failed/late agent once, then mark it missing
 max_clarification_rounds = 2      # doc 03 §3 initial default
 parallel_specialists = true
+tool_transport = "direct"         # "mcp": agents read data through the NetCoop MCP server
 
 [orchestration.tool_budgets]
 performance_agent = 30

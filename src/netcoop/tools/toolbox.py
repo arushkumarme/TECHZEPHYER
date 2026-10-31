@@ -15,7 +15,7 @@ from typing import Any, TypeVar
 
 from pydantic import BaseModel, ConfigDict
 
-from netcoop.core.blocks import ToolCallRecord
+from netcoop.core.blocks import TimeWindow, ToolCallRecord
 from netcoop.core.ids import Clock
 from netcoop.core.vocab import AgentId
 from netcoop.ingestion.models import (
@@ -56,6 +56,8 @@ TOOL_PERMISSIONS: dict[str, tuple[str, ...]] = {
     ),
     "correlation_agent": ("data_quality", "topology_info"),
     "reporting_agent": ("data_quality",),
+    # The MCP server (component 8) exposes every read-only tool to MCP clients.
+    "mcp_gateway": TOOL_NAMES,
 }
 
 
@@ -109,7 +111,12 @@ class ToolBox:
     def topology(self) -> Topology | None:
         return self._topology
 
-    def session(self, agent: AgentId, budget: int) -> ToolSession:
+    @property
+    def window(self) -> TimeWindow:
+        """Time span of the whole bundle (used when a clarification widens the window)."""
+        return self._bundle.window
+
+    def session(self, agent: AgentId | str, budget: int) -> ToolSession:
         return ToolSession(self._bundle, self._topology, self._clock, agent=agent, budget=budget)
 
 
@@ -122,7 +129,7 @@ class ToolSession:
         topology: Topology | None,
         clock: Clock,
         *,
-        agent: AgentId,
+        agent: AgentId | str,
         budget: int,
     ) -> None:
         self._bundle = bundle

@@ -163,7 +163,7 @@ Never counted toward the mandatory rows. Disabled → core must still pass (`T-I
 | R-19 dataset categories | TESTED | `tests/config/test_fields.py` (T-DOC-01) |
 | R-20 remediation simulated, no write path | TESTED | `test_no_state_changing_tool_exists`, `tests/orchestrator/test_review.py` (T-SAFE-02/03) |
 | M-01..M-06 minimum acceptance | TESTED | `test_full_run`, protocol tests, `test_congestion_is_diagnosed_from_two_agents`, ingestion tests, report tests, CLI test |
-| O-01 MCP | NOT_STARTED (M12; owner scope change ID-01) | |
+| O-01 MCP | TESTED | `tests/mcp/test_mcp.py` (server tools/resources, agents via MCP, stdio subprocess); doc 16 |
 | O-02 HITL | TESTED | `tests/orchestrator/test_review.py` (approve/reject, recorded, completes incident, CLI) |
 | O-03 persistent state / pause-resume | TESTED | `tests/orchestrator/test_persistence.py` (pause/resume after restart, crash recovery, CLI) |
 | O-04 dashboard | NOT_STARTED (M14/M17) — CLI works | |

@@ -141,7 +141,7 @@ def test_no_state_changing_tool_exists() -> None:  # T-SAFE-01
     for agent, tools in TOOL_PERMISSIONS.items():
         assert set(tools) <= set(TOOL_NAMES), agent
     public = [m for m in dir(ToolBox) if not m.startswith("_")]
-    assert public == ["bundle", "session", "topology"]
+    assert public == ["bundle", "session", "topology", "window"]  # all read-only
 
 
 def test_results_cannot_mutate_the_bundle(box: ToolBox) -> None:

@@ -358,7 +358,7 @@ class SpecialistAgent:
         if not entities:
             return ClarificationResponse(answered=False, reason="no entities given")
         session = self._toolbox(msg).session(self.agent_id, CLARIFICATION_BUDGET)
-        bundle_window = self._toolbox(msg).bundle.window
+        bundle_window = self._toolbox(msg).window
         inv = Investigation(
             session=session, scope=entities, window=bundle_window, id_prefix=self._prefix(msg)
         )

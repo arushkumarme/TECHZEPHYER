@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import base64
 import concurrent.futures as cf
+from contextlib import ExitStack
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -104,6 +105,7 @@ class _Run:
     topology: Topology | None = None
     topo_note: str | None = None
     bus: MessageBus | None = None
+    resources: ExitStack = field(default_factory=ExitStack)
     findings: dict[str, Finding] = field(default_factory=dict)
     missing: list[str] | None = None
     clarifications: list[dict[str, Any]] = field(default_factory=list)
@@ -253,6 +255,10 @@ class Orchestrator:
 
     # ------------------------------------------------------------------ the workflow
     def _drive(self, run: _Run) -> IncidentResult:
+        with run.resources:  # closes the MCP session (if any) however the run ends
+            return self._drive_stages(run)
+
+    def _drive_stages(self, run: _Run) -> IncidentResult:
         incident = run.incident
         state = self._state.get(incident)
         if state in ("RECEIVED", "VALIDATING"):
@@ -358,7 +364,20 @@ class Orchestrator:
         ids = IdFactory(namespace=run.incident)
         ids.seed("MSG", self.store.max_message_seq(run.incident))  # continue after restart
         bus = MessageBus(self.store, clock=self.clock, ids=ids)
-        toolbox = ToolBox(run.bundle, run.topology, clock=self.clock)
+        toolbox: Any
+        if cfg.tool_transport == "mcp":
+            # Imported here: the MCP server itself imports the scenario runner (and thus
+            # this module), so a top-level import would be circular.
+            from netcoop.mcp.adapter import McpToolBox
+            from netcoop.mcp.server import build_server
+
+            # Component 8: agents read through the MCP server, which serves this incident
+            # from its stored input checkpoint.
+            toolbox = run.resources.enter_context(
+                McpToolBox(build_server(self.store), source=run.incident, clock=self.clock)
+            )
+        else:
+            toolbox = ToolBox(run.bundle, run.topology, clock=self.clock)
         specialists = [
             PerformanceAgent(bus, lambda _i: toolbox, self.params),
             InfrastructureAgent(bus, lambda _i: toolbox, self.params),
@@ -437,7 +456,11 @@ class Orchestrator:
                         incident,
                         "DISPATCHED",
                         trigger="tasks_sent",
-                        detail={"agents": to_run, "deadline_s": deadline},
+                        detail={
+                            "agents": to_run,
+                            "deadline_s": deadline,
+                            "tool_transport": cfg.tool_transport,
+                        },
                     )
                 if attempt == 0 and state in ("READY", "READY_WITH_WARNINGS", "DISPATCHED"):
                     self._go(incident, "COLLECTING", trigger="auto")

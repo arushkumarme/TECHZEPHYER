@@ -7,10 +7,12 @@ requires-python = ">=3.12,<3.13"
 dependencies = [
     "pydantic>=2.9,<3",
     "networkx>=3.3,<4",
+    "mcp>=1.2",
 ]
 
 [project.scripts]
 netcoop = "netcoop.cli.main:main"
+netcoop-mcp = "netcoop.mcp.server:main"
 
 [dependency-groups]
 dev = [
