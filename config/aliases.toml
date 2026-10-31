@@ -1,0 +1,59 @@
+# Field aliases and unit rules for INCOMPATIBLE INPUT VARIANTS.
+#
+# Provenance of every entry: TEAM-AUTHORED incompatibility variants (doc 05 §6.4), built by
+# mutating valid generator output for the interoperability-failure scenario. None of these
+# names is claimed to be a real campus or vendor field name.
+
+provenance = "team-authored incompatibility variant (doc 05 §6.4)"
+
+# Record-level keys
+[record_aliases]
+deviceId = "device_id"
+node_id = "device_id"
+ts = "timestamp"
+time = "timestamp"
+telemetry = "metrics"
+state = "status"
+
+# Metric aliases. `unit` = unit implied by the alias name; omitted = ambiguous unless the
+# record declares it in a `units` object.
+[metric_aliases.cpu_pct]
+canonical = "cpu_utilization_pct"
+unit = "percent"
+[metric_aliases.link_util_pct]
+canonical = "link_utilization_pct"
+unit = "percent"
+[metric_aliases.link_util_ratio]
+canonical = "link_utilization_pct"
+unit = "ratio"
+[metric_aliases.loss_pct]
+canonical = "packet_loss_pct"
+unit = "percent"
+[metric_aliases.latency]
+canonical = "latency_ms"
+[metric_aliases.latency_s]
+canonical = "latency_ms"
+unit = "second"
+[metric_aliases.jitter]
+canonical = "jitter_ms"
+[metric_aliases.drops]
+canonical = "queue_drops"
+unit = "count"
+[metric_aliases.if_errors]
+canonical = "interface_errors"
+unit = "count"
+
+# Unit spellings -> (dimension, factor to the canonical unit of that dimension)
+[units]
+ms = ["millisecond", 1.0]
+millisecond = ["millisecond", 1.0]
+s = ["millisecond", 1000.0]
+second = ["millisecond", 1000.0]
+us = ["millisecond", 0.001]
+microsecond = ["millisecond", 0.001]
+pct = ["percent", 1.0]
+percent = ["percent", 1.0]
+"%" = ["percent", 1.0]
+ratio = ["percent", 100.0]
+fraction = ["percent", 100.0]
+count = ["count", 1.0]

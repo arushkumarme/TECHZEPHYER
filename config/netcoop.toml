@@ -1,0 +1,16 @@
+# NetCoop AI runtime configuration. Secrets never go here (doc 12 §6).
+
+# Only "simulation" is accepted (doc 02 §5); anything else is refused, never defaulted to live.
+mode = "simulation"
+
+[features]
+community_signals = false   # Extension A (doc 10)
+geospatial = false          # Extension B (doc 11)
+llm = false                 # LLM gateway (doc 02 C-LLM); null provider when false
+
+[ingestion]
+# Entity is stale when its newest record is older than the bundle reference time by more
+# than this. PROPOSAL value: the generator has no sampling interval (doc 06 §4 item 4).
+stale_after_s = 900
+supported_bundle_majors = [1]
+adapter_bundle_majors = [0]   # team-authored flat layout, see ingestion/normalize.py

@@ -167,3 +167,18 @@ Decisions made while implementing (additive to §2–§7):
 - Observation gains `metric` (canonical name from doc 06) next to `metric_category`, an `agent` field and an `evidence_class` (`direct_measurement` / `derived` / `user_report`) used by conflict rule 1 (doc 08 §5).
 - Not-assessable reasons gain `IMPLAUSIBLE` (doc 05 §7 `VALUE_IMPLAUSIBLE`).
 - `finding` carries an optional `facts` object for structured non-metric facts (e.g. dependency scope from `connectivity_agent`).
+
+## 11. Ingestion implementation (M3, 2026-10-31) — `IMPLEMENTED`, `TESTED`
+
+Code: `src/netcoop/ingestion/` (`normalize.ingest`), configuration `config/netcoop.toml` and `config/aliases.toml`, tests `tests/ingestion/`.
+
+- **Bundle container** (`PROPOSAL`, ID-03): a JSON array of generator records, or an object `{"records": [...], "schema_version"?, "mode"?, "provenance"?, "reference_time"?, "topology_ref"?, "probes"?, "description"?}`. Record fields are the generator's (doc 06). An optional record-level `units` object declares units for aliased fields.
+- **Schema versions:** bundle major `1` native; major `0` = team-authored *flat* layout (metrics at record top level), handled by a registered adapter (`SCHEMA_ADAPTER_APPLIED`); any other major is rejected.
+- **Assessable items** per device: the seven doc-06 metrics plus `status`. A metric absent from every record → `METRIC_NOT_PROVIDED` (info); absent for some devices but present for others → `METRIC_MISSING` (warning). Either way the pair is `not_assessable (MISSING)` — e.g. `interface_errors` in generator `normal` data.
+- **Units:** taken from the canonical name, the alias, or the record's `units` declaration. A contradiction between name and declaration, an unknown spelling, or no unit at all → `UNIT_AMBIGUOUS`; nothing is guessed. Conversions: s/us → ms, ratio/fraction → percent.
+- **Status values** are case-normalized to `Healthy`/`Warning`/`Critical`; anything else → `STATUS_UNRECOGNIZED`, status not assessable (never "healthy").
+- **Freshness:** a device is stale when its newest record is older than `reference_time` (or the newest record in the bundle) by more than `stale_after_s` (900 s, `PROPOSAL`). Stale pairs are `assessed_with_caveat (STALE)`.
+- **Duplicates:** identical records removed (`RECORD_DUPLICATE`); different records for the same device and timestamp are all kept (`RECORD_CONFLICT`) for the conflict rules.
+- **Data quality:** completeness = assessed pairs ÷ (devices × 8); freshness = share of non-stale devices; consistency = share of kept records without implausible/malformed/ambiguous/conflicting values; `Q` = min of the three.
+- **Probes** (ID-06): validated `{probe_id, from_entity, service: dns|dhcp, outcome: success|failure|timeout, response_ms?, timestamp}`; always labelled `team-authored probe`; invalid ones dropped with `PROBE_INVALID`.
+- **New codes** beyond §7: `INPUT_MODE_UNSUPPORTED` (fatal), `SCHEMA_ADAPTER_APPLIED`, `VALUE_MALFORMED`, `STATUS_UNRECOGNIZED`, `TIMESTAMP_UNUSABLE`, `ENTITY_UNUSABLE`, `RECORD_CONFLICT`, `PROBE_INVALID` (warnings), `FIELD_IGNORED`, `METRIC_NOT_PROVIDED` (info). Full list with severities: `src/netcoop/ingestion/issues.py`.

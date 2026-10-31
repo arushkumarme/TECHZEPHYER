@@ -35,3 +35,14 @@ Newest entry last. Each entry records actual commands and results. See `IMPLEMEN
 - **Process note:** tests were written before the code, but the red run was not observed separately (the first file write failed and was redone after the implementation existed).
 - **Gates:** G1–G7 ✔ (G6: real SQLite file, reopen-persistence test).
 - **Next:** M3 ingestion.
+
+## M3 — Ingestion, validation, normalization · 2026-10-31 · VERIFIED
+
+- **Objective:** `ingest(raw) -> IngestResult` with bundle acceptance, error taxonomy, assessability per device-item, data-quality note.
+- **Requirements:** R-13, R-19, M-04, P-11, T-MODE-01.
+- **Files:** `src/netcoop/ingestion/{issues,models,aliases,normalize}.py`, `src/netcoop/config/settings.py`, `config/{netcoop,aliases}.toml`, `tests/ingestion/test_ingest.py`, `tests/config/test_settings.py`, doc 05 §11.
+- **Tests added:** 34 (E-01..E-12 incl. variants, no entity / no timestamp / no usable metric / live mode, probes, record traceability, real-generator bundle, a Hypothesis property test that absent/corrupt metrics are never "assessed", settings/mode refusal).
+- **Executed:** red observed (collection error, module absent) → `uv run pytest -q` → 90 passed; ruff + format + mypy strict clean (19 files).
+- **Failures met:** 3 long lines, 1 mypy narrowing error — fixed.
+- **Gates:** G1–G7 ✔ (G6: real generator records + real config files).
+- **Next:** M4 simulated topology + read-only tool layer.
