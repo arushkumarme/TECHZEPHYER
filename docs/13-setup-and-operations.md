@@ -35,6 +35,17 @@ uv run netcoop validate-report report.json            # check a report against d
 - Every run prints `SIMULATED DATA - scenario playback` on stderr.
 - State lives in `var/netcoop.sqlite3` (git-ignored); use `--db PATH` for another file.
 
+## 3a. Backend API (FastAPI) and MCP server
+
+```bash
+uv run fastapi dev                     # http://127.0.0.1:8000, docs at /docs (entrypoint in pyproject)
+uv run fastapi run --port 8765         # production-style server (verified 2026-10-31 with curl)
+NETCOOP_DB=path/to.sqlite3 uv run fastapi run   # choose the log database
+uv run netcoop-mcp                     # MCP server over stdio (doc 16)
+```
+
+Endpoints (all under `/api`): `GET health`, `GET scenarios`, `GET scenarios/{id}`, `POST scenarios/{id}/run` (`{"fault_injection": {...}, "pause_after": STATE}`), `GET incidents`, `POST incidents` (raw bundle), `GET incidents/{id}`, `GET incidents/{id}/report[?strict=true]`, `GET incidents/{id}/report.md`, `GET incidents/{id}/trace`, `GET incidents/{id}/messages/{message_id}`, `POST incidents/{id}/resume`, `GET incidents/{id}/review`, `POST incidents/{id}/review/{index}` (`{"decision": "approve|reject", "reviewer": "...", "note": "..."}`), `GET topology/{id}`, `GET field-dictionary`. CORS allows the Vite dev server (`localhost:5173`). No endpoint can change a network device (test `test_no_device_changing_endpoint`).
+
 ## 4. Configuration (`config/`)
 
 | File | Content |

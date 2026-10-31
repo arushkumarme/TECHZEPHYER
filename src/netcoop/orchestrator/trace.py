@@ -85,3 +85,8 @@ def render_trace(store: LogStore, incident_id: str) -> str:
     events.sort(key=lambda e: (when(e[0]), e[1]))
     lines = [f"{when(at).strftime('%H:%M:%S.%f')[:-3]}  {line}" for at, _, line in events]
     return "\n".join(lines) + "\n"
+
+
+def summarize_message(message_type: str | None, payload: dict[str, Any]) -> str:
+    """One-line human summary of a message payload (used by the trace and the API)."""
+    return _summary(message_type, payload)

@@ -166,6 +166,6 @@ Never counted toward the mandatory rows. Disabled → core must still pass (`T-I
 | O-01 MCP | TESTED | `tests/mcp/test_mcp.py` (server tools/resources, agents via MCP, stdio subprocess); doc 16 |
 | O-02 HITL | TESTED | `tests/orchestrator/test_review.py` (approve/reject, recorded, completes incident, CLI) |
 | O-03 persistent state / pause-resume | TESTED | `tests/orchestrator/test_persistence.py` (pause/resume after restart, crash recovery, CLI) |
-| O-04 dashboard | NOT_STARTED (M14/M17) — CLI works | |
+| O-04 dashboard | PARTIAL — backend API TESTED (`tests/api/test_api.py`); React UI is M17 | |
 | O-05 simulated remediation | TESTED | `test_approval_is_recorded_and_outcome_simulated`, `test_simulator_has_no_write_path` |
 | X-CSI-*, X-GEO-* | NOT_STARTED (M15–M17) | |

@@ -162,3 +162,14 @@ Newest entry last. Each entry records actual commands and results. See `IMPLEMEN
 - **Decision recorded:** no LLM SDK dependency added — no provider was chosen (D-07) and a provider could not be verified without credentials; documented as KI-05 rather than shipping unverified code.
 - **Gates:** G1–G7 ✔.
 - **Next:** M14 FastAPI backend.
+
+## M14 — FastAPI backend · 2026-10-31 · VERIFIED
+
+- **Objective:** API for the dashboard (component 11 server side): read-only incidents/scenarios/reports/traces/topology + run, upload, resume and review endpoints.
+- **Skill used:** fastapi (Annotated deps, sync endpoints for blocking orchestrator, return types, router prefixes/tags, app factory, `[tool.fastapi]` entrypoint). FastAPI 0.162.0.
+- **Files:** `src/netcoop/api/{app,models}.py`, `trace.summarize_message`, pyproject deps/entrypoint, `tests/api/test_api.py`, doc 13 §3a, doc 01.
+- **Tests added:** 11 (health banner, scenarios, run + read report/strict/markdown/trace/raw message, upload + rejected bundle, review flow with 409 on repeat and 422 on blank reviewer, pause/resume, fault validation, topology/fields, 404s, CORS, no device-changing endpoint).
+- **Executed:** red (collection) → `uv run pytest -q` → 276 passed; ruff, format, mypy strict clean (59 files). **Real HTTP check:** `uv run fastapi run --port 8765` + curl: health, POST run S-02 (diagnosed link congestion), strict report — all correct; server stopped via its task id.
+- **Process note:** a first attempt to stop the server used a broad process kill and was (correctly) blocked by the permission classifier; redone by running the server as a tracked background task and stopping only that task.
+- **Gates:** G1–G7 ✔.
+- **Next:** M15 Extension A — community signal intelligence.
