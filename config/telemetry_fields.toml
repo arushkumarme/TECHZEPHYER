@@ -1,0 +1,137 @@
+# NetCoop AI - telemetry field dictionary (machine-readable twin of docs/06-field-dictionary.md)
+#
+# Every entry is OBSERVED in the organizer's generator, vendored verbatim at
+# sample_data/generator/organizer_generator.ipynb (SHA-256 f245012f...a460).
+# `source` cites "gen:L<line>" = line number inside the notebook's single code cell.
+# Test T-DOC-01 (tests/config/test_fields.py) enforces citations and verbatim names.
+#
+# observed_ranges: [min, max] per generator profile, copied from the generator's
+#   random.uniform / random.randint bounds or constants. Absent profile = field not emitted.
+# plausible_min / plausible_max: definitional limits used by ingestion plausibility
+#   checks (a percentage cannot exceed 100; a delay or count cannot be negative).
+#   These are NOT generator-derived, so they carry their own basis.
+
+schema = "netcoop.field_dictionary/1"
+generator_sha256 = "f245012f96a878a10653d14df95bdb45cbd6c59f42c8fe61d33efebf70aea460"
+
+[fields.timestamp]
+location = "record"
+category = "Timestamps"
+type = "string"
+unit = "ISO 8601 UTC"
+format = "datetime.utcnow().isoformat() + 'Z' (microseconds present when non-zero)"
+source = "gen:L7"
+
+[fields.device_id]
+location = "record"
+category = "Device ID"
+type = "string"
+unit = "none"
+format = "SW_CAMPUS_<n>, n in 1..10"
+source = "gen:L8"
+
+[fields.status]
+location = "record"
+category = "Device status"
+type = "enum"
+unit = "none"
+allowed_values = ["Healthy", "Warning", "Critical"]
+source = "gen:L21,L31,L41"
+
+[fields.cpu_utilization_pct]
+location = "metrics"
+category = "CPU utilization"
+type = "number"
+unit = "percent"
+unit_basis = "field-name suffix _pct; values within 0..100"
+plausible_min = 0
+plausible_max = 100
+plausible_basis = "definition of a percentage"
+source = "gen:L14,L24,L34"
+[fields.cpu_utilization_pct.observed_ranges]
+normal = [10, 35]
+latency_spike = [40, 70]
+hardware_failure = [99.9, 99.9]
+
+[fields.link_utilization_pct]
+location = "metrics"
+category = "Link utilization"
+type = "number"
+unit = "percent"
+unit_basis = "field-name suffix _pct; values within 0..100"
+plausible_min = 0
+plausible_max = 100
+plausible_basis = "definition of a percentage"
+source = "gen:L15,L25,L35"
+[fields.link_utilization_pct.observed_ranges]
+normal = [20, 50]
+latency_spike = [60, 85]
+hardware_failure = [100.0, 100.0]
+
+[fields.packet_loss_pct]
+location = "metrics"
+category = "Packet loss"
+type = "number"
+unit = "percent"
+unit_basis = "field-name suffix _pct; values within 0..100"
+plausible_min = 0
+plausible_max = 100
+plausible_basis = "definition of a percentage"
+source = "gen:L16,L26,L36"
+[fields.packet_loss_pct.observed_ranges]
+normal = [0.0, 0.0]
+latency_spike = [0.1, 1.5]
+hardware_failure = [15, 30]
+
+[fields.latency_ms]
+location = "metrics"
+category = "Latency"
+type = "number"
+unit = "millisecond"
+unit_basis = "field-name suffix _ms"
+plausible_min = 0
+plausible_basis = "a delay cannot be negative"
+source = "gen:L17,L27,L37"
+[fields.latency_ms.observed_ranges]
+normal = [5, 20]
+latency_spike = [150, 400]
+hardware_failure = [500, 1000]
+
+[fields.jitter_ms]
+location = "metrics"
+category = "Jitter"
+type = "number"
+unit = "millisecond"
+unit_basis = "field-name suffix _ms"
+plausible_min = 0
+plausible_basis = "a delay variation cannot be negative"
+source = "gen:L18,L38"
+[fields.jitter_ms.observed_ranges]
+normal = [1, 5]
+latency_spike = [30, 80]
+
+[fields.queue_drops]
+location = "metrics"
+category = "Egress queue drops"
+type = "integer"
+unit = "count"
+unit_basis = "random.randint integers; interval semantics (per sample vs cumulative) UNKNOWN"
+plausible_min = 0
+plausible_basis = "a count cannot be negative"
+source = "gen:L19,L28,L39"
+[fields.queue_drops.observed_ranges]
+normal = [0, 0]
+latency_spike = [0, 50]
+hardware_failure = [5000, 15000]
+
+[fields.interface_errors]
+location = "metrics"
+category = "Interface errors"
+type = "integer"
+unit = "count"
+unit_basis = "random.randint integers; interval semantics (per sample vs cumulative) UNKNOWN"
+plausible_min = 0
+plausible_basis = "a count cannot be negative"
+source = "gen:L29"
+[fields.interface_errors.observed_ranges]
+hardware_failure = [100, 500]
