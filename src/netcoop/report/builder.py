@@ -351,10 +351,32 @@ def build_report(
         ],
         "community_signals": [],
         "llm_assistance": [],
+        "narrative": "",
         "top_cause_type": top.cause_type,
         "generated_at": (generated_at or datetime.now(UTC)).isoformat(),
     }
+    report["netcoop_extensions"]["narrative"] = template_narrative(report)
     return report
+
+
+def template_narrative(report: dict[str, Any]) -> str:
+    """Deterministic plain-language summary built only from the report's own content.
+    An optional LLM may reword it (grounding-checked); it is never the source of a fact."""
+    ext = report.get("netcoop_extensions", {})
+    parts = [
+        f"{report['suspected_root_cause']} (heuristic confidence "
+        f"{report['confidence']:.2f}, {ext.get('confidence_category', 'n/a')})."
+    ]
+    evidence = [e["interpretation"] for e in report["supporting_evidence"][:2]]
+    if evidence:
+        parts.append("Key evidence: " + "; ".join(evidence) + ".")
+    if report["recommended_actions"]:
+        parts.append(
+            "First recommended step (requires human approval; simulated): "
+            + report["recommended_actions"][0]
+            + "."
+        )
+    return " ".join(parts)
 
 
 def build_failure_report(

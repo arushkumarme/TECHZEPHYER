@@ -20,6 +20,8 @@ def render_markdown(report: dict[str, Any]) -> str:
         f"{ext.get('confidence_method', 'heuristic')} score)  ",
         f"**Affected devices:** {', '.join(report['affected_devices']) or 'none identified'}",
         "",
+        f"_Summary:_ {ext.get('narrative') or report['suspected_root_cause']}",
+        "",
         "## Supporting evidence",
         "",
     ]

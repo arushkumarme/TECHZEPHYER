@@ -24,6 +24,7 @@ from netcoop.core.messages import (
 )
 from netcoop.core.vocab import AgentId
 from netcoop.ingestion.models import NormalizedBundle
+from netcoop.llm.gateway import LLMGateway, report_terms
 from netcoop.report.builder import build_failure_report, build_report
 from netcoop.report.markdown import render_markdown
 from netcoop.report.validate import validate_report
@@ -62,8 +63,9 @@ def reporting_context(
 class ReportingAgent:
     agent_id: AgentId = "reporting_agent"
 
-    def __init__(self, bus: MessageBus) -> None:
+    def __init__(self, bus: MessageBus, llm: LLMGateway | None = None) -> None:
         self.bus = bus
+        self.llm = llm
 
     def handle(self, msg: ParsedMessage) -> Envelope:
         try:
@@ -119,4 +121,22 @@ class ReportingAgent:
         )
         if problems:
             raise ValueError("report failed validation: " + "; ".join(problems))
+        if self.llm is not None and self.llm.enabled:
+            self._reword(report)
         return report
+
+    def _reword(self, report: dict[str, Any]) -> None:
+        """Optional LLM wording of the narrative only (CD-1). Official keys untouched."""
+        assert self.llm is not None
+        ext = report["netcoop_extensions"]
+        template = ext["narrative"]
+        result = self.llm.reword(template, allowed_terms=report_terms(report, template))
+        ext["narrative"] = result.text
+        entry: dict[str, Any] = {
+            "field": "netcoop_extensions.narrative",
+            "status": result.status,
+            "provider": result.provider,
+        }
+        if result.reason:
+            entry["reason"] = result.reason
+        ext["llm_assistance"] = [entry]

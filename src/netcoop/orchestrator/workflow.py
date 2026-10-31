@@ -51,6 +51,7 @@ from netcoop.diagnosis.params import DiagnosisParams, load_diagnosis_params
 from netcoop.ingestion.issues import IngestIssue
 from netcoop.ingestion.models import NormalizedBundle
 from netcoop.ingestion.normalize import ingest
+from netcoop.llm.gateway import LLMGateway, NullProvider
 from netcoop.orchestrator.faults import SimulatedCrash, inject
 from netcoop.orchestrator.states import RESUMABLE, TERMINAL, check_transition
 from netcoop.report.builder import build_failure_report, build_report
@@ -121,12 +122,18 @@ class Orchestrator:
         params: DiagnosisParams | None = None,
         clock: Clock | None = None,
         fault_injection: dict[str, str] | None = None,
+        llm: LLMGateway | None = None,
     ) -> None:
         self.store = store
         self.settings = settings or load_settings()
         self.params = params or load_diagnosis_params()
         self.clock: Clock = clock or SystemClock()
         self.fault_injection = dict(fault_injection or {})
+        # LLM is optional and off by default (CD-1). If enabled without a configured
+        # provider, the null provider makes every attempt fall back to the template.
+        if llm is None and self.settings.features.llm:
+            llm = LLMGateway(NullProvider(), enabled=True)
+        self.llm = llm
         self._state: dict[str, str | None] = {}
         self._pause_after: str | None = None
 
@@ -383,7 +390,7 @@ class Orchestrator:
             InfrastructureAgent(bus, lambda _i: toolbox, self.params),
             ConnectivityAgent(bus, lambda _i: toolbox, self.params),
         ]
-        corr, rept = CorrelationAgent(bus, self.params), ReportingAgent(bus)
+        corr, rept = CorrelationAgent(bus, self.params), ReportingAgent(bus, llm=self.llm)
         handler: Handler
         for agent_id, handler in [
             *((a.agent_id, a.handle) for a in specialists),

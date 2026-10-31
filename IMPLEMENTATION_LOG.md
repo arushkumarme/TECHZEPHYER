@@ -152,3 +152,13 @@ Newest entry last. Each entry records actual commands and results. See `IMPLEMEN
   4. Agent clarification read the raw bundle window; replaced by `ToolBox.window`, which the MCP toolbox also provides.
 - **Gates:** G1–G7 ✔ (G6: real stdio subprocess server; agents end-to-end through MCP).
 - **Next:** M13 LLM gateway.
+
+## M13 — LLM gateway · 2026-10-31 · VERIFIED (interface + guardrails; no real provider)
+
+- **Objective:** CD-1 provider-independent LLM interface, null default, grounding check, template fallback; prove the diagnosis is LLM-independent.
+- **Files:** `src/netcoop/llm/gateway.py`; report builder `template_narrative`; reporting agent `_reword`; orchestrator `llm=` parameter (null provider when `features.llm` is on without a provider); Markdown summary line; `tests/llm/test_gateway.py`; doc 12 §9; KI-05.
+- **Tests added:** 22 (6 grounding rejections, faithful rephrase accepted, disabled/unavailable/rejected/accepted paths, T-LLM-OFF-01 official keys identical, hallucination rejected in a real run, off by default, echo-template accepted in 8 scenarios).
+- **Executed:** red (collection) → `uv run pytest -q` → 265 passed; ruff, format, mypy strict clean (56 files).
+- **Decision recorded:** no LLM SDK dependency added — no provider was chosen (D-07) and a provider could not be verified without credentials; documented as KI-05 rather than shipping unverified code.
+- **Gates:** G1–G7 ✔.
+- **Next:** M14 FastAPI backend.

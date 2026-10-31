@@ -65,7 +65,7 @@ These refine the design docs; each is mirrored into the relevant doc when its mi
 | M10 | Persistent workflow state: checkpoint per transition, pause at review, resume after restart, crash recovery | Component 10 | T-PERSIST-* | VERIFIED |
 | M11 | HITL review + simulated remediation: approvals recorded, simulated outcomes, no write path | O-02, O-05, R-20 | T-HITL-*, T-SAFE-* | VERIFIED |
 | M12 | MCP server exposing read-only diagnostic tools + resources; MCP-backed tool adapter usable by agents | O-01 / component 8 | T-MCP-* | VERIFIED |
-| M13 | LLM gateway: provider interface, null provider, grounding check, template fallback | P-01, P-15 | T-LLM-OFF-01, T-LLM-GROUND-* | NOT_STARTED |
+| M13 | LLM gateway: provider interface, null provider, grounding check, template fallback | P-01, P-15 | T-LLM-OFF-01, T-LLM-GROUND-* | VERIFIED |
 | M14 | FastAPI backend: incidents, runs, trace, reports, topology, approvals, scenarios | O-04, P-03 | T-API-* | NOT_STARTED |
 | M15 | Extension A — community signals: intake, pseudonymize, screen, extract, gazetteer, cluster, candidate → orchestrator, trust labels | X-CSI-01..08 | T-CSI-*, T-ISO-* | NOT_STARTED |
 | M16 | Extension B — geo backend: campus layers with provenance, blast radius isolated/degraded/unknown, map API | X-GEO-01..05 | T-GEO-* | NOT_STARTED |

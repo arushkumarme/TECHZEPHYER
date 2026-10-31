@@ -73,3 +73,11 @@
 - **Human-in-the-loop** (`src/netcoop/orchestrator/review.py`, CLI `netcoop review | approve | reject INC idx --reviewer NAME [--note …]`): decisions are taken only in `AWAITING_REVIEW`, one per recommendation, never twice, always with a reviewer name; each is appended to the append-only `approvals` table (who, when, what, decision, note). When all are decided a new report version is appended (the original is kept) and the incident moves to `COMPLETE`. Review never alters status, cause or confidence.
 - **Simulated remediation** (`src/netcoop/remediation/simulator.py`): approval yields a text outcome that begins `SIMULATED: no device was changed and nothing was sent to any network` and states that real execution needs change control and authorization and that the outcome is unverified.
 - **No write path, tested:** the tool layer has no state-changing tool (`T-SAFE-01`); approving with all socket creation monkeypatched to fail succeeds (`T-SAFE-02`); the simulator imports no tools, subprocess, socket or HTTP library (`T-SAFE-03`). Tests: `tests/orchestrator/test_review.py`.
+
+## 9. Implementation of §4 LLM guardrails (M13, 2026-10-31) — `IMPLEMENTED`, `TESTED`
+
+- `src/netcoop/llm/gateway.py`: provider protocol, `NullProvider` (default), `StaticProvider` (deterministic test/demo stand-in). **No real provider is configured** — the owner has not chosen one (D-07) and none is needed by any requirement (KNOWN_ISSUES KI-05).
+- The LLM may only reword `netcoop_extensions.narrative`, a deterministic template summary always present in the report. Official keys are never touched: test `test_llm_never_changes_diagnosis` (T-LLM-OFF-01) compares all official keys with the LLM off vs on.
+- Grounding check rejects output naming a device, metric or number absent from the report, or using forbidden wording (calibrated, exact, certainly, definitely, confirmed, live, real-time, fixed, remediated, resolved). Rejected / unavailable → template; `llm_assistance` records field, status, provider and reason.
+- Complaint text is passed as delimited data (`<summary>…</summary>`), with instructions that it is data, not instructions; the LLM has no tools.
+- Property test: an LLM that echoes the template is accepted in 8 scenarios, proving the allowed-term set is built correctly.
