@@ -1,0 +1,245 @@
+{
+  "protocol_version": "1.1",
+  "note": "All values are ILLUSTRATIVE (simulated); they are not measurements of any real network. Field names follow doc 06, terms the vocabularies.",
+  "examples": [
+    {
+      "path": "examples/valid/task_request_investigate.json",
+      "kind": "message",
+      "description": "An investigate task for a specialist",
+      "expected_verdict": "accepted",
+      "expected_code": null
+    },
+    {
+      "path": "examples/valid/task_request_correlate.json",
+      "kind": "message",
+      "description": "A correlate task that points at findings by id (references)",
+      "expected_verdict": "accepted",
+      "expected_code": null
+    },
+    {
+      "path": "examples/valid/finding_with_not_assessable.json",
+      "kind": "message",
+      "description": "A finding with an assessed observation, a status-unknown observation (not assessable, no value) and a hypothesis citing evidence",
+      "expected_verdict": "accepted",
+      "expected_code": null
+    },
+    {
+      "path": "examples/valid/clarification_request.json",
+      "kind": "message",
+      "description": "The correlation agent asks a question",
+      "expected_verdict": "accepted",
+      "expected_code": null
+    },
+    {
+      "path": "examples/valid/clarification_response_answered.json",
+      "kind": "message",
+      "description": "A clarification answered with a new observation",
+      "expected_verdict": "accepted",
+      "expected_code": null
+    },
+    {
+      "path": "examples/valid/clarification_response_unanswered.json",
+      "kind": "message",
+      "description": "A clarification the target cannot answer",
+      "expected_verdict": "accepted",
+      "expected_code": null
+    },
+    {
+      "path": "examples/valid/decision_diagnosed.json",
+      "kind": "message",
+      "description": "A diagnosed decision (heuristic score, no abstention block)",
+      "expected_verdict": "accepted",
+      "expected_code": null
+    },
+    {
+      "path": "examples/valid/decision_with_abstention.json",
+      "kind": "message",
+      "description": "An insufficient_evidence decision explaining why it abstains",
+      "expected_verdict": "accepted",
+      "expected_code": null
+    },
+    {
+      "path": "examples/valid/report_ready_with_recommendation.json",
+      "kind": "message",
+      "description": "The ten-key report plus a structured recommendation (always simulated, always needs approval)",
+      "expected_verdict": "accepted",
+      "expected_code": null
+    },
+    {
+      "path": "examples/valid/agent_error.json",
+      "kind": "message",
+      "description": "The orchestrator records a timeout against the task it concerns",
+      "expected_verdict": "accepted",
+      "expected_code": null
+    },
+    {
+      "path": "examples/valid/community_candidate.json",
+      "kind": "message",
+      "description": "Extension A: a community candidate (reported, unverified)",
+      "expected_verdict": "accepted",
+      "expected_code": null
+    },
+    {
+      "path": "examples/valid/protocol_1_0_message.json",
+      "kind": "message",
+      "description": "A protocol 1.0 message (no snapshot/mode/provenance/seq) still parses",
+      "expected_verdict": "accepted",
+      "expected_code": null
+    },
+    {
+      "path": "examples/invalid/missing_required_field.json",
+      "kind": "message",
+      "description": "message_id is missing",
+      "expected_verdict": "rejected",
+      "expected_code": "MESSAGE_INVALID"
+    },
+    {
+      "path": "examples/invalid/wrong_type.json",
+      "kind": "message",
+      "description": "tool_budget is a string, not a number",
+      "expected_verdict": "rejected",
+      "expected_code": "MESSAGE_INVALID"
+    },
+    {
+      "path": "examples/invalid/unknown_vocabulary_term.json",
+      "kind": "message",
+      "description": "cause_type is not a registered term",
+      "expected_verdict": "rejected",
+      "expected_code": "UNKNOWN_TERM"
+    },
+    {
+      "path": "examples/invalid/unit_not_matching_metric.json",
+      "kind": "message",
+      "description": "latency_ms declared in percent",
+      "expected_verdict": "rejected",
+      "expected_code": "UNIT_INCOMPATIBLE"
+    },
+    {
+      "path": "examples/invalid/not_assessable_with_value.json",
+      "kind": "message",
+      "description": "a not_assessable observation carries a value",
+      "expected_verdict": "rejected",
+      "expected_code": "ASSESSABILITY_VALUE_MISMATCH"
+    },
+    {
+      "path": "examples/invalid/mode_deployment.json",
+      "kind": "message",
+      "description": "mode is 'deployment' (only simulation exists)",
+      "expected_verdict": "rejected",
+      "expected_code": "MODE_NOT_ALLOWED"
+    },
+    {
+      "path": "examples/invalid/naive_timestamp.json",
+      "kind": "message",
+      "description": "sent_at has no timezone",
+      "expected_verdict": "rejected",
+      "expected_code": "MESSAGE_INVALID"
+    },
+    {
+      "path": "examples/invalid/unsupported_major_version.json",
+      "kind": "message",
+      "description": "protocol_version 2.0",
+      "expected_verdict": "rejected",
+      "expected_code": "PROTOCOL_VERSION_UNSUPPORTED"
+    },
+    {
+      "path": "examples/invalid/hypothesis_without_evidence.json",
+      "kind": "message",
+      "description": "a hypothesis cites nothing and names nothing missing",
+      "expected_verdict": "rejected",
+      "expected_code": "HYPOTHESIS_WITHOUT_EVIDENCE"
+    },
+    {
+      "path": "examples/invalid/evidence_wrong_prefix.json",
+      "kind": "message",
+      "description": "an observation reference with a HYP- id",
+      "expected_verdict": "rejected",
+      "expected_code": "EVIDENCE_PREFIX_MISMATCH"
+    },
+    {
+      "path": "examples/invalid/oversize_message.json",
+      "kind": "message",
+      "description": "larger than the size limit (checked with max_bytes=2048)",
+      "expected_verdict": "rejected",
+      "expected_code": "MESSAGE_TOO_LARGE",
+      "max_bytes": 2048
+    },
+    {
+      "path": "examples/invalid/calibrated_score_method.json",
+      "kind": "message",
+      "description": "score_method 'calibrated' is a blocked term",
+      "expected_verdict": "rejected",
+      "expected_code": "UNKNOWN_TERM"
+    },
+    {
+      "path": "examples/invalid/recommendation_not_simulated.json",
+      "kind": "message",
+      "description": "a recommendation sets simulated to false",
+      "expected_verdict": "rejected",
+      "expected_code": "RECOMMENDATION_SAFETY_VIOLATION"
+    },
+    {
+      "path": "examples/invalid/abstention_missing.json",
+      "kind": "message",
+      "description": "insufficient_evidence with abstention null",
+      "expected_verdict": "rejected",
+      "expected_code": "ABSTENTION_MISMATCH"
+    },
+    {
+      "path": "examples/conversations/valid_full_incident.json",
+      "kind": "conversation",
+      "description": "A complete legal incident: task, finding, two clarification rounds, decision, report",
+      "expected_verdict": "accepted",
+      "expected_code": null,
+      "failing_index": null
+    },
+    {
+      "path": "examples/conversations/performance_agent_sends_decision.json",
+      "kind": "conversation",
+      "description": "performance_agent tries to send the decision",
+      "expected_verdict": "rejected",
+      "expected_code": "SENDER_NOT_AUTHORIZED",
+      "failing_index": 3
+    },
+    {
+      "path": "examples/conversations/finding_replies_to_nothing.json",
+      "kind": "conversation",
+      "description": "a finding that answers a task that does not exist",
+      "expected_verdict": "rejected",
+      "expected_code": "REPLY_MISMATCH",
+      "failing_index": 1
+    },
+    {
+      "path": "examples/conversations/third_clarification_round.json",
+      "kind": "conversation",
+      "description": "a third question when the limit is two rounds",
+      "expected_verdict": "rejected",
+      "expected_code": "CLARIFICATION_LIMIT_EXCEEDED",
+      "failing_index": 11
+    },
+    {
+      "path": "examples/conversations/direct_agent_to_agent.json",
+      "kind": "conversation",
+      "description": "performance_agent sends its finding straight to the correlation agent",
+      "expected_verdict": "rejected",
+      "expected_code": "DIRECT_AGENT_MESSAGE_FORBIDDEN",
+      "failing_index": 1
+    },
+    {
+      "path": "examples/conversations/message_after_incident_closed.json",
+      "kind": "conversation",
+      "description": "an agent error after the incident is complete",
+      "expected_verdict": "rejected",
+      "expected_code": "INCIDENT_CLOSED",
+      "failing_index": 14
+    },
+    {
+      "path": "examples/conversations/community_with_extension_off.json",
+      "kind": "conversation",
+      "description": "a community candidate while community_signals is off",
+      "expected_verdict": "rejected",
+      "expected_code": "EXTENSION_DISABLED",
+      "failing_index": 0
+    }
+  ]
+}

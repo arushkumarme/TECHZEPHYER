@@ -54,7 +54,7 @@ The expected outcome is *ground truth by construction* unless the generator prov
 | `T-AGT-CONN-*`, `T-AGT-*` | Each agent stand-alone against recorded task messages |
 | `T-AGT-BEHAV-*` | The 8-point agent checklist (doc 03 §1): scope respected; tool budget enforced; investigation path differs by scenario; independent finding identical with other agents absent; abstention; clarification bounded; message-only coordination; output adapts to uncertainty |
 | `T-ORCH-*`, `T-ORCH-COLLAB-*` | State transitions, timeouts, retries, clarification round cap, degraded runs, collaboration |
-| `T-PROTO-*` | Envelope validation; unknown fields ignored and logged; missing required fields rejected; version rules; payload semantic rules; authority matrix and conversation rules (`tests/core/test_messages.py`, `test_envelope_v11.py`, `test_payload_rules.py`, `test_guard.py`) |
+| `T-PROTO-*` | Envelope validation; unknown fields ignored and logged; missing required fields rejected; version rules; payload semantic rules; authority matrix and conversation rules (`tests/core/test_messages.py`, `test_envelope_v11.py`, `test_payload_rules.py`, `test_guard.py`); conformance kit: every example in `conformance/manifest.json` through the real parser and guard, schema freshness, third-party agent helper (`tests/conformance/test_kit.py`, `uv run netcoop conformance`) |
 | `T-ING-*`, `T-ING-FIELDS-*` | Normalization, alias use, unit conversion, data-quality note, field coverage |
 | `T-ERR-*`, `T-ERR-MISSING-*` | Error catalog (§5); missing ≠ healthy |
 | `T-RPT-*` (`T-RPT-EVID`, `T-RPT-ACT`, `T-RPT-SCHEMA`) | Report content; official keys exact (doc 07 §8); evidence traceability |

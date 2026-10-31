@@ -1,0 +1,34 @@
+{
+  "protocol_version": "1.1",
+  "message_id": "INC-0001-MSG-000009",
+  "incident_id": "INC-0001",
+  "in_reply_to": null,
+  "sender": "community_module",
+  "recipient": "orchestrator",
+  "message_type": "community_candidate",
+  "sent_at": "2026-11-01T09:00:00Z",
+  "payload_schema_version": "1.0",
+  "status": "ok",
+  "snapshot_id": "SNAP-0123456789ab",
+  "mode": "simulation",
+  "data_provenance": "synthetic-generator",
+  "payload": {
+    "candidate_id": "CAND-0001",
+    "zone": "ZONE_HOSTEL_A",
+    "symptom_categories": [
+      "disconnects"
+    ],
+    "window": {
+      "start": "2026-11-01T09:00:00Z",
+      "end": "2026-11-01T09:15:00Z"
+    },
+    "complaint_count": 3,
+    "distinct_reporters": 3,
+    "trust_label": "reported_unverified",
+    "complaint_ids": [
+      "CMP-0001",
+      "CMP-0002",
+      "CMP-0003"
+    ]
+  }
+}

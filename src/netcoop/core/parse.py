@@ -60,7 +60,7 @@ def _size(raw: object) -> int:
 def _issues(exc: ValidationError, prefix: str = "") -> list[ParseIssue]:
     out = []
     for err in exc.errors():
-        path = prefix + ".".join(str(x) for x in err["loc"])
+        path = (prefix + ".".join(str(x) for x in err["loc"])).rstrip(".")
         msg = str(err["msg"])
         vocabulary_problem = err["type"] == "literal_error" or (
             err["type"] == "value_error"
@@ -70,7 +70,13 @@ def _issues(exc: ValidationError, prefix: str = "") -> list[ParseIssue]:
             code = err["type"]
         else:
             code = "UNKNOWN_TERM" if vocabulary_problem else "MESSAGE_INVALID"
-        reason = msg if "input" not in err else f"{msg} (got {err['input']!r})"
+        given = err.get("input")
+        # Quote short scalar inputs only; whole objects would bury the reason.
+        reason = (
+            f"{msg} (got {given!r})"
+            if isinstance(given, str | int | float | bool) and len(repr(given)) <= 60
+            else msg
+        )
         out.append(ParseIssue(code, reason, path))
     return out
 

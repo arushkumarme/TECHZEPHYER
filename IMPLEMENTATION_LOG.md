@@ -18,7 +18,7 @@ Newest entry last. Each entry records actual commands and results. See `IMPLEMEN
 
 - **Objective:** typed, versioned, validated envelope + all eight payload types; JSON Schemas.
 - **Requirements:** R-09, M-02 (T-PROTO-*).
-- **Files:** `src/netcoop/core/{vocab,blocks,messages,ids,schema_export}.py`, `schemas/protocol/*.schema.json`, `tests/core/{test_messages,test_ids_schema}.py`, doc 05 §10.
+- **Files:** `src/netcoop/core/{vocab,blocks,messages,ids,schema_export}.py`, `schemas/protocol/*.schema.json` (moved to `conformance/schemas/` in protocol upgrade P6), `tests/core/{test_messages,test_ids_schema}.py`, doc 05 §10.
 - **Tests added:** 31 (round trip ×8, missing envelope field ×5, missing payload field, unknown-field reporting, type/payload mismatch, naive time, `in_reply_to` ×4, version rules, unknown sender, closed enums, bad JSON, window order, ids, clock, schema freshness).
 - **Executed:** `uv run pytest -q` → 46 passed. `ruff check`/`format --check` clean. `mypy --strict` clean (11 files).
 - **Failures met:** schema-freshness test failed before the first export (expected red); mypy flagged a redundant cast and an untyped dict — fixed.
@@ -259,3 +259,11 @@ Newest entry last. Each entry records actual commands and results. See `IMPLEMEN
 - Store API additions: append, get_incident_messages, get_message, iter_trace, export_jsonl; no update/delete. Bus: every parse error and warning recorded (try_parse), read API get_message / messages_for, rebuild_state from the log.
 - Existing tests changed (method rename only, listed in the plan): `tests/core/test_bus_log.py`, `tests/orchestrator/test_persistence.py`, `tests/orchestrator/test_review.py` now call `_execute_raw_for_tests` (was the public `execute_unsafe_for_tests`).
 - Stale docs corrected: doc 02 C-BUS was `PLANNED`; doc 05 §8 said "no MCP" and `PLANNED`; doc 04 §7 said pause/resume was not promised.
+
+## Protocol upgrade P6 — conformance kit (2026-11-01)
+
+- `conformance/`: schemas (moved from `schemas/protocol/`, each stating its protocol version, plus `official_report`), vocabularies, 12 valid / 14 invalid messages, 7 conversations, `manifest.json`, one-page README.
+- `src/netcoop/conformance/` (kit runner, deterministic builder with `--check`, `assert_agent_conforms`); CLIs `python -m netcoop.cli.conformance` / `netcoop conformance` and `python -m netcoop.cli.validate` / `netcoop validate`.
+- Schema move (#22): repo-wide grep for `schemas/protocol` (CI, API, dashboard, docs, code): updated `core/schema_export.py` (single constant), docs 01 and 05; historical mentions in `docs/results/release-verification.md` and this log annotated. `tests/core/test_ids_schema.py` reads the constant: no change needed.
+- Parser reasons no longer quote whole objects (short scalar inputs only); stale doc 14 statements corrected (DLV-1 pushed by the owner; test count).
+- No existing test changed.

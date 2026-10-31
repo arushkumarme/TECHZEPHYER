@@ -336,7 +336,30 @@ def build_parser() -> argparse.ArgumentParser:
     v = sub.add_parser("validate-report", help="check a report JSON against doc 07 §8")
     v.add_argument("report")
     v.set_defaults(func=cmd_validate)
+
+    ck = sub.add_parser("conformance", help="run the protocol conformance kit")
+    ck.set_defaults(func=lambda a: _conformance_main([]))
+    vm = sub.add_parser("validate", help="check one protocol message or conversation file")
+    vm.add_argument("file")
+    vm.add_argument("--max-bytes", type=int, default=None)
+    vm.set_defaults(
+        func=lambda a: _validate_main(
+            [a.file, *(["--max-bytes", str(a.max_bytes)] if a.max_bytes else [])]
+        )
+    )
     return p
+
+
+def _conformance_main(argv: list[str]) -> int:
+    from netcoop.cli.conformance import main as run
+
+    return run(argv)
+
+
+def _validate_main(argv: list[str]) -> int:
+    from netcoop.cli.validate import main as run
+
+    return run(argv)
 
 
 def main(argv: list[str] | None = None) -> int:

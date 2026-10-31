@@ -503,5 +503,7 @@
     "self_assessment"
   ],
   "title": "Finding",
-  "type": "object"
+  "type": "object",
+  "x-netcoop-payload-schema-version": "1.0",
+  "x-netcoop-protocol-version": "1.1"
 }

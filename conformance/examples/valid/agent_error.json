@@ -1,0 +1,24 @@
+{
+  "protocol_version": "1.1",
+  "message_id": "INC-0001-MSG-000008",
+  "incident_id": "INC-0001",
+  "in_reply_to": "INC-0001-MSG-000001",
+  "sender": "orchestrator",
+  "recipient": "performance_agent",
+  "message_type": "agent_error",
+  "sent_at": "2026-11-01T09:00:00Z",
+  "payload_schema_version": "1.0",
+  "status": "error",
+  "snapshot_id": "SNAP-0123456789ab",
+  "mode": "simulation",
+  "data_provenance": "synthetic-generator",
+  "payload": {
+    "code": "AGENT_TIMEOUT",
+    "message": "no reply within 10s",
+    "recoverable": true,
+    "related_message_id": "INC-0001-MSG-000001",
+    "details": {
+      "deadline_s": 10
+    }
+  }
+}

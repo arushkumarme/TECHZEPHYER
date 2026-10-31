@@ -6,9 +6,9 @@
 
 | ID | Deliverable | Status |
 |---|---|---|
-| DLV-1 | GitHub repository: implementation, dependencies, setup instructions, test scripts | Local git repository complete (branch `develop`); **not pushed** — needs the owner to create/authorize the GitHub remote |
+| DLV-1 | GitHub repository: implementation, dependencies, setup instructions, test scripts | Pushed by the owner (`develop`, `main`); the protocol upgrade is on branch `feature/protocol-upgrade` (local, not pushed) |
 | DLV-2 | Architecture README: agent responsibilities, communication interfaces, orchestration, evidence correlation, error handling, workflow | Done — README + docs 00–16 updated with implementation sections |
-| DLV-3 | Sample data and test cases: normal operation and multiple fault scenarios | Done — `sample_data/scenarios/` S-01..S-12 + S-06b, 318 tests |
+| DLV-3 | Sample data and test cases: normal operation and multiple fault scenarios | Done — `sample_data/scenarios/` S-01..S-12 + S-06b, the full test suite (`uv run pytest`, `uv run pytest -m ui`) and the protocol conformance kit (`conformance/`) |
 | DLV-4 | Demo video, 3–5 minutes: end-to-end diagnosis, inter-agent communication, final report | **Not started** — recording needs a person; every segment below is runnable |
 | DLV-5 | Working prototype: CLI with optional dashboard demonstrating the complete workflow | Done — CLI, API, dashboard, MCP server |
 
@@ -73,4 +73,5 @@ The demo shows the mandatory workflow first; extensions come after. Every segmen
 | Demo-6 | dashboard → Recommended actions → enter name → Approve → simulated outcome; or `netcoop approve INC-… 0 --reviewer NAME` |
 | Demo-7 | dashboard → User reports: two reports "Hostel A Wi-Fi is disconnecting." from different test reporters → Investigate against S-02 (corroborated) and S-01 (reported, not verified) |
 | Demo-8 | dashboard → Campus map → choose the community incident; click `SW_CAMPUS_2` for isolated vs degraded |
+| Demo-2b (optional, ~20 s inside Demo-2) | `uv run netcoop conformance`: valid examples accepted, invalid ones rejected with the expected code and a plain-English reason (e.g. "Rejected: only correlation_agent may send a decision; performance_agent tried."), see `conformance/README.md` |
 | Extra | `--inject-fault performance_agent:timeout` (S-10 degraded run); `--pause-after COLLECTING` then `netcoop resume`; `uv run netcoop-mcp` |

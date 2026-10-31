@@ -1,0 +1,43 @@
+{
+  "protocol_version": "1.1",
+  "message_id": "INC-0001-MSG-000006.R",
+  "incident_id": "INC-0001",
+  "in_reply_to": "INC-0001-MSG-000006",
+  "sender": "correlation_agent",
+  "recipient": "orchestrator",
+  "message_type": "decision",
+  "sent_at": "2026-11-01T09:00:00Z",
+  "payload_schema_version": "1.0",
+  "status": "ok",
+  "snapshot_id": "SNAP-0123456789ab",
+  "mode": "simulation",
+  "data_provenance": "synthetic-generator",
+  "payload": {
+    "decision": "insufficient_evidence",
+    "decision_id": "DEC-0001",
+    "ranked": [
+      {
+        "cause_type": "link_congestion",
+        "entities": [
+          "SW_CAMPUS_4"
+        ],
+        "score": 0.82,
+        "support": 0.9,
+        "contradiction": 0.0,
+        "corroboration": 1.0,
+        "ceiling": 1.0,
+        "score_method": "heuristic"
+      }
+    ],
+    "margin": 0.3,
+    "gate_checks": {
+      "score_at_least_tau": false,
+      "margin_at_least_delta": false
+    },
+    "confidence": 0.3,
+    "confidence_category": "insufficient",
+    "score_method": "heuristic",
+    "affected_entities": [],
+    "abstention": null
+  }
+}

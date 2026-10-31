@@ -1,0 +1,150 @@
+{
+  "description": "a finding that answers a task that does not exist",
+  "max_clarification_rounds": 2,
+  "extensions": [],
+  "steps": [
+    {
+      "incident_state": "READY",
+      "message": {
+        "protocol_version": "1.1",
+        "message_id": "INC-0001-MSG-000001",
+        "incident_id": "INC-0001",
+        "in_reply_to": null,
+        "sender": "orchestrator",
+        "recipient": "performance_agent",
+        "message_type": "task_request",
+        "sent_at": "2026-11-01T09:00:00Z",
+        "payload_schema_version": "1.0",
+        "status": "ok",
+        "snapshot_id": "SNAP-0123456789ab",
+        "mode": "simulation",
+        "data_provenance": "synthetic-generator",
+        "payload": {
+          "goal": "assess_performance",
+          "scope_entities": [
+            "SW_CAMPUS_1",
+            "SW_CAMPUS_4"
+          ],
+          "window": {
+            "start": "2026-11-01T09:00:00Z",
+            "end": "2026-11-01T09:15:00Z"
+          },
+          "tool_budget": 30,
+          "deadline_s": 10,
+          "task_id": "TASK-0001",
+          "task_kind": "investigate",
+          "input_message_ids": [],
+          "incident_context": {
+            "description": "illustrative example",
+            "trigger": "telemetry_bundle"
+          }
+        }
+      }
+    },
+    {
+      "incident_state": "COLLECTING",
+      "message": {
+        "protocol_version": "1.1",
+        "message_id": "INC-0001-MSG-000001.R",
+        "incident_id": "INC-0001",
+        "in_reply_to": "INC-0001-MSG-000099",
+        "sender": "performance_agent",
+        "recipient": "orchestrator",
+        "message_type": "finding",
+        "sent_at": "2026-11-01T09:00:00Z",
+        "payload_schema_version": "1.0",
+        "status": "ok",
+        "snapshot_id": "SNAP-0123456789ab",
+        "mode": "simulation",
+        "data_provenance": "synthetic-generator",
+        "payload": {
+          "task_id": "TASK-0001",
+          "observations": [
+            {
+              "observation_id": "OBS-PERF-000001-001",
+              "entity": "SW_CAMPUS_4",
+              "metric": "latency_ms",
+              "metric_category": "Latency",
+              "value": 180.0,
+              "unit": "millisecond",
+              "window": {
+                "start": "2026-11-01T09:00:00Z",
+                "end": "2026-11-01T09:15:00Z"
+              },
+              "severity": "critical",
+              "assessability": "assessed",
+              "agent": "performance_agent",
+              "aggregation": "worst_by_severity",
+              "sample_count": 3,
+              "source_ref": [
+                "REC-0001"
+              ]
+            },
+            {
+              "observation_id": "OBS-PERF-000001-002",
+              "entity": "SW_CAMPUS_1",
+              "metric": "status",
+              "metric_category": "Device status",
+              "value": null,
+              "unit": "none",
+              "window": {
+                "start": "2026-11-01T09:00:00Z",
+                "end": "2026-11-01T09:15:00Z"
+              },
+              "severity": "unknown",
+              "assessability": "not_assessable",
+              "agent": "performance_agent",
+              "aggregation": null,
+              "sample_count": 0,
+              "source_ref": [],
+              "not_assessable_reason": "MISSING"
+            }
+          ],
+          "hypotheses": [
+            {
+              "hypothesis_id": "HYP-PERF-000001-001",
+              "cause_type": "link_congestion",
+              "entities": [
+                "SW_CAMPUS_4"
+              ],
+              "supporting": [
+                {
+                  "evidence_type": "observation",
+                  "evidence_id": "OBS-PERF-000001-001",
+                  "stance": "supports",
+                  "strength": 0.8
+                }
+              ],
+              "local_score": 0.8,
+              "score_method": "agent_local_heuristic",
+              "rationale_code": "HIGH_UTILIZATION_WITH_DELAY"
+            }
+          ],
+          "not_assessable": [
+            {
+              "entity": "SW_CAMPUS_1",
+              "metric": "status",
+              "reason": "MISSING",
+              "detail": "no status in the window"
+            }
+          ],
+          "limitations": [],
+          "tool_calls": [
+            {
+              "tool": "telemetry_query",
+              "arguments": {
+                "entities": 2
+              },
+              "result_summary": "6 samples",
+              "at": "2026-11-01T09:00:00Z"
+            }
+          ],
+          "self_assessment": {
+            "assessed_fraction": 0.5,
+            "budget_exhausted": false
+          }
+        }
+      }
+    }
+  ]
+}

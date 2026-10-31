@@ -183,7 +183,7 @@ Severity: **fatal** stops the incident; **error** degrades it; **warning** is re
 | Closed vocabularies (agents, message types, cause types, severities, reasons…) | `src/netcoop/core/vocab.py` |
 | Building blocks (§4) | `src/netcoop/core/blocks.py` |
 | Envelope, eight payload types, `make_message`, `parse_message` | `src/netcoop/core/messages.py` |
-| Formal JSON Schemas (generated; a test fails if stale) | `schemas/protocol/*.schema.json` |
+| Formal JSON Schemas (generated; a test fails if stale) | `conformance/schemas/*.schema.json` (moved from `schemas/protocol/` in the protocol upgrade, §17) |
 | Deterministic ids and injectable clock | `src/netcoop/core/ids.py` |
 | Contract tests `T-PROTO-01..10`, `T-PROTO-SCHEMA-01` | `tests/core/` |
 
@@ -289,6 +289,15 @@ Checked in this order; every rejection is logged with its code and a plain-Engli
 - **Migration:** opening a database written by an earlier version adds the new columns automatically (`ALTER TABLE … ADD COLUMN` never rewrites rows) and records `messages_v2_protocol_1_1` in `schema_migrations`. Old rows read the new columns as derived values: attempt order, verdict from `valid`, violations from the old error code.
 - **Read API for agents and tools:** `bus.get_message(id)` and `bus.messages_for(incident, types=...)`, so a correlate task can read the findings it references. Reading never changes anything. `bus.rebuild_state(incident)` replays the conversation state from the log alone.
 - **Evidence:** `tests/core/test_bus_v11.py`. It checks delivery once and in order; rejected messages logged with reasons and not delivered; warnings logged; monotonic sequence and duplicate rejection; identical log on replay; rebuilt state equal to live; references resolved by id; no update/delete; subscribers only receive their own messages; and an old-format database migrated.
+
+## 17. Conformance kit (protocol upgrade, Prompt 6) — `IMPLEMENTED`, `TESTED`
+
+Proof that the protocol is real: **[`conformance/README.md`](../conformance/README.md)** (one page). `uv run netcoop conformance` (or `python -m netcoop.cli.conformance`) runs every example through the real parser and conversation guard. It prints how many valid examples were accepted, how many invalid examples were rejected **with the expected code**, how many conversations behaved as expected, and each rejection's plain-English reason, and exits 1 on any difference from `conformance/manifest.json`. `uv run netcoop validate FILE` checks one message or conversation.
+
+- **Schemas:** `conformance/schemas/` holds the envelope, one schema per payload type and `official_report`. Each states `x-netcoop-protocol-version`. They are written by `scripts/export_schemas.py`, and a test fails if they are stale. Vocabularies are in `conformance/vocabularies.json`.
+- **Examples:** 12 valid messages (every type plus variants, including a 1.0 message), 14 invalid messages (each with its expected code: missing field, wrong type, unknown term, unit not fitting the metric, not-assessable with a value, mode `deployment`, naive timestamp, major version 2, hypothesis without evidence, wrong evidence prefix, oversize, `calibrated`, recommendation not simulated, missing abstention), and 7 conversations (one fully valid incident; plus a decision from `performance_agent`, a finding replying to nothing, a third clarification round, a direct agent-to-agent message, a message after closing, and community input with the extension off). All values are illustrative. They are built deterministically by `python -m netcoop.conformance.build` (`--check` for freshness). The expected verdicts are written by hand, never derived from running the code.
+- **Third-party agents:** `netcoop.conformance.assert_agent_conforms(agent, recorded_task_request)` feeds a recorded task to any callable and checks that its reply parses and passes the guard. It is proven with a stub agent written only from the kit README; non-conforming variants are caught.
+- **Evidence:** `tests/conformance/test_kit.py`. The manifest matches reality; examples and schemas are current; **breaking a rule or a model makes the kit fail** (exact mismatches asserted); the CLI commands work; and the stub agent conforms.
 
 ## Appendix A: Controlled vocabularies
 
