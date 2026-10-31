@@ -473,7 +473,20 @@
       }
     ],
     "community_signals": [],
+    "community_trust": {},
     "llm_assistance": [],
+    "narrative": "Likely link congestion causing egress queue drops on SW_CAMPUS_4 (heuristic confidence 0.66, medium). Key evidence: Elevated link utilization on SW_CAMPUS_4 (sustained); Elevated egress queue drops on SW_CAMPUS_4 (sustained). First recommended step (requires human approval; simulated): Inspect egress link utilization and traffic distribution on the affected device (SW_CAMPUS_4).",
+    "data_snapshot": {
+      "snapshot_id": "SNAP-a1526c22b3df",
+      "bundle_hash": "a1526c22b3dfa3266c31c5ec7629e323d28c44aadafc287c4f239ead33d7126e",
+      "topology_version": "10fc7f3d312b",
+      "config_hash": "e08c66056802",
+      "mode": "simulation",
+      "data_provenance": "synthetic-generator",
+      "declared_provenance": "synthetic-generator",
+      "bundle_acceptance": "READY",
+      "source_label": "cli"
+    },
     "top_cause_type": "link_congestion",
     "generated_at": "2026-10-31T15:55:50.207794+00:00"
   }

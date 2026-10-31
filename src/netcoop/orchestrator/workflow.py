@@ -23,8 +23,10 @@ from __future__ import annotations
 
 import base64
 import concurrent.futures as cf
+from collections.abc import Callable
 from contextlib import ExitStack
 from dataclasses import dataclass, field
+from functools import partial
 from typing import Any
 
 from netcoop.agents.connectivity import ConnectivityAgent
@@ -48,6 +50,7 @@ from netcoop.core.messages import (
     ReportReady,
     TaskRequest,
 )
+from netcoop.core.snapshot import DataSnapshot, take_snapshot
 from netcoop.core.vocab import SPECIALIST_AGENTS, AgentId
 from netcoop.diagnosis.params import DiagnosisParams, load_diagnosis_params
 from netcoop.ingestion.issues import IngestIssue
@@ -104,6 +107,7 @@ class _Run:
     raw: bytes
     community: list[dict[str, Any]]
     community_errors: list[str] = field(default_factory=list)
+    label: str = ""
     issues: list[IngestIssue] = field(default_factory=list)
     bundle: NormalizedBundle | None = None
     topology: Topology | None = None
@@ -114,6 +118,7 @@ class _Run:
     missing: list[str] | None = None
     clarifications: list[dict[str, Any]] = field(default_factory=list)
     decision: Decision | None = None
+    snapshot: DataSnapshot | None = None
 
 
 class Orchestrator:
@@ -191,9 +196,13 @@ class Orchestrator:
     ) -> IncidentResult:
         data = raw.encode("utf-8") if isinstance(raw, str) else raw
         incident = self.store.register_incident(
-            {"source": source, "mode": self.settings.mode, "label": label}, at=self.clock.now()
+            {"source": source, "mode": self.settings.mode, "label": label},
+            at=self.clock.now(),
+            prefix=self.settings.protocol.incident_prefix,
         )
-        run = _Run(incident=incident, raw=data, community=list(community or []))
+        run = _Run(
+            incident=incident, raw=data, community=list(community or []), label=label or source
+        )
         self._checkpoint(
             run,
             "input",
@@ -239,6 +248,7 @@ class Orchestrator:
             incident=incident,
             raw=base64.b64decode(inp["raw_b64"]),
             community=list(inp.get("community", [])),
+            label=inp.get("label") or inp.get("source") or "",
         )
         for c in cps:
             kind, data = c["kind"], c["data"]
@@ -281,18 +291,30 @@ class Orchestrator:
             warnings = list(run.bundle.data_quality.warnings) + (
                 ["TOPOLOGY_MISSING"] if run.topo_note else []
             )
+            acceptance = "READY_WITH_WARNINGS" if warnings else "READY"
+            snapshot = self._take_snapshot(run, acceptance)
             self._go(
                 incident,
-                "READY_WITH_WARNINGS" if warnings else "READY",
+                acceptance,
                 trigger="ingestion",
                 detail={
                     "warnings": warnings,
                     "q": round(run.bundle.data_quality.q, 4),
                     "topology": run.topo_note,
+                    "snapshot_id": snapshot.snapshot_id,
                 },
             )
         elif self._validate(run) is not None:  # pragma: no cover - input was accepted before
             raise RuntimeError("stored input no longer validates")
+        else:
+            stored = [
+                c["data"] for c in self.store.checkpoints(incident) if c["kind"] == "snapshot"
+            ]
+            run.snapshot = (
+                DataSnapshot.model_validate(stored[-1])
+                if stored
+                else self._take_snapshot(run, run.bundle.data_quality.acceptance)  # type: ignore[union-attr]
+            )
         self._setup_agents(run)
         self._admit_community(run)
 
@@ -382,6 +404,23 @@ class Orchestrator:
                     incident_id=run.incident,
                 )
 
+    def _take_snapshot(self, run: _Run, acceptance: str) -> DataSnapshot:
+        """Fingerprint the data every agent will analyse; checkpointed so a resumed run
+        reuses the identical snapshot (protocol 1.1, doc 05 §1)."""
+        assert run.bundle is not None
+        snapshot = take_snapshot(
+            run.bundle,
+            run.topology,
+            settings=self.settings,
+            params=self.params,
+            source_label=run.label,
+            clock=self.clock,
+            acceptance=acceptance,
+        )
+        self._checkpoint(run, "snapshot", snapshot.model_dump(mode="json"))
+        run.snapshot = snapshot
+        return snapshot
+
     def _validate(self, run: _Run) -> IncidentResult | None:
         result = ingest(run.raw, settings=self.settings)
         run.issues = result.issues
@@ -418,7 +457,13 @@ class Orchestrator:
         cfg = self.settings.orchestration
         ids = IdFactory(namespace=run.incident)
         ids.seed("MSG", self.store.max_message_seq(run.incident))  # continue after restart
-        bus = MessageBus(self.store, clock=self.clock, ids=ids)
+        bus = MessageBus(
+            self.store,
+            clock=self.clock,
+            ids=ids,
+            snapshot=run.snapshot,
+            max_message_bytes=self.settings.protocol.max_message_bytes,
+        )
         toolbox: Any
         if cfg.tool_transport == "mcp":
             # Imported here: the MCP server itself imports the scenario runner (and thus
@@ -464,9 +509,18 @@ class Orchestrator:
             return fut
         return pool.submit(bus.deliver, sent)
 
-    def _outcome(self, fut: cf.Future[ParsedMessage], timeout: float) -> ParsedMessage:
+    def _outcome(
+        self,
+        fut: cf.Future[Any],
+        timeout: float,
+        accept: Callable[[Any], ParsedMessage] | None = None,
+    ) -> ParsedMessage:
+        """Wait for a reply. With ``accept``, the future yields the raw reply and it is
+        validated and logged HERE, in the caller's thread - so replies from parallel
+        specialists are logged (and numbered) in a fixed, deterministic order."""
         try:
-            reply = fut.result(timeout=timeout)
+            raw_reply = fut.result(timeout=timeout)
+            reply: ParsedMessage = accept(raw_reply) if accept is not None else raw_reply
         except cf.TimeoutError as exc:
             raise _AgentFailure("AGENT_TIMEOUT", f"no reply within {timeout:g}s") from exc
         except MessageValidationError as exc:
@@ -519,14 +573,18 @@ class Orchestrator:
                     )
                 if attempt == 0 and state in ("READY", "READY_WITH_WARNINGS", "DISPATCHED"):
                     self._go(incident, "COLLECTING", trigger="auto")
+                # Handlers run in parallel; replies are validated, logged and numbered
+                # below in fixed agent order (deterministic seq, protocol 1.1).
                 futures = (
-                    {a: self._ask(bus, sent[a], pool) for a in to_run} if pool is not None else {}
+                    {a: pool.submit(bus.call_handler, sent[a]) for a in to_run}
+                    if pool is not None
+                    else {}
                 )
                 failed: list[AgentId] = []
                 for a in to_run:  # fixed order; each finding is made durable on arrival
                     fut = futures[a] if pool is not None else _submit(timer_pool, bus, sent[a])
                     try:
-                        out = self._outcome(fut, deadline)
+                        out = self._outcome(fut, deadline, partial(bus.accept_reply, sent=sent[a]))
                     except _AgentFailure as f:
                         failed.append(a)
                         self._agent_error(run, a, sent[a], f, attempt)
@@ -684,6 +742,13 @@ class Orchestrator:
             generated_at=self.clock.now().isoformat(),
             community=run.community,
             community_errors=run.community_errors,
+            # Identity of the analysed data; its wall-clock created_at stays in the
+            # checkpoint so reports remain reproducible across runs.
+            data_snapshot=(
+                run.snapshot.model_dump(mode="json", exclude={"created_at"})
+                if run.snapshot
+                else None
+            ),
         )
         reply = self._request_with_retry(
             run,
@@ -711,6 +776,7 @@ class Orchestrator:
             generated_at=self.clock.now(),
             community=run.community,
             community_errors=run.community_errors,
+            data_snapshot=ctx["data_snapshot"],
         )
         problems = validate_report(
             report,
@@ -742,6 +808,6 @@ class Orchestrator:
 
 def _submit(
     pool: cf.ThreadPoolExecutor | None, bus: MessageBus, sent: ParsedMessage
-) -> cf.Future[ParsedMessage]:
+) -> cf.Future[Any]:
     assert pool is not None
-    return pool.submit(bus.deliver, sent)
+    return pool.submit(bus.call_handler, sent)

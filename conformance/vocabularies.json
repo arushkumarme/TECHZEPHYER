@@ -1099,6 +1099,50 @@
         "label": "Value malformed",
         "source": "doc 05 \u00a77; doc 05 \u00a711",
         "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "protocol",
+          "severity": "error"
+        },
+        "definition": "The message exceeds the configured size limit and is rejected unread.",
+        "id": "MESSAGE_TOO_LARGE",
+        "label": "Message too large",
+        "source": "doc 05 \u00a710 (P2); D-23",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "protocol",
+          "severity": "error"
+        },
+        "definition": "The envelope declares a mode other than simulation; it is never defaulted to live.",
+        "id": "MODE_NOT_ALLOWED",
+        "label": "Mode not allowed",
+        "source": "doc 05 \u00a72 (P2)",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "protocol",
+          "severity": "error"
+        },
+        "definition": "A field holds a value that is not a registered (or is a blocked) vocabulary term.",
+        "id": "UNKNOWN_TERM",
+        "label": "Unknown term",
+        "source": "doc 05 App. A (P2)",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "protocol",
+          "severity": "warning"
+        },
+        "definition": "The sender uses a newer minor protocol version; the message is accepted and unknown fields are ignored.",
+        "id": "PROTOCOL_MINOR_NEWER",
+        "label": "Protocol minor newer",
+        "source": "doc 05 \u00a75 (P2)",
+        "status": "active"
       }
     ],
     "version": "1.0"

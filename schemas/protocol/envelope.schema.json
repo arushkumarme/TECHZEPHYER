@@ -1,5 +1,17 @@
 {
   "properties": {
+    "data_provenance": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Data Provenance"
+    },
     "in_reply_to": {
       "anyOf": [
         {
@@ -42,6 +54,20 @@
       ],
       "title": "Message Type",
       "type": "string"
+    },
+    "mode": {
+      "anyOf": [
+        {
+          "const": "simulation",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Only simulation is allowed (MODE_NOT_ALLOWED otherwise)",
+      "title": "Mode"
     },
     "payload": {
       "additionalProperties": true,
@@ -86,6 +112,34 @@
       "format": "date-time",
       "title": "Sent At",
       "type": "string"
+    },
+    "seq": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Per-incident sequence number assigned by the bus",
+      "title": "Seq"
+    },
+    "snapshot_id": {
+      "anyOf": [
+        {
+          "pattern": "^SNAP-[0-9a-f]{12}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Fingerprint of the data every agent of the incident analyses",
+      "title": "Snapshot Id"
     },
     "status": {
       "default": "ok",

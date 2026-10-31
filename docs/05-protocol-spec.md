@@ -12,6 +12,7 @@
 3. Every conclusion cites observation IDs, so any report claim can be traced to a raw record.
 4. Unknown extra fields are ignored and logged; missing required fields make a message invalid.
 5. Nothing is silently guessed: conversions, aliases and gaps are recorded.
+6. **Agents exchange references, not data.** Telemetry and topology never travel inside messages. Every message of an incident carries the same `snapshot_id`, a fingerprint of the exact data all agents analyse (§13). Telemetry-like extra fields in a message are ignored and reported (`FIELD_IGNORED`), never accepted.
 
 ## 2. Message envelope
 
@@ -27,6 +28,12 @@
 | `payload_schema_version` | Version of the payload layout for this type | yes |
 | `status` | `ok`, `partial`, or `error` | yes |
 | `payload` | Type-specific content | yes |
+| `snapshot_id` | `SNAP-` + 12 hex: the data snapshot the message refers to (§13) | no (1.1; stamped by the bus) |
+| `mode` | Always `simulation`; any other value is rejected with `MODE_NOT_ALLOWED`, never defaulted to live | no (1.1; stamped by the bus) |
+| `data_provenance` | A registered `data_provenance` term (Appendix A), e.g. `synthetic-generator` | no (1.1; stamped by the bus) |
+| `seq` | Per-incident sequence number (1, 2, 3 ...) in log order, deterministic | no (1.1; assigned by the bus) |
+
+The four 1.1 fields are optional so 1.0 messages still parse (compatibility tests in `tests/core/test_envelope_v11.py`).
 
 ## 3. Message types
 
@@ -63,11 +70,13 @@ Names are protocol design choices. Metric categories are written in words until 
 ## 5. Identifiers, time, versions
 
 - **Agent identifiers** are fixed strings (doc 02 §2). `performance_agent` and `infrastructure_agent` match the official example (`SRC-1 p5 §6`).
-- **Incident ID** format is not mandated by the PDF (the example is `INC-8832`); format decided at implementation. `PENDING`
+- **Incident ID** format is not mandated by the PDF (the example is `INC-8832`). Implemented: `<prefix>-NNNN`, prefix `INC` configurable (`[protocol] incident_prefix`). **PROVISIONAL** (D-22).
+- **Other identifiers** keep their existing formats; `validate_id(kind, value)` in `core/ids.py` checks every kind: messages `INC-0001-MSG-000001` (replies add `.R`), observations `OBS-PERF-000003-001`, hypotheses `HYP-…`, records `REC-0001`, snapshots `SNAP-<12 hex>`, candidates `CAND-`, complaints `CMP-`, conflicts `CONF-`, and the prefixes reserved for later prompts `TASK-`, `CLR-`, `DEC-`, `RCM-` (recommendations; `REC-` is taken by records).
 - **Time:** internal timestamps are UTC. Input timestamp format, timezone and sampling interval are `PENDING` (generator).
 - **Versioning (semantic):**
   - *Minor* change = additive (new optional field, new enum value readers can ignore) → accepted by older readers.
   - *Major* change = breaking → rejected with `INPUT_SCHEMA_VERSION_UNSUPPORTED` unless a registered adapter exists.
+  - Current `protocol_version` is **1.1**. A message with the same major and an older or equal minor is accepted. A **newer minor** (e.g. 1.9) is accepted with the warning `PROTOCOL_MINOR_NEWER`, and its unknown fields are ignored and reported. A different major is rejected with `PROTOCOL_VERSION_UNSUPPORTED` (`core/versioning.py`).
   - Three version numbers are kept distinct: `protocol_version` (envelope), `payload_schema_version` (per message type), and the **input data schema version** (from the telemetry itself, *if* the data carries one — `UNKNOWN`).
 
 ## 6. Ingestion, normalization and bundle acceptance
@@ -194,6 +203,14 @@ The "interpret" half of `R-09`: every agent uses the same defined terms. Each vo
 - **Generated outputs:** `scripts/generate_docs.py` writes Appendix A below and `conformance/vocabularies.json` (for the conformance kit); idempotent, and a test fails if either is stale.
 - **Evidence:** `tests/core/test_vocabulary.py` (22) and `tests/e2e/test_vocabulary_in_runs.py`, which checks every vocabulary-controlled value in real S-05, S-09 and S-12 runs.
 
+## 13. Envelope 1.1, data snapshot and safe parsing (protocol upgrade, Prompt 2) — `IMPLEMENTED`, `TESTED`
+
+- **Data snapshot** (`core/snapshot.py`). After ingestion the orchestrator fingerprints the normalized bundle: canonical JSON (sorted keys, `,`/`:` separators, UTF-8, NaN/Infinity rejected), then SHA-256. `snapshot_id` = `SNAP-` + the first 12 hex. The descriptor also records the full hash, `topology_version` (hash of the topology, or `none`), `config_hash` (settings + diagnosis parameters that can change the analysis; execution mechanics proven result-neutral, parallel/sequential and direct/MCP, are excluded), `mode`, `data_provenance` (the registered term; an unregistered declared provenance is kept in `declared_provenance` and stamped as `unspecified`), `bundle_acceptance`, `source_label`, `created_at`. It is checkpointed, so a resumed run reuses the identical snapshot, and it appears in the report under `netcoop_extensions.data_snapshot`. Same data in any key order gives the same id; changing one value changes it.
+- **Stamping** (`core/bus.py`). The bus stamps `snapshot_id`, `mode` and `data_provenance` on every message it builds and assigns `seq` to every accepted message, under a lock, continuing from the log after a restart. Specialist handlers still run in parallel, but their replies are validated, logged and numbered by the orchestrator in fixed agent order, so `seq` is identical in parallel and sequential runs. A reply that arrives after its deadline is no longer logged; the timeout itself is recorded as an `agent_error`.
+- **Safe parsing** (`core/parse.py`). `try_parse(raw)` never raises: it returns a `ParseResult` with the message or `None`, plus `errors` and `warnings`, each with a registered code, a plain reason and the field path (e.g. `payload.tool_budget`). Codes: `MESSAGE_INVALID`, `UNKNOWN_TERM` (unregistered or blocked vocabulary value), `MODE_NOT_ALLOWED`, `MESSAGE_TOO_LARGE` (limit `[protocol] max_message_bytes`, default 1 MiB, about 20x the largest scenario message, **PROVISIONAL** D-23), `PROTOCOL_VERSION_UNSUPPORTED`, `PAYLOAD_SCHEMA_VERSION_UNSUPPORTED`; warnings `PROTOCOL_MINOR_NEWER`, `FIELD_IGNORED`. `parse_message` keeps its raising behaviour and is now a thin wrapper.
+- **Trace.** Every message line shows `seq=N` and `[SNAP-… provenance]`.
+- **Evidence:** `tests/core/test_envelope_v11.py`, `tests/core/test_snapshot.py`, `tests/orchestrator/test_stamping.py` (real S-09 run: every message carries the snapshot, mode and provenance, `seq` is 1..N without gaps, also after pause/resume, and parallel = sequential).
+
 ## Appendix A: Controlled vocabularies
 
 <!-- BEGIN GENERATED: vocabulary -->
@@ -215,7 +232,7 @@ _Generated by `scripts/generate_docs.py` from `config/vocabulary/*.toml`; do not
 | [`decision_kind`](#vocabulary-decision-kind) | 3 | closed | `netcoop.core.vocab:DecisionKind` |
 | [`dimension`](#vocabulary-dimension) | 6 | closed | registry only |
 | [`entity_type`](#vocabulary-entity-type) | 3 | closed | registry only |
-| [`error_code`](#vocabulary-error-code) | 40 | closed | registry only |
+| [`error_code`](#vocabulary-error-code) | 44 | closed | registry only |
 | [`evidence_class`](#vocabulary-evidence-class) | 3 | closed | `netcoop.core.vocab:EvidenceClass` |
 | [`evidence_stance`](#vocabulary-evidence-stance) | 3 | closed | registry only |
 | [`evidence_type`](#vocabulary-evidence-type) | 6 | closed | registry only |
@@ -439,6 +456,10 @@ Every error, warning and limitation code the system emits. Severity: fatal stops
 | `UNIT_CONVERTED` | Unit converted | A value was converted to the canonical unit. | active | doc 05 §7; doc 05 §11 | severity=info, kind=ingestion |
 | `VALUE_IMPLAUSIBLE` | Value implausible | A value is outside its definitional range. | active | doc 05 §7; doc 05 §11 | severity=warning, kind=ingestion |
 | `VALUE_MALFORMED` | Value malformed | A value is not a finite number. | active | doc 05 §7; doc 05 §11 | severity=warning, kind=ingestion |
+| `MESSAGE_TOO_LARGE` | Message too large | The message exceeds the configured size limit and is rejected unread. | active | doc 05 §10 (P2); D-23 | severity=error, kind=protocol |
+| `MODE_NOT_ALLOWED` | Mode not allowed | The envelope declares a mode other than simulation; it is never defaulted to live. | active | doc 05 §2 (P2) | severity=error, kind=protocol |
+| `UNKNOWN_TERM` | Unknown term | A field holds a value that is not a registered (or is a blocked) vocabulary term. | active | doc 05 App. A (P2) | severity=error, kind=protocol |
+| `PROTOCOL_MINOR_NEWER` | Protocol minor newer | The sender uses a newer minor protocol version; the message is accepted and unknown fields are ignored. | active | doc 05 §5 (P2) | severity=warning, kind=protocol |
 
 ### Vocabulary: evidence_class
 

@@ -10,6 +10,7 @@ orchestrator (doc 03 §3); agents cannot message each other directly.
 from __future__ import annotations
 
 import json
+import threading
 from collections.abc import Callable
 from typing import Any
 
@@ -22,6 +23,8 @@ from netcoop.core.messages import (
     make_message,
     parse_message,
 )
+from netcoop.core.parse import DEFAULT_MAX_MESSAGE_BYTES
+from netcoop.core.snapshot import DataSnapshot
 from netcoop.core.vocab import AgentId, MessageStatus, MessageType
 
 Handler = Callable[[ParsedMessage], Envelope | str]
@@ -41,12 +44,19 @@ class MessageBus:
         *,
         clock: Clock | None = None,
         ids: IdFactory | None = None,
+        snapshot: DataSnapshot | None = None,
+        max_message_bytes: int = DEFAULT_MAX_MESSAGE_BYTES,
     ) -> None:
         self.store = store
         self.clock: Clock = clock or SystemClock()
         self.ids = ids or IdFactory()
+        #: Protocol 1.1 stamp: every message this bus builds carries the snapshot fields.
+        self.snapshot = snapshot
+        self.max_message_bytes = max_message_bytes
         self._handlers: dict[str, Handler] = {}
         self._listeners: dict[str, Listener] = {}
+        self._seq: dict[str, int] = {}
+        self._seq_lock = threading.Lock()
 
     # ------------------------------------------------------------------ registration
     def register(self, agent_id: AgentId, handler: Handler) -> None:
@@ -70,7 +80,11 @@ class MessageBus:
         status: MessageStatus = "ok",
         message_id: str | None = None,
     ) -> Envelope:
+        snap = self.snapshot
         return make_message(
+            snapshot_id=snap.snapshot_id if snap else None,
+            mode=snap.mode if snap else None,
+            data_provenance=snap.data_provenance if snap else None,
             message_id=message_id or self.ids.message(),
             sender=sender,
             recipient=recipient,
@@ -121,7 +135,7 @@ class MessageBus:
             header.setdefault("recipient", req.sender)
             header.setdefault("in_reply_to", req.message_id)
         try:
-            parsed = parse_message(raw)
+            parsed = parse_message(raw, max_bytes=self.max_message_bytes)
             _check_route(parsed.envelope.sender, parsed.envelope.recipient)
             if expect_reply_to is not None:
                 _check_reply(parsed, expect_reply_to)
@@ -143,6 +157,7 @@ class MessageBus:
                 error_detail=str(exc),
             )
             raise
+        parsed, raw = self._stamp_seq(parsed, raw)
         self.store.append_message(
             raw_json=raw,
             header=parsed.envelope.model_dump(mode="json", exclude={"payload"}),
@@ -150,6 +165,21 @@ class MessageBus:
             ignored_fields=parsed.ignored_fields,
         )
         return parsed
+
+    def _stamp_seq(self, parsed: ParsedMessage, raw: str) -> tuple[ParsedMessage, str]:
+        """Assign the next per-incident sequence number to an accepted message (protocol
+        1.1). Numbering continues from the log after a restart."""
+        incident = parsed.envelope.incident_id
+        if incident is None or parsed.envelope.seq is not None:
+            return parsed, raw
+        with self._seq_lock:
+            if incident not in self._seq:
+                self._seq[incident] = self.store.max_seq(incident)
+            self._seq[incident] += 1
+            n = self._seq[incident]
+        envelope = parsed.envelope.model_copy(update={"seq": n})
+        stamped = ParsedMessage(envelope, parsed.payload, parsed.ignored_fields, parsed.warnings)
+        return stamped, envelope.to_json()
 
     def request(
         self,
@@ -199,8 +229,16 @@ class MessageBus:
 
     def deliver(self, sent: ParsedMessage) -> ParsedMessage:
         """Hand a logged request to its recipient; validate and log the reply."""
-        handler = self._handlers[sent.envelope.recipient]
-        return self.transmit(handler(sent), expect_reply_to=sent)
+        return self.accept_reply(self.call_handler(sent), sent)
+
+    def call_handler(self, sent: ParsedMessage) -> Envelope | str:
+        """Run the recipient's handler and return its raw reply WITHOUT logging it (lets a
+        caller run handlers in worker threads and log replies in a fixed order)."""
+        return self._handlers[sent.envelope.recipient](sent)
+
+    def accept_reply(self, wire: Envelope | str, sent: ParsedMessage) -> ParsedMessage:
+        """Validate and log a reply produced by :meth:`call_handler`."""
+        return self.transmit(wire, expect_reply_to=sent)
 
     def notify(
         self,

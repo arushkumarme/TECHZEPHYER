@@ -405,3 +405,43 @@ source = "doc 05 §7; doc 05 §11"
 [terms.attributes]
 severity = "warning"
 kind = "ingestion"
+
+[[terms]]
+id = "MESSAGE_TOO_LARGE"
+label = "Message too large"
+definition = "The message exceeds the configured size limit and is rejected unread."
+status = "active"
+source = "doc 05 §10 (P2); D-23"
+[terms.attributes]
+severity = "error"
+kind = "protocol"
+
+[[terms]]
+id = "MODE_NOT_ALLOWED"
+label = "Mode not allowed"
+definition = "The envelope declares a mode other than simulation; it is never defaulted to live."
+status = "active"
+source = "doc 05 §2 (P2)"
+[terms.attributes]
+severity = "error"
+kind = "protocol"
+
+[[terms]]
+id = "UNKNOWN_TERM"
+label = "Unknown term"
+definition = "A field holds a value that is not a registered (or is a blocked) vocabulary term."
+status = "active"
+source = "doc 05 App. A (P2)"
+[terms.attributes]
+severity = "error"
+kind = "protocol"
+
+[[terms]]
+id = "PROTOCOL_MINOR_NEWER"
+label = "Protocol minor newer"
+definition = "The sender uses a newer minor protocol version; the message is accepted and unknown fields are ignored."
+status = "active"
+source = "doc 05 §5 (P2)"
+[terms.attributes]
+severity = "warning"
+kind = "protocol"

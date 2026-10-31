@@ -248,11 +248,11 @@ class LogStore:
             ).fetchall()
         return [r[0] for r in rows]
 
-    def register_incident(self, meta: dict[str, Any], *, at: datetime) -> str:
+    def register_incident(self, meta: dict[str, Any], *, at: datetime, prefix: str = "INC") -> str:
         """Allocate the next sequential incident id (``INC-0001``...) and record it."""
         with self._lock:
             (count,) = self._conn.execute("SELECT COUNT(*) FROM incidents").fetchone()
-            incident_id = f"INC-{count + 1:04d}"
+            incident_id = f"{prefix}-{count + 1:04d}"
             self._conn.execute(
                 "INSERT INTO incidents (incident_id, created_at, meta) VALUES (?,?,?)",
                 (incident_id, at.isoformat(), json.dumps(meta, sort_keys=True, default=str)),
@@ -350,6 +350,20 @@ class LogStore:
             "decided_at",
         )
         return [dict(zip(keys, r, strict=True)) for r in rows]
+
+    def max_seq(self, incident_id: str) -> int:
+        """Highest protocol ``seq`` stamped on an accepted message of the incident (0 if none)."""
+        best = 0
+        for m in self.messages(incident_id):
+            if not m.valid:
+                continue
+            try:
+                seq = json.loads(m.raw_json).get("seq")
+            except (json.JSONDecodeError, AttributeError):
+                continue
+            if isinstance(seq, int):
+                best = max(best, seq)
+        return best
 
     def max_message_seq(self, incident_id: str) -> int:
         """Highest request sequence number used by an incident (to continue after restart)."""

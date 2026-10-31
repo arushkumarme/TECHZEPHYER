@@ -63,18 +63,29 @@ def render_trace(store: LogStore, incident_id: str) -> str:
             (t.at, 0, f"[state] {t.from_state or '-'} -> {t.to_state} ({t.trigger}){extra}")
         )
     for m in store.messages(incident_id):
-        payload: dict[str, Any] = {}
+        envelope: dict[str, Any] = {}
         try:
-            payload = json.loads(m.raw_json).get("payload", {})
-        except (json.JSONDecodeError, AttributeError):
-            payload = {}
+            loaded = json.loads(m.raw_json)
+            envelope = loaded if isinstance(loaded, dict) else {}
+        except json.JSONDecodeError:
+            envelope = {}
+        payload = envelope.get("payload", {})
+        payload = payload if isinstance(payload, dict) else {}
         flag = "" if m.valid else f"  ** INVALID: {m.error_code} **"
+        seq = envelope.get("seq")
+        # Protocol 1.1 stamp: which data snapshot (and provenance) the message refers to.
+        stamp = (
+            f"  [{envelope['snapshot_id']} {envelope.get('data_provenance', '?')}]"
+            if envelope.get("snapshot_id")
+            else ""
+        )
         events.append(
             (
                 m.sent_at or "",
                 1,
-                f"[msg]   {m.message_id} {m.sender} -> {m.recipient} {m.message_type}: "
-                f"{_summary(m.message_type, payload)}{flag}",
+                f"[msg]   seq={seq if seq is not None else '-'} {m.message_id} {m.sender} -> "
+                f"{m.recipient} {m.message_type}: {_summary(m.message_type, payload)}"
+                f"{flag}{stamp}",
             )
         )
 

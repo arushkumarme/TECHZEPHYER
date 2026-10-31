@@ -10,14 +10,12 @@ version of a major it supports (additive change) and rejects other majors.
 
 from __future__ import annotations
 
-import json
-import re
 import types
 import typing
 from dataclasses import dataclass, field
-from typing import Any, Self
+from typing import Annotated, Any, Literal, Self
 
-from pydantic import AwareDatetime, BaseModel, Field, ValidationError, model_validator
+from pydantic import AwareDatetime, BaseModel, Field, model_validator
 
 from netcoop.core.blocks import (
     ClarificationRecord,
@@ -32,6 +30,10 @@ from netcoop.core.blocks import (
     ToolCallRecord,
 )
 from netcoop.core.blocks import Hypothesis as Hypothesis
+from netcoop.core.versioning import PAYLOAD_SCHEMA_VERSION as PAYLOAD_SCHEMA_VERSION
+from netcoop.core.versioning import PROTOCOL_VERSION as PROTOCOL_VERSION
+from netcoop.core.versioning import SUPPORTED_PAYLOAD_MAJORS as SUPPORTED_PAYLOAD_MAJORS
+from netcoop.core.versioning import SUPPORTED_PROTOCOL_MAJORS as SUPPORTED_PROTOCOL_MAJORS
 from netcoop.core.vocab import (
     RESPONSE_TYPES,
     AgentId,
@@ -43,12 +45,9 @@ from netcoop.core.vocab import (
     QuestionType,
     TrustLabel,
 )
+from netcoop.core.vocabulary import VocabTerm
 
-PROTOCOL_VERSION = "1.0"
-PAYLOAD_SCHEMA_VERSION = "1.0"
-SUPPORTED_PROTOCOL_MAJORS = frozenset({1})
-SUPPORTED_PAYLOAD_MAJORS = frozenset({1})
-_VERSION_RE = re.compile(r"^(\d+)\.(\d+)$")
+# Version constants live in versioning.py (re-exported above for existing importers).
 
 
 class MessageValidationError(ValueError):
@@ -160,6 +159,19 @@ class Envelope(ProtocolModel):
     payload_schema_version: str
     status: MessageStatus = "ok"
     payload: dict[str, Any]
+    # ---- protocol 1.1 (optional; stamped by the bus so 1.0 messages still parse) ----
+    snapshot_id: str | None = Field(
+        default=None,
+        pattern=r"^SNAP-[0-9a-f]{12}$",
+        description="Fingerprint of the data every agent of the incident analyses",
+    )
+    mode: Literal["simulation"] | None = Field(
+        default=None, description="Only simulation is allowed (MODE_NOT_ALLOWED otherwise)"
+    )
+    data_provenance: Annotated[str, VocabTerm("data_provenance")] | None = None
+    seq: int | None = Field(
+        default=None, ge=1, description="Per-incident sequence number assigned by the bus"
+    )
 
     @model_validator(mode="after")
     def _responses_reference_requests(self) -> Self:
@@ -176,6 +188,8 @@ class ParsedMessage:
     envelope: Envelope
     payload: ProtocolModel
     ignored_fields: list[str] = field(default_factory=list)
+    #: Non-fatal notices, e.g. PROTOCOL_MINOR_NEWER (codes from the error_code vocabulary).
+    warnings: list[str] = field(default_factory=list)
 
 
 def make_message(
@@ -189,6 +203,9 @@ def make_message(
     incident_id: str | None = None,
     in_reply_to: str | None = None,
     status: MessageStatus = "ok",
+    snapshot_id: str | None = None,
+    mode: str | None = None,
+    data_provenance: str | None = None,
 ) -> Envelope:
     """Build an envelope around a typed payload (payload stored in JSON form)."""
     expected = PAYLOAD_TYPES[message_type]
@@ -209,18 +226,13 @@ def make_message(
         payload_schema_version=PAYLOAD_SCHEMA_VERSION,
         status=status,
         payload=payload.model_dump(mode="json"),
+        snapshot_id=snapshot_id,
+        mode=mode,
+        data_provenance=data_provenance,
     )
 
 
 # --------------------------------------------------------------------------- parsing
-
-
-def _check_version(value: Any, supported: frozenset[int], code: str, what: str) -> None:
-    match = _VERSION_RE.match(value) if isinstance(value, str) else None
-    if match is None:
-        raise MessageValidationError("MESSAGE_INVALID", f"{what} {value!r} is not MAJOR.MINOR")
-    if int(match.group(1)) not in supported:
-        raise MessageValidationError(code, f"{what} {value} not supported")
 
 
 def _model_types(annotation: Any) -> list[type[BaseModel]]:
@@ -257,40 +269,20 @@ def _unknown_keys(model: type[BaseModel], data: Any, prefix: str) -> list[str]:
     return unknown
 
 
-def parse_message(raw: str | bytes | dict[str, Any]) -> ParsedMessage:
-    """Validate a raw message. Raises :class:`MessageValidationError` on any violation."""
-    if isinstance(raw, str | bytes):
-        try:
-            data = json.loads(raw)
-        except json.JSONDecodeError as exc:
-            raise MessageValidationError("MESSAGE_INVALID", f"not JSON: {exc}") from exc
-    else:
-        data = raw
-    if not isinstance(data, dict):
-        raise MessageValidationError("MESSAGE_INVALID", "message must be a JSON object")
+def parse_message(
+    raw: str | bytes | dict[str, Any], *, max_bytes: int | None = None
+) -> ParsedMessage:
+    """Validate a raw message. Raises :class:`MessageValidationError` (code of the first
+    problem; all problems in the detail) on any violation. Use
+    :func:`netcoop.core.parse.try_parse` for a version that never raises."""
+    from netcoop.core.parse import DEFAULT_MAX_MESSAGE_BYTES, try_parse
 
-    _check_version(
-        data.get("protocol_version"),
-        SUPPORTED_PROTOCOL_MAJORS,
-        "PROTOCOL_VERSION_UNSUPPORTED",
-        "protocol_version",
-    )
-    _check_version(
-        data.get("payload_schema_version"),
-        SUPPORTED_PAYLOAD_MAJORS,
-        "PAYLOAD_SCHEMA_VERSION_UNSUPPORTED",
-        "payload_schema_version",
-    )
-    try:
-        envelope = Envelope.model_validate(data)
-        payload_cls = PAYLOAD_TYPES[envelope.message_type]
-        payload = payload_cls.model_validate(envelope.payload)
-    except ValidationError as exc:
-        raise MessageValidationError("MESSAGE_INVALID", str(exc)) from exc
-
-    ignored = _unknown_keys(Envelope, {k: v for k, v in data.items() if k != "payload"}, "")
-    ignored += _unknown_keys(payload_cls, envelope.payload, "payload.")
-    return ParsedMessage(envelope=envelope, payload=payload, ignored_fields=sorted(ignored))
+    result = try_parse(raw, max_bytes=max_bytes or DEFAULT_MAX_MESSAGE_BYTES)
+    if result.message is None:
+        first = result.errors[0]
+        detail = "; ".join(f"{e.path or '<message>'}: {e.reason}" for e in result.errors)
+        raise MessageValidationError(first.code, detail)
+    return result.message
 
 
 def payload_as[P: ProtocolModel](parsed: ParsedMessage, cls: type[P]) -> P:

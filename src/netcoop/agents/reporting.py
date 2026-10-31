@@ -41,6 +41,7 @@ def reporting_context(
     generated_at: str | None = None,
     community: list[dict[str, Any]] | None = None,
     community_errors: list[str] | None = None,
+    data_snapshot: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     dq = bundle.data_quality
     return {
@@ -61,6 +62,7 @@ def reporting_context(
         "generated_at": generated_at,
         "community": community or [],
         "community_errors": community_errors or [],
+        "data_snapshot": data_snapshot,
     }
 
 
@@ -119,6 +121,7 @@ class ReportingAgent:
             generated_at=at,
             community=ctx.get("community", []),
             community_errors=ctx.get("community_errors", []),
+            data_snapshot=ctx.get("data_snapshot"),
         )
         problems = validate_report(
             report,

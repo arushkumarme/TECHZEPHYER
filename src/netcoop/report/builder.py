@@ -216,6 +216,7 @@ def build_report(
     generated_at: datetime | None = None,
     community: list[dict[str, Any]] | None = None,
     community_errors: list[str] | None = None,
+    data_snapshot: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     obs = _observations(findings)
     evidence = _evidence(decision, obs)
@@ -357,6 +358,7 @@ def build_report(
         "community_trust": trust,
         "llm_assistance": [],
         "narrative": "",
+        "data_snapshot": data_snapshot,
         "top_cause_type": top.cause_type,
         "generated_at": (generated_at or datetime.now(UTC)).isoformat(),
     }

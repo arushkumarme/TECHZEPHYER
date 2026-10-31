@@ -228,3 +228,11 @@ Newest entry last. Each entry records actual commands and results. See `IMPLEMEN
 - E2E proof: `tests/e2e/test_vocabulary_in_runs.py` checks every vocabulary-controlled value of every logged message in real S-05, S-09, S-12 runs.
 - Docs: doc 05 §12 + Appendix A, doc 00 D-16..D-21 (PROVISIONAL), doc 01 R-09.
 - Executed: `pytest -q` 339 passed (314 + 25 new); `pytest -m ui` 7; Vitest 4; scenarios 13/13; ruff, format, mypy (70 files) clean; `generate_docs.py --check` up to date. No existing test changed.
+
+## Protocol upgrade P2 — envelope 1.1, data snapshot, safe parsing (2026-11-01)
+
+- Protocol 1.1: optional `snapshot_id`, `mode`, `data_provenance`, `seq`, stamped by the bus; 1.0 messages still parse; a newer minor is accepted with `PROTOCOL_MINOR_NEWER`.
+- `core/snapshot.py` (canonical hash + `DataSnapshot`, checkpointed, in `netcoop_extensions.data_snapshot`), `core/parse.py` (`try_parse`, never raises; `MESSAGE_TOO_LARGE`), `core/versioning.py`, `core/clock.py` (re-export), `validate_id` in `core/ids.py`, configurable incident prefix.
+- Determinism: specialist replies are now logged by the orchestrator in fixed agent order (handlers still run in parallel), so `seq` is identical in parallel and sequential runs. Late replies after a timeout are no longer logged (the timeout stays as `agent_error`).
+- New error codes registered: `MESSAGE_TOO_LARGE`, `MODE_NOT_ALLOWED`, `UNKNOWN_TERM`, `PROTOCOL_MINOR_NEWER`. Decisions D-22 (incident id), D-23 (size limit).
+- No existing test changed. `docs/results/example-S-02-report.json` refreshed to the current output (it also lacked the earlier `narrative` and `community_trust` keys).
