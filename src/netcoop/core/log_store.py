@@ -64,11 +64,23 @@ CREATE TABLE IF NOT EXISTS checkpoints (
     data        TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS ix_checkpoints_incident ON checkpoints(incident_id, seq);
+CREATE TABLE IF NOT EXISTS approvals (
+    seq               INTEGER PRIMARY KEY AUTOINCREMENT,
+    incident_id       TEXT NOT NULL,
+    action_index      INTEGER NOT NULL,
+    action            TEXT NOT NULL,
+    decision          TEXT NOT NULL,
+    reviewer          TEXT NOT NULL,
+    note              TEXT NOT NULL,
+    simulated_outcome TEXT,
+    decided_at        TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ix_approvals_incident ON approvals(incident_id, seq);
 """
 _APPEND_ONLY = [
     f"CREATE TRIGGER IF NOT EXISTS {table}_no_{op.lower()} BEFORE {op} ON {table} "
     f"BEGIN SELECT RAISE(ABORT, '{table} is append-only'); END;"
-    for table in ("messages", "transitions", "incidents", "reports", "checkpoints")
+    for table in ("messages", "transitions", "incidents", "reports", "checkpoints", "approvals")
     for op in ("UPDATE", "DELETE")
 ]
 
@@ -301,6 +313,42 @@ class LogStore:
                 (incident_id,),
             ).fetchall()
         return [{"kind": r[0], "at": r[1], "data": json.loads(r[2])} for r in rows]
+
+    def append_approval(self, record: dict[str, Any]) -> None:
+        """Record a human review decision (component 9). Append-only: never edited."""
+        with self._lock:
+            self._conn.execute(
+                "INSERT INTO approvals (incident_id, action_index, action, decision, reviewer,"
+                " note, simulated_outcome, decided_at) VALUES (?,?,?,?,?,?,?,?)",
+                (
+                    record["incident_id"],
+                    record["action_index"],
+                    record["action"],
+                    record["decision"],
+                    record["reviewer"],
+                    record["note"],
+                    record.get("simulated_outcome"),
+                    record["decided_at"],
+                ),
+            )
+
+    def approvals(self, incident_id: str) -> list[dict[str, Any]]:
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT action_index, action, decision, reviewer, note, simulated_outcome,"
+                " decided_at FROM approvals WHERE incident_id=? ORDER BY seq",
+                (incident_id,),
+            ).fetchall()
+        keys = (
+            "action_index",
+            "action",
+            "decision",
+            "reviewer",
+            "note",
+            "simulated_outcome",
+            "decided_at",
+        )
+        return [dict(zip(keys, r, strict=True)) for r in rows]
 
     def max_message_seq(self, incident_id: str) -> int:
         """Highest request sequence number used by an incident (to continue after restart)."""

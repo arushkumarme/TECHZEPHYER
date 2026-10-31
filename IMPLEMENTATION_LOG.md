@@ -128,3 +128,13 @@ Newest entry last. Each entry records actual commands and results. See `IMPLEMEN
 - **Real defect found:** findings were checkpointed only after all three specialists replied, so a crash while waiting for the third lost the first two. Now each finding is made durable on arrival.
 - **Gates:** G1–G7 ✔ (G6: a separate Orchestrator instance on the same SQLite file = restart).
 - **Next:** M11 HITL review + simulated remediation.
+
+## M11 — HITL review + simulated remediation · 2026-10-31 · VERIFIED
+
+- **Objective:** official optional components 9 (HITL) and 12 (automated remediation, simulated).
+- **Files:** `src/netcoop/orchestrator/review.py`, `src/netcoop/remediation/simulator.py`, `approvals` table in `core/log_store.py`, Markdown shows decisions/outcomes, CLI `review`/`approve`/`reject`; `tests/orchestrator/test_review.py`; docs 12 §8, 01.
+- **Tests added:** 8 (pending list, approval recorded + simulated outcome, double/out-of-range/blank reviewer refused, completion → COMPLETE with versioned report and unchanged diagnosis, review only in AWAITING_REVIEW, no network during approval, simulator has no write path, CLI flow).
+- **Executed:** red (collection error) → `uv run pytest -q` → 234 passed; ruff, format, mypy strict clean (51 files).
+- **Failures met:** a shell heredoc quoting error aborted one write step (nothing applied); redone with file tools.
+- **Gates:** G1–G7 ✔.
+- **Next:** M12 MCP server.

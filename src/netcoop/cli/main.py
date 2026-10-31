@@ -21,6 +21,7 @@ from typing import Any
 from netcoop.config.settings import load_settings
 from netcoop.core.log_store import LogStore
 from netcoop.orchestrator.faults import FAULTS
+from netcoop.orchestrator.review import ReviewError, ReviewService
 from netcoop.orchestrator.trace import render_trace
 from netcoop.orchestrator.workflow import IncidentResult, Orchestrator
 from netcoop.report.builder import strict_official
@@ -156,6 +157,36 @@ def cmd_scenarios(args: argparse.Namespace) -> int:
     return 0 if all(not f for *_, f in rows) else 1
 
 
+def cmd_review(args: argparse.Namespace) -> int:
+    svc = ReviewService(LogStore(Path(args.db)))
+    try:
+        items = svc.pending(args.incident)
+    except ReviewError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    print(f"{args.incident}: state {svc.state(args.incident)} - every action is SIMULATED")
+    for p in items:
+        who = f" (by {p.reviewer})" if p.reviewer else ""
+        print(f"[{p.index}] {p.approval_state}{who}: {p.action}")
+    return 0
+
+
+def cmd_decide(args: argparse.Namespace) -> int:
+    svc = ReviewService(LogStore(Path(args.db)))
+    try:
+        rec = svc.decide(
+            args.incident, args.index, args.choice, reviewer=args.reviewer, note=args.note
+        )
+    except ReviewError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    print(f"{rec.decision}d [{rec.action_index}] by {rec.reviewer} at {rec.decided_at}")
+    if rec.simulated_outcome:
+        print(rec.simulated_outcome)
+    print(f"incident state: {svc.state(args.incident)}")
+    return 0
+
+
 def cmd_trace(args: argparse.Namespace) -> int:
     print(render_trace(LogStore(Path(args.db)), args.incident), end="")
     return 0
@@ -214,6 +245,17 @@ def build_parser() -> argparse.ArgumentParser:
 
     inc = sub.add_parser("incidents", help="list incidents with their current state")
     inc.set_defaults(func=cmd_incidents)
+
+    rv = sub.add_parser("review", help="list an incident's recommendations and decisions")
+    rv.add_argument("incident")
+    rv.set_defaults(func=cmd_review)
+    for name, choice in (("approve", "approve"), ("reject", "reject")):
+        d = sub.add_parser(name, help=f"{name} one recommendation (outcome is simulated)")
+        d.add_argument("incident")
+        d.add_argument("index", type=int)
+        d.add_argument("--reviewer", required=True, help="who decides (recorded)")
+        d.add_argument("--note", default="")
+        d.set_defaults(func=cmd_decide, choice=choice)
 
     s = sub.add_parser("scenarios", help="list or run the scenario suite")
     s.add_argument("action", choices=["list", "run-all"])

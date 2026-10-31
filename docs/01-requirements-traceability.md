@@ -161,11 +161,11 @@ Never counted toward the mandatory rows. Disabled → core must still pass (`T-I
 | R-17 synthetic data / simulation mode | TESTED | `test_other_modes_are_refused`, `test_live_mode_refused` |
 | R-18 suggested scenarios | TESTED (S-03 as "not assessable"; S-05 via team-authored probes) | e2e |
 | R-19 dataset categories | TESTED | `tests/config/test_fields.py` (T-DOC-01) |
-| R-20 remediation simulated, no write path | PARTIAL — no write tool exists (`test_no_state_changing_tool_exists`); approval workflow is M11 | |
+| R-20 remediation simulated, no write path | TESTED | `test_no_state_changing_tool_exists`, `tests/orchestrator/test_review.py` (T-SAFE-02/03) |
 | M-01..M-06 minimum acceptance | TESTED | `test_full_run`, protocol tests, `test_congestion_is_diagnosed_from_two_agents`, ingestion tests, report tests, CLI test |
 | O-01 MCP | NOT_STARTED (M12; owner scope change ID-01) | |
-| O-02 HITL | NOT_STARTED (M11) | |
+| O-02 HITL | TESTED | `tests/orchestrator/test_review.py` (approve/reject, recorded, completes incident, CLI) |
 | O-03 persistent state / pause-resume | TESTED | `tests/orchestrator/test_persistence.py` (pause/resume after restart, crash recovery, CLI) |
 | O-04 dashboard | NOT_STARTED (M14/M17) — CLI works | |
-| O-05 simulated remediation | NOT_STARTED (M11) | |
+| O-05 simulated remediation | TESTED | `test_approval_is_recorded_and_outcome_simulated`, `test_simulator_has_no_write_path` |
 | X-CSI-*, X-GEO-* | NOT_STARTED (M15–M17) | |

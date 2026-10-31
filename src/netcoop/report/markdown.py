@@ -50,8 +50,12 @@ def render_markdown(report: dict[str, Any]) -> str:
     ]
     status = {r["action"]: r for r in ext.get("recommendation_status", [])}
     for a in report["recommended_actions"]:
-        state = status.get(a, {}).get("approval_state", "pending")
-        lines.append(f"- [{state}] {a}")
+        entry = status.get(a, {})
+        lines.append(f"- [{entry.get('approval_state', 'pending')}] {a}")
+        if entry.get("reviewer"):
+            lines.append(f"  - decided by `{entry['reviewer']}` at {entry.get('decided_at')}")
+        if entry.get("simulated_outcome"):
+            lines.append(f"  - {entry['simulated_outcome']}")
     trace = ext.get("agent_contributions", {})
     if trace:
         lines += [

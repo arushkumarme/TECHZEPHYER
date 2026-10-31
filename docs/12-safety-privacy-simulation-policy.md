@@ -67,3 +67,9 @@
 - [ ] No state-changing tool exists (`T-SAFE-*`)
 - [ ] No team members, roles or dates invented (`T-DOC-02`)
 - [ ] Field dictionary rows all cite a source (`T-DOC-01`)
+
+## 8. Implementation of §3 (M11, 2026-10-31) — `IMPLEMENTED`, `TESTED`
+
+- **Human-in-the-loop** (`src/netcoop/orchestrator/review.py`, CLI `netcoop review | approve | reject INC idx --reviewer NAME [--note …]`): decisions are taken only in `AWAITING_REVIEW`, one per recommendation, never twice, always with a reviewer name; each is appended to the append-only `approvals` table (who, when, what, decision, note). When all are decided a new report version is appended (the original is kept) and the incident moves to `COMPLETE`. Review never alters status, cause or confidence.
+- **Simulated remediation** (`src/netcoop/remediation/simulator.py`): approval yields a text outcome that begins `SIMULATED: no device was changed and nothing was sent to any network` and states that real execution needs change control and authorization and that the outcome is unverified.
+- **No write path, tested:** the tool layer has no state-changing tool (`T-SAFE-01`); approving with all socket creation monkeypatched to fail succeeds (`T-SAFE-02`); the simulator imports no tools, subprocess, socket or HTTP library (`T-SAFE-03`). Tests: `tests/orchestrator/test_review.py`.
