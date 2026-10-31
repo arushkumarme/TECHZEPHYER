@@ -46,3 +46,13 @@ Newest entry last. Each entry records actual commands and results. See `IMPLEMEN
 - **Failures met:** 3 long lines, 1 mypy narrowing error — fixed.
 - **Gates:** G1–G7 ✔ (G6: real generator records + real config files).
 - **Next:** M4 simulated topology + read-only tool layer.
+
+## M4 — Simulated topology + read-only tool layer · 2026-10-31 · VERIFIED
+
+- **Objective:** deterministic topology analysis (paths, neighbours, zones, what-if blast radius) and the only data-access path for agents, with permissions, budgets and call records.
+- **Requirements:** R-02, R-20 (T-TOOL-*, T-SAFE-01), groundwork for X-GEO-05.
+- **Files:** `sample_data/topology/{campus_v1.json,README.md}` (SIMULATED, team-authored), `src/netcoop/tools/{topology,toolbox}.py`, `tests/tools/{test_topology,test_toolbox}.py`; dev dep `types-networkx`.
+- **Tests added:** 16. **Executed:** `uv run pytest -q` → 106 passed; ruff, format, mypy strict clean (22 files).
+- **Failure met (real bug, caught by test):** degraded nodes were never detected because every path to the core shared one virtual sink edge (edge connectivity always 1). Fixed by a max-flow with unlimited capacity on core→sink edges. Also: lint findings, networkx stubs/generics.
+- **Gates:** G1–G7 ✔ (G6: tool layer over a real ingested bundle + real topology file).
+- **Next:** M5 diagnosis knowledge (catalog, scoring, gate, conflict rules).

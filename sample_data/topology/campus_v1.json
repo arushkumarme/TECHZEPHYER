@@ -1,0 +1,32 @@
+{
+  "topology_id": "campus_v1",
+  "schema_version": "1.0",
+  "provenance": "SIMULATED",
+  "provenance_note": "Team-authored synthetic topology for hackathon simulation mode. Device IDs reuse the organizer generator's SW_CAMPUS_1..10. Zone names are placeholders, not claims about IIT Bhubaneswar naming or wiring (docs 11 §2, 12 §1).",
+  "core_nodes": ["SW_CAMPUS_1"],
+  "nodes": [
+    {"id": "SW_CAMPUS_1", "role": "core", "zone": "ZONE_DATA_CENTRE"},
+    {"id": "SW_CAMPUS_2", "role": "distribution", "zone": "ZONE_DATA_CENTRE"},
+    {"id": "SW_CAMPUS_3", "role": "distribution", "zone": "ZONE_DATA_CENTRE"},
+    {"id": "SW_CAMPUS_4", "role": "access", "zone": "ZONE_HOSTEL_A"},
+    {"id": "SW_CAMPUS_5", "role": "access", "zone": "ZONE_HOSTEL_B"},
+    {"id": "SW_CAMPUS_6", "role": "access", "zone": "ZONE_ACADEMIC_BLOCK"},
+    {"id": "SW_CAMPUS_7", "role": "access", "zone": "ZONE_LIBRARY"},
+    {"id": "SW_CAMPUS_8", "role": "access", "zone": "ZONE_LECTURE_HALLS"},
+    {"id": "SW_CAMPUS_9", "role": "access", "zone": "ZONE_DEPT_LAB"},
+    {"id": "SW_CAMPUS_10", "role": "access", "zone": "ZONE_ADMIN"}
+  ],
+  "links": [
+    {"id": "L-1-2", "a": "SW_CAMPUS_1", "b": "SW_CAMPUS_2"},
+    {"id": "L-1-3", "a": "SW_CAMPUS_1", "b": "SW_CAMPUS_3"},
+    {"id": "L-2-3", "a": "SW_CAMPUS_2", "b": "SW_CAMPUS_3"},
+    {"id": "L-2-4", "a": "SW_CAMPUS_2", "b": "SW_CAMPUS_4"},
+    {"id": "L-2-5", "a": "SW_CAMPUS_2", "b": "SW_CAMPUS_5"},
+    {"id": "L-2-10", "a": "SW_CAMPUS_2", "b": "SW_CAMPUS_10"},
+    {"id": "L-3-6", "a": "SW_CAMPUS_3", "b": "SW_CAMPUS_6"},
+    {"id": "L-3-7", "a": "SW_CAMPUS_3", "b": "SW_CAMPUS_7"},
+    {"id": "L-3-9", "a": "SW_CAMPUS_3", "b": "SW_CAMPUS_9"},
+    {"id": "L-2-8", "a": "SW_CAMPUS_2", "b": "SW_CAMPUS_8"},
+    {"id": "L-3-8", "a": "SW_CAMPUS_3", "b": "SW_CAMPUS_8"}
+  ]
+}
