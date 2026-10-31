@@ -1,0 +1,20 @@
+=== incident INC-0001 | snapshot SNAP-0123456789ab | mode simulation | data provenance synthetic-generator | SIMULATED DATA - scenario playback ===
+
+ seq  time          from -> to                                    type                     message_id                in_reply_to               verdict   summary
+   1  09:00:00.000  orchestrator -> performance_agent             task_request             INC-0001-MSG-000001       -                         accepted  investigate task TASK-0001, scope 2 entities, budget 30
+   2  09:00:00.250  performance_agent -> orchestrator             finding                  INC-0001-MSG-000001.R     INC-0001-MSG-000001       accepted  2 observations, 1 hypothesis, 1 not_assessable
+   3  09:00:00.500  orchestrator -> correlation_agent             task_request             INC-0001-MSG-000002       -                         accepted  correlate task TASK-0002, scope 2 entities, budget 0, refs 1
+   4  09:00:00.750  performance_agent -> orchestrator             decision                 INC-0001-MSG-000050       INC-0001-MSG-000001       REJECTED  SENDER_NOT_AUTHORIZED: Rejected: only correlation_agent may send a decision; performance_agent tried.
+   5  09:00:01.000  correlation_agent -> orchestrator             clarification_request    INC-0001-MSG-000002.R     INC-0001-MSG-000002       accepted  recheck_metric -> performance_agent, round 1 (narrow_margin) CLR-0001
+   6  09:00:01.250  orchestrator -> performance_agent             clarification_request    INC-0001-MSG-000003       INC-0001-MSG-000002.R     accepted  recheck_metric -> performance_agent, round 1 (narrow_margin) CLR-0001
+   7  09:00:01.500  performance_agent -> orchestrator             clarification_response   INC-0001-MSG-000003.R     INC-0001-MSG-000003       accepted  answerable no, 0 observations
+   8  09:00:01.750  orchestrator -> correlation_agent             task_request             INC-0001-MSG-000004       -                         accepted  correlate task TASK-0003, scope 2 entities, budget 0, refs 1
+   9  09:00:02.000  correlation_agent -> orchestrator             clarification_request    INC-0001-MSG-000004.R     INC-0001-MSG-000004       accepted  recheck_metric -> performance_agent, round 2 (narrow_margin) CLR-0002
+  10  09:00:02.250  orchestrator -> performance_agent             clarification_request    INC-0001-MSG-000005       INC-0001-MSG-000004.R     accepted  recheck_metric -> performance_agent, round 2 (narrow_margin) CLR-0002
+  11  09:00:02.500  performance_agent -> orchestrator             clarification_response   INC-0001-MSG-000005.R     INC-0001-MSG-000005       accepted  answerable no, 0 observations
+  12  09:00:02.750  orchestrator -> correlation_agent             task_request             INC-0001-MSG-000006       -                         accepted  correlate task TASK-0004, scope 2 entities, budget 0, refs 1
+  13  09:00:03.000  correlation_agent -> orchestrator             decision                 INC-0001-MSG-000006.R     INC-0001-MSG-000006       accepted  diagnosed, top link_congestion score 0.82 (heuristic)
+  14  09:00:03.250  orchestrator -> reporting_agent               task_request             INC-0001-MSG-000007       -                         accepted  report task TASK-0005, scope 2 entities, budget 0, refs 2
+  15  09:00:03.500  reporting_agent -> orchestrator               report_ready             INC-0001-MSG-000007.R     INC-0001-MSG-000007       accepted  report diagnosed, 1 recommendation
+
+--- 15 messages: 14 accepted, 1 rejected | by type: clarification_request 4, clarification_response 2, decision 1, finding 1, report_ready 1, task_request 5 | clarification rounds used: 2 | snapshot SNAP-0123456789ab ---

@@ -243,7 +243,15 @@ def cmd_community(args: argparse.Namespace) -> int:
 
 
 def cmd_trace(args: argparse.Namespace) -> int:
-    print(render_trace(LogStore(Path(args.db)), args.incident), end="")
+    from netcoop.cli import trace as inspector
+
+    store = LogStore(Path(args.db))
+    if inspector.wants_inspector(args):  # protocol inspector views (doc 05 §18)
+        if hasattr(sys.stdout, "reconfigure"):
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        print(inspector.render(args, store), end="")
+    else:  # the original state + message timeline, unchanged
+        print(render_trace(store, args.incident), end="")
     return 0
 
 
@@ -331,6 +339,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     t = sub.add_parser("trace", help="print an incident's trace from the log")
     t.add_argument("incident")
+    from netcoop.cli.trace import add_arguments as add_inspector_arguments
+
+    add_inspector_arguments(t, with_incident=False)
     t.set_defaults(func=cmd_trace)
 
     v = sub.add_parser("validate-report", help="check a report JSON against doc 07 §8")

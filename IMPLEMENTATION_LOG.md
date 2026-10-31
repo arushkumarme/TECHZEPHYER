@@ -267,3 +267,9 @@ Newest entry last. Each entry records actual commands and results. See `IMPLEMEN
 - Schema move (#22): repo-wide grep for `schemas/protocol` (CI, API, dashboard, docs, code): updated `core/schema_export.py` (single constant), docs 01 and 05; historical mentions in `docs/results/release-verification.md` and this log annotated. `tests/core/test_ids_schema.py` reads the constant: no change needed.
 - Parser reasons no longer quote whole objects (short scalar inputs only); stale doc 14 statements corrected (DLV-1 pushed by the owner; test count).
 - No existing test changed.
+
+## Protocol upgrade P7 — protocol inspector (2026-11-01)
+
+- `core/inspector/` pure renderers: table, sequence lanes, json, evidence chain (with explicit UNRESOLVED), explain (vocabulary definitions, metric units/categories), banner `SIMULATED DATA - scenario playback`, footer counts.
+- CLI `python -m netcoop.cli.trace` and the same flags on `netcoop trace` (its default output is unchanged, so the existing trace tests are untouched). ANSI colour off by default.
+- Golden files for the three formats from a fixture log built through the real bus (kit conversation + one rejected message); golden review caught and fixed a time-format slip and a plural. No existing test changed.

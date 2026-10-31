@@ -299,6 +299,19 @@ Proof that the protocol is real: **[`conformance/README.md`](../conformance/READ
 - **Third-party agents:** `netcoop.conformance.assert_agent_conforms(agent, recorded_task_request)` feeds a recorded task to any callable and checks that its reply parses and passes the guard. It is proven with a stub agent written only from the kit README; non-conforming variants are caught.
 - **Evidence:** `tests/conformance/test_kit.py`. The manifest matches reality; examples and schemas are current; **breaking a rule or a model makes the kit fail** (exact mismatches asserted); the CLI commands work; and the stub agent conforms.
 
+## 18. Protocol inspector: how to read a trace (protocol upgrade, Prompt 7) — `IMPLEMENTED`, `TESTED`
+
+`uv run python -m netcoop.cli.trace INC-0001 [--format table|sequence|json] [--show-rejected] [--type T] [--sender S]`. The same flags work on `netcoop trace`; without flags `netcoop trace` keeps its original state-and-message timeline. The rendering functions (`core/inspector/`) are pure and return text or data, so the API and dashboard can reuse them.
+
+- **Banner (always):** incident, snapshot id, mode, data provenance and `SIMULATED DATA - scenario playback`. **Footer (always):** messages by type, accepted vs rejected, clarification rounds used, snapshot id. Rejected messages are hidden only from the body (use `--show-rejected`); the footer always counts them.
+- **`table`:** one line per message: `seq` (the attempt number in the log), time, `sender -> recipient`, type, `message_id`, `in_reply_to`, verdict, and a one-line summary (e.g. `2 observations, 1 hypothesis, 1 not_assessable`). A rejected line shows `REJECTED`, its code and the plain-English reason.
+- **`sequence`:** one lane per participant. `o----->` goes from sender to recipient; a rejected message is drawn `Xxxxxo` with its code and reason.
+- **`json`:** the same content, structured (`banner`, `messages`, `footer`) for the dashboard.
+- **`--evidence HYP-…`:** the evidence chain: hypothesis → supporting and contradicting refs → observations (entity, metric, value, unit, severity) → source records (`REC-…`) → data snapshot. A reference that does not resolve is printed as `UNRESOLVED: …`.
+- **`--explain MSG-…`:** the full message, then each vocabulary-controlled field with its definition. Metrics also show their unit and problem-statement category, which is how "field meanings and units" can be read off any message.
+- **ANSI colour** is off by default (`--color` to switch it on). Raw telemetry is never displayed, only the observations agents derived from it.
+- **Evidence:** `tests/inspector/test_inspector.py`. Golden files (`tests/inspector/golden/`) cover the table, sequence and json views of a fixture log built through the real bus: the kit's valid conversation plus one rejected message. Further tests cover the rejected toggle, filters, footer counts, evidence resolved and unresolved, explain definitions, the banner being always present, the absence of the words "live"/"real-time", and the CLI.
+
 ## Appendix A: Controlled vocabularies
 
 <!-- BEGIN GENERATED: vocabulary -->

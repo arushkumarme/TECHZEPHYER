@@ -67,7 +67,7 @@ The demo shows the mandatory workflow first; extensions come after. Every segmen
 | Segment | Command / screen |
 |---|---|
 | Demo-1 | `uv run netcoop run --scenario S-01` (or dashboard → S-01) |
-| Demo-2 | `uv run netcoop run --scenario S-02 --trace`; dashboard swimlane for S-09 shows clarification rounds |
+| Demo-2 | `uv run netcoop run --scenario S-02 --trace`; dashboard swimlane for S-09 shows clarification rounds. Protocol inspector (doc 05 §18): `uv run netcoop trace INC-… --format sequence` (lanes, rejected messages marked), `--format table --show-rejected`, `--evidence HYP-…` (hypothesis → observations → source records → snapshot), `--explain MSG-…` (field meanings and units) |
 | Demo-3/4 | S-07 (missing metrics), S-06 (renamed fields/units), S-06b (unsupported schema → rejected) |
 | Demo-5 | S-08 (insufficient evidence) |
 | Demo-6 | dashboard → Recommended actions → enter name → Approve → simulated outcome; or `netcoop approve INC-… 0 --reviewer NAME` |

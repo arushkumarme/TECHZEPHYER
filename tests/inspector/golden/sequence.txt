@@ -1,0 +1,21 @@
+=== incident INC-0001 | snapshot SNAP-0123456789ab | mode simulation | data provenance synthetic-generator | SIMULATED DATA - scenario playback ===
+
+ seq    orchestrator   performance   infrastructure  connectivity   correlation     reporting      community   
+             |              |              |              |              |              |              |       
+   1         o-------------->              |              |              |              |              |         task_request
+   2         <--------------o              |              |              |              |              |         finding
+   3         o----------------------------------------------------------->              |              |         task_request
+   4         Xxxxxxxxxxxxxxxo              |              |              |              |              |         decision  REJECTED SENDER_NOT_AUTHORIZED: Rejected: only correlation_agent may send a decision; performance_agent tried.
+   5         <-----------------------------------------------------------o              |              |         clarification_request
+   6         o-------------->              |              |              |              |              |         clarification_request
+   7         <--------------o              |              |              |              |              |         clarification_response
+   8         o----------------------------------------------------------->              |              |         task_request
+   9         <-----------------------------------------------------------o              |              |         clarification_request
+  10         o-------------->              |              |              |              |              |         clarification_request
+  11         <--------------o              |              |              |              |              |         clarification_response
+  12         o----------------------------------------------------------->              |              |         task_request
+  13         <-----------------------------------------------------------o              |              |         decision
+  14         o-------------------------------------------------------------------------->              |         task_request
+  15         <--------------------------------------------------------------------------o              |         report_ready
+
+--- 15 messages: 14 accepted, 1 rejected | by type: clarification_request 4, clarification_response 2, decision 1, finding 1, report_ready 1, task_request 5 | clarification rounds used: 2 | snapshot SNAP-0123456789ab ---
