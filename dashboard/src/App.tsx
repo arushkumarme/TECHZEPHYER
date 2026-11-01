@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, type Health, type IncidentSummary, type MapLayers, type ScenarioInfo } from "./api";
 import { CommunityView } from "./components/CommunityView";
-import { IncidentView, StatusTag } from "./components/IncidentView";
+import { StatusTag } from "./components/DiagnosisPanel";
+import { IncidentView } from "./components/IncidentView";
 import { MapView } from "./components/MapView";
 
 type Tab = "incidents" | "map" | "community";
@@ -14,6 +15,8 @@ export default function App() {
   const [incidents, setIncidents] = useState<IncidentSummary[]>([]);
   const [layers, setLayers] = useState<MapLayers | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
+  // The incident just created by Run diagnosis: its exchange replays once on arrival.
+  const [fresh, setFresh] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("incidents");
   const [scenario, setScenario] = useState("S-02");
   const [faultAgent, setFaultAgent] = useState(AGENTS[0]);
@@ -41,6 +44,7 @@ export default function App() {
     try {
       const inc = await api.runScenario(scenario, fault ? { [faultAgent]: fault } : {});
       await refresh();
+      setFresh(inc.incident_id);
       setSelected(inc.incident_id);
       setTab("incidents");
       setError(null);
@@ -118,7 +122,7 @@ export default function App() {
                   <button
                     aria-current={selected === i.incident_id}
                     title={`${i.incident_id}${i.label ? ` · ${i.label}` : ""}`}
-                    onClick={() => { setSelected(i.incident_id); setTab("incidents"); }}
+                    onClick={() => { setFresh(null); setSelected(i.incident_id); setTab("incidents"); }}
                   >
                     <span className="inc-head">
                       <span className="id">{i.incident_id}</span>
@@ -135,7 +139,13 @@ export default function App() {
         <main className="main">
           {error && <div className="error-box" role="alert">{error}</div>}
           {tab === "incidents" && (selected ? (
-            <IncidentView key={selected} id={selected} onChanged={() => void refresh()} />
+            <IncidentView
+              key={selected}
+              id={selected}
+              onChanged={() => void refresh()}
+              layers={layers}
+              autoReplay={selected === fresh}
+            />
           ) : (
             <div className="empty-state panel">
               <h2>Choose an incident</h2>
@@ -146,7 +156,7 @@ export default function App() {
           ))}
           {tab === "map" && <MapView incidents={incidents} layers={layers} />}
           {tab === "community" && (
-            <CommunityView scenarios={scenarios} onInvestigated={async (id) => { await refresh(); setSelected(id); setTab("incidents"); }} />
+            <CommunityView scenarios={scenarios} onInvestigated={async (id) => { await refresh(); setFresh(null); setSelected(id); setTab("incidents"); }} />
           )}
         </main>
       </div>

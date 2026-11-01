@@ -78,7 +78,10 @@ export function useReplay(
   const autoStarted = useRef(false);
   const lastKey = useRef(opts.resetKey);
 
-  const cursor = pos === null ? last : Math.min(pos, last);
+  // Auto-play is due but its effect has not run yet: render as already started at row 0,
+  // so the fully revealed trace never shows for one frame before the replay begins.
+  const autoPending = opts.auto && !autoStarted.current && rowCount > 0 && !prefersReducedMotion();
+  const cursor = autoPending ? 0 : pos === null ? last : Math.min(pos, last);
 
   // Auto-play once, the first time rows exist.
   useEffect(() => {
@@ -138,5 +141,5 @@ export function useReplay(
   }, [cursor, last]);
   const restart = useCallback(() => start(0), [start]);
 
-  return { cursor, playing, play, pause, step, restart };
+  return { cursor, playing: playing || autoPending, play, pause, step, restart };
 }

@@ -8,8 +8,9 @@ const TOP = 34;
 const REPLIES = new Set(["finding", "decision", "report_ready", "clarification_response"]);
 
 // Every message between the orchestrator and the agents, in order: the visible evidence
-// that agents exchange and reconcile findings (SRC-1 p7 §10).
-export function Swimlane({ events }: { events: TraceEvent[] }) {
+// that agents exchange and reconcile findings (SRC-1 p7 §10). Every row is always drawn;
+// a replay `cursor` only dims the rows not reached yet and marks the current one.
+export function Swimlane({ events, cursor }: { events: TraceEvent[]; cursor?: number }) {
   const { lanes, rows } = layoutTrace(events);
   const [selected, setSelected] = useState<number | null>(null);
   const width = lanes.length * LANE_W;
@@ -40,8 +41,9 @@ export function Swimlane({ events }: { events: TraceEvent[] }) {
         ))}
         {rows.map((row, i) => {
           const y = TOP + i * ROW_H + ROW_H / 2;
+          const phase = cursor === undefined ? "" : i > cursor ? "pending" : i === cursor ? "current" : "";
           return (
-            <g key={i}>
+            <g key={i} className={phase || undefined}>
               {row.kind === "state" ? (
                 <>
                   <rect className="state-band" x={0} y={y - 9} width={width} height={18} />

@@ -80,6 +80,19 @@ describe("useReplay", () => {
     expect(result.current.cursor).toBe(4);
   });
 
+  it("never renders the fully revealed trace before auto-play starts", () => {
+    // Every committed render once rows exist must already be at row 0 (no one-frame flash).
+    const seen: number[] = [];
+    const { rerender } = renderHook(({ n }) => {
+      const r = useReplay(n, opts);
+      if (n > 0) seen.push(r.cursor);
+      return r;
+    }, { initialProps: { n: 0 } });
+    rerender({ n: 5 });
+    expect(seen.length).toBeGreaterThan(0);
+    expect(seen.every((c) => c === 0)).toBe(true);
+  });
+
   it("shows everything when auto is false", () => {
     const { result } = renderHook(() => useReplay(5, { ...opts, auto: false }));
     expect(result.current.cursor).toBe(4);

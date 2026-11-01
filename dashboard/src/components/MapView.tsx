@@ -12,7 +12,7 @@ import type { ComplaintCluster } from "../complaints/types";
 const featureName = new Map(CAMPUS_FEATURES.map((f) => [f.id, f.name]));
 
 /** Swatches mirror the marker styles in CampusMap (solid = finding, hollow = consequence). */
-function Swatch({ kind }: { kind: "reported" | "corroborated" | "critical" | "isolated" | "warning" | "neutral" | "sample" | "path" }) {
+export function Swatch({ kind }: { kind: "reported" | "corroborated" | "critical" | "isolated" | "warning" | "neutral" | "sample" | "path" | "ok" | "suspect" }) {
   const box = { width: 24, height: 14, viewBox: "0 0 24 14", className: "swatch", "aria-hidden": true } as const;
   switch (kind) {
     case "reported":
@@ -25,6 +25,10 @@ function Swatch({ kind }: { kind: "reported" | "corroborated" | "critical" | "is
       return <svg {...box}><circle cx="12" cy="7" r="4.5" fill="var(--bg)" stroke="var(--critical)" strokeWidth="2" /></svg>;
     case "warning":
       return <svg {...box}><circle cx="12" cy="7" r="4.5" fill="var(--bg)" stroke="var(--warning)" strokeWidth="2" /></svg>;
+    case "ok":
+      return <svg {...box}><circle cx="12" cy="7" r="5" fill="var(--ok)" /></svg>;
+    case "suspect":
+      return <svg {...box}><circle cx="12" cy="7" r="4.5" fill="var(--bg)" stroke="var(--warning)" strokeWidth="2" strokeDasharray="3 2" /></svg>;
     case "neutral":
       return <svg {...box}><circle cx="12" cy="7" r="4.5" fill="var(--bg)" stroke="var(--text)" strokeWidth="1.5" /></svg>;
     case "path":
