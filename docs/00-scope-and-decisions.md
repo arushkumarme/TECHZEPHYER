@@ -134,6 +134,7 @@ Headings 1, 9 and 10 are absent; heading 6 ("Be rigorous about diagnosis and evi
 | D-23 | Maximum message size | Doc 05 §13 | **PROVISIONAL**: 1 MiB (`[protocol] max_message_bytes`), about 20x the largest message of the scenario suite (~47 KB); larger messages are rejected with `MESSAGE_TOO_LARGE` |
 | D-24 | Recommendation priority | Doc 05 §4, doc 07 §5 | **PROVISIONAL**: by order of the official `recommended_actions` (1st `high`, 2nd `medium`, rest `low`); the PDF defines no priority |
 | D-25 | Who may raise a conflict (protocol 1.2) | Doc 05 §19, doc 03 §3 | **PROVISIONAL** (prompt-pack default; owner may switch to "any specialist"): only `correlation_agent` sends `conflict_report`; the orchestrator relays it to the named party and enforces the rules (guard pre-check); only that party answers with `conflict_response` |
+| D-26 | Dashboard placement of simulated switches on the IIT BBS campus artwork | Doc 11, dashboard | **PROVISIONAL** (owner choice, option 1): frontend table dashboard/src/campus/placement.ts maps each simulated zone to a campus building; drawn with "Simulated network, illustrative placement, not real switch locations."; backend schematic layout unchanged |
 
 ## 8. Assumptions and explicit non-assumptions
 

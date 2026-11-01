@@ -72,6 +72,6 @@ The demo shows the mandatory workflow first; extensions come after. Every segmen
 | Demo-5 | S-08 (insufficient evidence) |
 | Demo-6 | dashboard → Recommended actions → enter name → Approve → simulated outcome; or `netcoop approve INC-… 0 --reviewer NAME` |
 | Demo-7 | dashboard → User reports: two reports "Hostel A Wi-Fi is disconnecting." from different test reporters → Investigate against S-02 (corroborated) and S-01 (reported, not verified) |
-| Demo-8 | dashboard → Campus map → choose the community incident; click `SW_CAMPUS_2` for isolated vs degraded |
+| Demo-8 | dashboard → Incidents tab (campus artwork map with diagnosis panel and agent strip, replay of the message exchange; placement is illustrative, D-26) and Campus map tab → choose the community incident; click `SW_CAMPUS_2` for isolated vs degraded |
 | Demo-2b (optional, ~20 s inside Demo-2) | `uv run netcoop conformance`: valid examples accepted, invalid ones rejected with the expected code and a plain-English reason (e.g. "Rejected: only correlation_agent may send a decision; performance_agent tried."), see `conformance/README.md` |
 | Extra | `--inject-fault performance_agent:timeout` (S-10 degraded run); `--pause-after COLLECTING` then `netcoop resume`; `uv run netcoop-mcp` |

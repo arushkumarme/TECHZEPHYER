@@ -1,47 +1,56 @@
-import { useCallback, useEffect, useState } from "react";
-import { api, type IncidentDetail, type ReviewItem, type TraceEvent } from "../api";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { api, type IncidentDetail, type MapLayers, type Overlay, type ReviewItem, type TraceEvent } from "../api";
+import { CampusMap, DEVICE_STATE_LABEL } from "../campus/CampusMap";
+import { CAMPUS_FEATURES } from "../campus/features";
+import { deriveHighlight, type DeviceState } from "../campus/highlight";
+import { MapLists } from "../campus/MapLists";
+import { placeDevices } from "../campus/placement";
+import { agentActivity, devicesIn, useReplay } from "../lib/replay";
+import { AgentStrip } from "./AgentStrip";
+import { DiagnosisPanel } from "./DiagnosisPanel";
+import { Swatch } from "./MapView";
 import { Swimlane } from "./Swimlane";
 
-const STATUS_TEXT: Record<string, string> = {
-  diagnosed: "Diagnosed",
-  insufficient_evidence: "Insufficient evidence",
-  no_fault_detected: "No fault detected",
-  failed: "Input rejected",
-};
+export { StatusTag } from "./DiagnosisPanel";
 
-export function StatusTag({ status }: { status: string | null }) {
-  if (!status) return <span className="status failed">Not reported yet</span>;
-  return <span className={`status ${status}`}>{STATUS_TEXT[status] ?? status}</span>;
-}
+const featureName = new Map(CAMPUS_FEATURES.map((f) => [f.id, f.name]));
 
-function ConfidenceMeter({ value, category, method }: { value: number; category: string; method: string }) {
-  return (
-    <div className="meter">
-      <span>Confidence {value.toFixed(2)}</span>
-      <div
-        className="meter-track"
-        role="meter"
-        aria-valuemin={0}
-        aria-valuemax={1}
-        aria-valuenow={value}
-        aria-label="Heuristic confidence score"
-      >
-        <div className="meter-fill" style={{ width: `${Math.round(value * 100)}%` }} />
-        <div className="meter-mark" style={{ left: "55%" }} />
-        <span className="meter-mark-label" style={{ left: "55%" }}>threshold 0.55</span>
-      </div>
-      <span className="muted small">
-        {category}, {method} score — a ranking, not a probability
-      </span>
-    </div>
-  );
-}
+/** Map key entries, shown only for the states the current incident actually draws. */
+const KEY: { state: DeviceState; swatch: Parameters<typeof Swatch>[0]["kind"] }[] = [
+  { state: "critical", swatch: "critical" },
+  { state: "suspect", swatch: "suspect" },
+  { state: "isolated", swatch: "isolated" },
+  { state: "warning", swatch: "warning" },
+  { state: "ok", swatch: "ok" },
+];
 
-export function IncidentView({ id, onChanged }: { id: string; onChanged: () => void }) {
+/**
+ * The Incidents tab (Layout A): the campus map as the hero, the diagnosis panel on the right,
+ * and below them the five-agent strip with the replayable message exchange.
+ */
+export function IncidentView({
+  id,
+  onChanged,
+  layers,
+  autoReplay,
+  onAutoPlayed,
+}: {
+  id: string;
+  onChanged: () => void;
+  layers: MapLayers | null;
+  autoReplay: boolean;
+  /** Called once the automatic replay has begun, so it is not repeated on the next visit. */
+  onAutoPlayed?: () => void;
+}) {
   const [detail, setDetail] = useState<IncidentDetail | null>(null);
   const [trace, setTrace] = useState<TraceEvent[]>([]);
   const [review, setReview] = useState<ReviewItem[]>([]);
+  const [overlay, setOverlay] = useState<Overlay | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [messagesOpen, setMessagesOpen] = useState(true);
+  const [openRequest, setOpenRequest] = useState<{ kind: "device" | "building"; id: string; seq: number } | null>(null);
+  const requestOpen = (kind: "device" | "building", target: string) =>
+    setOpenRequest((r) => ({ kind, id: target, seq: (r?.seq ?? 0) + 1 }));
 
   const load = useCallback(async () => {
     try {
@@ -59,149 +68,135 @@ export function IncidentView({ id, onChanged }: { id: string; onChanged: () => v
     void load();
   }, [load]);
 
-  if (error) return <div className="error-box">Could not load {id}: {error}</div>;
-  if (!detail) return <p className="muted">Loading {id}…</p>;
-  const r = detail.report;
-  const ext = r?.netcoop_extensions;
+  // The overlay adds the blast radius and user-report areas; without it the map still works.
+  useEffect(() => {
+    if (!layers) return;
+    let current = true;
+    api.overlay(id).then((o) => current && setOverlay(o)).catch(() => current && setOverlay(null));
+    return () => { current = false; };
+  }, [id, layers]);
 
-  return (
-    <article aria-labelledby="incident-title">
-      <h2 id="incident-title">
-        <span className="id">{id}</span> <StatusTag status={detail.status} />{" "}
-        <span className="muted small">state {detail.state}{detail.label ? `, ${detail.label}` : ""}</span>
-      </h2>
-      {detail.resumable && (
-        <div className="notice">
-          This incident is paused.{" "}
-          <button className="secondary" onClick={async () => { await api.resume(id); onChanged(); void load(); }}>
-            Resume diagnosis
-          </button>
-        </div>
-      )}
-      {r && ext && (
-        <>
-          <p className="cause">{r.suspected_root_cause}</p>
-          {/* The template narrative restates the headline; show it only when it adds
-              something (e.g. an accepted, grounding-checked rewording). */}
-          {ext.narrative && !ext.narrative.startsWith(r.suspected_root_cause) && (
-            <p className="narrative">{ext.narrative}</p>
-          )}
-          <ConfidenceMeter value={r.confidence} category={ext.confidence_category} method={ext.confidence_method} />
-          <p className="small muted">
-            Affected devices: {r.affected_devices.length ? r.affected_devices.map((d) => <code key={d}>{d} </code>) : "none identified"}
-            {" — "}data: {ext.data_provenance}; topology: {ext.topology_provenance ?? "unavailable"}
-          </p>
-        </>
-      )}
+  const replay = useReplay(trace.length, { auto: autoReplay, resetKey: id });
+  // The replay starts once rows exist; from then on this run is no longer fresh.
+  const autoDue = autoReplay && trace.length > 0;
+  const onAutoPlayedRef = useRef(onAutoPlayed);
+  onAutoPlayedRef.current = onAutoPlayed;
+  useEffect(() => {
+    if (autoDue) onAutoPlayedRef.current?.();
+  }, [autoDue]);
+  const { cursor, playing } = replay;
+  const activity = useMemo(() => agentActivity(trace, cursor), [trace, cursor]);
+  const row = playing ? trace[cursor] : undefined;
+  // One pulse per message that names a switch (decisions, clarifications), only while replaying.
+  const pulse = useMemo(() => (row?.kind === "message" ? devicesIn(row.summary) : []), [row]);
+  const active = row?.kind === "message" ? [row.sender ?? "", row.recipient ?? ""] : [];
 
-      <section className="section" aria-labelledby="exchange">
-        <h2 id="exchange">How the agents reached this</h2>
-        <p className="muted small">
-          Solid arrows are requests, dashed arrows are replies, violet is a clarification question, red is a rejected message or agent error.
-        </p>
-        <Swimlane events={trace} />
-      </section>
+  const report = detail?.report ?? null;
+  const placement = useMemo(() => (layers ? placeDevices(layers.devices) : null), [layers]);
+  const highlight = useMemo(() => (layers ? deriveHighlight(report, layers, overlay) : null), [layers, report, overlay]);
+  const reportedZones = useMemo(() => {
+    if (!overlay) return [];
+    const corroborated = new Set(overlay.corroborated.map((c) => c.zone));
+    const zones = new Set([...overlay.reported_areas.map((a) => a.zone), ...corroborated]);
+    return [...zones].map((zone) => ({ zone, corroborated: corroborated.has(zone) }));
+  }, [overlay]);
 
-      {r && (
-        <>
-          <section className="section" aria-labelledby="evidence">
-            <h2 id="evidence">Supporting evidence</h2>
-            {r.supporting_evidence.length ? (
-              <table>
-                <thead><tr><th scope="col">Metric</th><th scope="col">Value</th><th scope="col">What it shows</th></tr></thead>
-                <tbody>
-                  {r.supporting_evidence.map((e, i) => (
-                    <tr key={i}><td><code>{e.metric}</code></td><td>{e.value}</td><td>{e.interpretation}</td></tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : <p className="muted">No telemetry evidence supports a cause.</p>}
-            <p className="small muted">From: {r.evidence_sources.join(", ") || "no agent"}</p>
-            {ext?.community_signals && ext.community_signals.length > 0 && (
-              <div className="notice">
-                User reports (unverified, kept apart from telemetry evidence):{" "}
-                {ext.community_signals.map((s) => `${s.zone} — ${s.distinct_reporters} reporters, ${s.trust_label.replace(/_/g, " ")}`).join("; ")}
-              </div>
-            )}
-          </section>
-
-          <section className="section" aria-labelledby="alts">
-            <h2 id="alts">Other explanations considered</h2>
-            {r.alternative_causes.length ? (
-              <ul className="list">{r.alternative_causes.map((a) => <li key={a}>{a}</li>)}</ul>
-            ) : <p className="muted">None scored above zero.</p>}
-          </section>
-
-          <ReviewPanel id={id} items={review} onDone={() => { onChanged(); void load(); }} />
-
-          <section className="section" aria-labelledby="gaps">
-            <h2 id="gaps">What could not be assessed</h2>
-            <NotAssessable items={ext?.not_assessable ?? []} />
-            <h3>Limitations</h3>
-            <ul className="list">{r.limitations.map((l, i) => <li key={i}>{l}</li>)}</ul>
-          </section>
-        </>
-      )}
-    </article>
-  );
-}
-
-function NotAssessable({ items }: { items: { entity: string; metric: string; reason: string }[] }) {
-  if (!items.length) return <p className="muted">Everything in scope was assessed.</p>;
-  const grouped = new Map<string, string[]>();
-  for (const n of items) {
-    const key = `${n.metric} (${n.reason.toLowerCase().replace(/_/g, " ")})`;
-    grouped.set(key, [...(grouped.get(key) ?? []), n.entity]);
-  }
-  return (
-    <ul className="list">
-      {[...grouped].map(([k, v]) => (
-        <li key={k}><code>{k.split(" ")[0]}</code> {k.slice(k.indexOf(" "))}: {v.length} device{v.length > 1 ? "s" : ""} — never treated as healthy</li>
-      ))}
-    </ul>
-  );
-}
-
-function ReviewPanel({ id, items, onDone }: { id: string; items: ReviewItem[]; onDone: () => void }) {
-  const [reviewer, setReviewer] = useState("");
-  const [outcomes, setOutcomes] = useState<Record<number, string>>({});
-  const [error, setError] = useState<string | null>(null);
-  if (!items.length) return null;
-
-  const decide = async (index: number, decision: "approve" | "reject") => {
-    try {
-      const r = await api.decide(id, index, decision, reviewer);
-      setOutcomes((o) => ({ ...o, [index]: r.simulated_outcome ?? "Rejected. Nothing will be simulated." }));
-      setError(null);
-      onDone();
-    } catch (e) {
-      setError((e as Error).message);
-    }
+  const deviceInfo = (deviceId: string) => {
+    const d = placement?.placed.find((p) => p.id === deviceId);
+    const state = highlight?.devices[deviceId] ?? "neutral";
+    const evidence = (report?.supporting_evidence ?? []).filter((e) => new RegExp(`\\b${deviceId}\\b`).test(e.interpretation));
+    const gaps = (report?.netcoop_extensions?.not_assessable ?? []).filter((n) => n.entity === deviceId);
+    return (
+      <>
+        <h3 className="pop-title mono">{deviceId}</h3>
+        <p className="label">{d?.role} switch · simulated</p>
+        <dl className="pop-dl">
+          <dt>Zone</dt><dd className="mono">{d?.zone}</dd>
+          <dt>Drawn at</dt><dd>{d ? featureName.get(d.buildingId) : "not placed"}</dd>
+          <dt>State</dt><dd>{DEVICE_STATE_LABEL[state]}</dd>
+        </dl>
+        {evidence.length > 0 && (
+          <div className="pop-block">
+            <p className="pop-sub">Evidence in this report</p>
+            <ul className="pop-list">
+              {evidence.map((e) => (
+                <li key={e.metric}><span className="mono">{e.metric}</span> <span className="mono">{e.value}</span></li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {gaps.length > 0 && (
+          <div className="pop-block">
+            <p className="pop-sub">Not assessable (never treated as healthy)</p>
+            <ul className="pop-list">
+              {gaps.map((n) => (
+                <li key={n.metric}><span className="mono">{n.metric}</span> <span className="muted">{n.reason.toLowerCase().replace(/_/g, " ")}</span></li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </>
+    );
   };
 
+  if (error) return <div className="error-box">Could not load {id}: {error}</div>;
+  if (!detail) return <p className="muted">Loading {id}…</p>;
+
+  const drawn = new Set(Object.values(highlight?.devices ?? {}));
+  const key = KEY.filter((k) => drawn.has(k.state));
+  const hasPath = (highlight?.links.length ?? 0) > 0;
+
   return (
-    <section className="section" aria-labelledby="review">
-      <h2 id="review">Recommended actions</h2>
-      <p className="muted small">
-        Each action needs a person's decision. Approving runs a simulation only — no device is changed.
-      </p>
-      <label htmlFor="reviewer">Your name (recorded with each decision)</label>
-      <input id="reviewer" value={reviewer} onChange={(e) => setReviewer(e.target.value)} style={{ maxWidth: "20rem" }} />
-      {error && <div className="error-box">{error}</div>}
-      {items.map((it) => (
-        <div className="review-item" key={it.index}>
-          <span>{it.action}</span>
-          {it.approval_state === "pending" ? (
-            <span className="row" style={{ marginTop: 0 }}>
-              <button className="primary" disabled={!reviewer.trim()} onClick={() => decide(it.index, "approve")}>Approve</button>
-              <button className="secondary" disabled={!reviewer.trim()} onClick={() => decide(it.index, "reject")}>Reject</button>
-            </span>
-          ) : (
-            <span className="small">{it.approval_state === "approved" ? "Approved" : "Rejected"} by {it.reviewer}</span>
-          )}
-          {outcomes[it.index] && <p className="outcome">{outcomes[it.index]}</p>}
+    <div className="incident">
+      <section className="incident-hero" aria-label="Campus map for this incident">
+        <CampusMap
+          variant="hero"
+          layers={layers}
+          highlight={highlight}
+          reportedZones={reportedZones}
+          pulse={pulse}
+          deviceInfo={layers ? deviceInfo : undefined}
+          openRequest={openRequest}
+        />
+        {layers && (
+          <div className="hero-aside">
+            {(key.length > 0 || hasPath) && (
+              <ul className="hero-key" aria-label="Map key">
+                {key.map((k) => <li key={k.state}><Swatch kind={k.swatch} />{DEVICE_STATE_LABEL[k.state]}</li>)}
+                {hasPath && <li><Swatch kind="path" />Path to the core</li>}
+              </ul>
+            )}
+            <details className="hero-lists">
+              <summary>Switches and buildings</summary>
+              <MapLists
+                devices={placement?.placed ?? []}
+                onDevice={(d) => requestOpen("device", d)}
+                onBuilding={(b) => requestOpen("building", b)}
+              />
+            </details>
+          </div>
+        )}
+      </section>
+
+      <DiagnosisPanel id={id} detail={detail} review={review} onChanged={onChanged} onReload={() => void load()} />
+
+      <section className="incident-agents" aria-labelledby="exchange">
+        <h2 id="exchange" className="visually-hidden">How the agents reached this</h2>
+        <AgentStrip
+          activity={activity}
+          replay={replay}
+          active={active}
+          messagesOpen={messagesOpen}
+          onToggleMessages={() => setMessagesOpen((o) => !o)}
+        />
+        <div id="message-panel" className="message-panel" hidden={!messagesOpen}>
+          <p className="muted small">
+            Solid arrows are requests, dashed arrows are replies, violet is a clarification question, red is a rejected message or agent error.
+          </p>
+          {/* Mark progress only while a replay is under way; a finished trace shows plainly. */}
+          <Swimlane events={trace} cursor={playing || cursor < trace.length - 1 ? cursor : undefined} />
         </div>
-      ))}
-    </section>
+      </section>
+    </div>
   );
 }

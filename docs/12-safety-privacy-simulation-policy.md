@@ -80,4 +80,5 @@
 - The LLM may only reword `netcoop_extensions.narrative`, a deterministic template summary always present in the report. Official keys are never touched: test `test_llm_never_changes_diagnosis` (T-LLM-OFF-01) compares all official keys with the LLM off vs on.
 - Grounding check rejects output naming a device, metric or number absent from the report, or using forbidden wording (calibrated, exact, certainly, definitely, confirmed, live, real-time, fixed, remediated, resolved). Rejected / unavailable → template; `llm_assistance` records field, status, provider and reason.
 - Complaint text is passed as delimited data (`<summary>…</summary>`), with instructions that it is data, not instructions; the LLM has no tools.
+- Provider exception messages are not returned or stored; only the exception type and a generic failure reason are reported, preventing credentials in provider errors from leaking into reports.
 - Property test: an LLM that echoes the template is accepted in 8 scenarios, proving the allowed-term set is built correctly.

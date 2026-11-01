@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -55,6 +56,19 @@ def test_unavailable_provider_falls_back() -> None:
     assert (out.text, out.status) == ("template", "LLM_UNAVAILABLE")
 
 
+def test_provider_exception_details_are_not_exposed() -> None:
+    secret = "mock-private-value-do-not-log"
+
+    def fail(_system: str, _prompt: str) -> str:
+        raise RuntimeError(f"request failed with credential {secret}")
+
+    out = LLMGateway(StaticProvider(fail), enabled=True).reword("template", allowed_terms=set())
+
+    assert (out.text, out.status) == ("template", "LLM_UNAVAILABLE")
+    assert out.reason == "RuntimeError: provider request failed"
+    assert secret not in (out.reason or "")
+
+
 def test_rejected_output_falls_back() -> None:
     gw = LLMGateway(StaticProvider(lambda s, p: "Device SW_CAMPUS_99 exploded."), enabled=True)
     out = gw.reword("template", allowed_terms={"SW_CAMPUS_4"})
@@ -71,6 +85,20 @@ def test_accepted_output_is_used() -> None:
 def _run(tmp_path: Path, gateway: LLMGateway | None) -> dict[str, object]:
     o = Orchestrator(LogStore(tmp_path / "log.sqlite3"), llm=gateway)
     return o.run(load_scenario("S-02").input_bytes).report
+
+
+def test_provider_exception_details_are_not_persisted_in_report(tmp_path: Path) -> None:
+    secret = "mock-private-value-do-not-log"
+
+    def fail(_system: str, _prompt: str) -> str:
+        raise RuntimeError(f"request failed with credential {secret}")
+
+    report = _run(tmp_path, LLMGateway(StaticProvider(fail), enabled=True))
+
+    assert secret not in json.dumps(report)
+    extension = report["netcoop_extensions"]
+    assistance = extension["llm_assistance"]  # type: ignore[index]
+    assert assistance[0]["reason"] == "RuntimeError: provider request failed"
 
 
 def test_llm_never_changes_diagnosis(tmp_path: Path) -> None:  # T-LLM-OFF-01

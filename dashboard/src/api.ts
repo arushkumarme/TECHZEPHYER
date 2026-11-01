@@ -71,6 +71,7 @@ export interface Report {
       distinct_reporters: number;
     }[];
     top_cause_type?: string;
+    hypotheses?: { cause_type: string; entities: string[]; score: number }[];
   };
 }
 

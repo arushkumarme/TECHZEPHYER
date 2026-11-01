@@ -23,3 +23,6 @@ dashboard/dist/
 
 # Organizer generator: no stated licence -> fetched on demand, never committed
 sample_data/generator/organizer_generator.ipynb
+
+# brainstorming mockups (local only)
+.superpowers/
