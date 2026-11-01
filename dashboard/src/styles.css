@@ -282,10 +282,59 @@ tbody tr:last-child td { border-bottom: none; }
 .error-box { border-left: 3px solid var(--critical); }
 .main > .error-box:first-child { margin-top: 0; }
 
-/* ---- Schematic map (Task 7 replaces this view) ---- */
-.map-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 272px; gap: 16px; }
-.map { height: 560px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
-.leaflet-container { font-family: var(--font-ui); }
+/* ---- Campus map (shared by the Campus map tab and, later, the Incidents tab) ---- */
+.map-tab { display: grid; gap: 12px; }
+.map-head { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 24px; }
+.map-head h2 { margin: 0; }
+.map-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; }
+.map-controls > label { margin: 0; }
+.map-controls > select { width: 340px; }
+.map-controls .toggle { display: inline-flex; align-items: center; gap: 6px; color: var(--text); font-size: 13px; cursor: pointer; }
+.map-controls .toggle input { width: auto; margin: 0; }
+
+.map-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 264px; gap: 16px; align-items: start; }
+.campus-map { position: relative; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--bg); }
+.campus-map.full { height: max(480px, calc(100vh - 236px)); }
+.campus-map.hero { height: 100%; min-height: 420px; }
+.campus-leaflet { height: 100%; width: 100%; background: var(--bg); }
+.leaflet-container { font-family: var(--font-ui); background: var(--bg); }
+/* Recede the artwork toward the palette so only state carries colour. */
+.campus-artwork { filter: saturate(0.3) brightness(0.68); }
+
+/* Building hit areas: invisible until hovered or focused. CSS beats Leaflet's attributes. */
+.campus-map path.building-hit { cursor: pointer; transition: stroke-opacity 150ms var(--ease), fill-opacity 150ms var(--ease); }
+.campus-map path.building-hit:hover, .campus-map path.building-hit:focus-visible { stroke-opacity: 1; fill-opacity: 0.1; outline: none; }
+.campus-map path.device { cursor: pointer; transition: fill 200ms var(--ease), stroke 200ms var(--ease); }
+.campus-map path.device:focus-visible { outline: none; stroke: var(--accent); stroke-width: 3; }
+.campus-map path.net-link { transition: stroke 200ms var(--ease), stroke-width 200ms var(--ease); }
+/* One ring per pulse: the marker's own stroke widens and fades once (600 ms). */
+.campus-map path.device.pulse { animation: device-pulse 600ms ease-out 1; }
+@keyframes device-pulse {
+  from { stroke-width: 2; stroke-opacity: 1; }
+  to { stroke-width: 22; stroke-opacity: 0; }
+}
+
+.placement-note, .map-notice {
+  position: absolute; z-index: 500; margin: 0;
+  font-size: 11px; line-height: 16px; color: var(--muted);
+  background: rgba(10, 14, 19, 0.88); border: 1px solid var(--line); border-radius: 6px;
+  padding: 4px 8px; pointer-events: none;
+}
+.placement-note { left: 12px; bottom: 12px; }
+.map-notice { left: 50%; top: 16px; transform: translateX(-50%); color: var(--text); font-size: 12px; max-width: calc(100% - 96px); }
+
+/* Sample-report badges: dashed outline and the SAMPLE word, never a status colour. */
+.cbadge-icon { background: none; border: none; display: flex; }
+.cbadge {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; width: 100%; height: 20px; padding: 0 6px;
+  font-family: var(--font-mono); font-size: 11px; line-height: 18px; color: var(--text);
+  background: var(--panel-raised); border: 1px dashed var(--muted); border-radius: 4px;
+  white-space: nowrap; cursor: pointer;
+}
+.cbadge-tag { font-family: var(--font-ui); font-size: 10px; font-weight: 700; letter-spacing: 0.08em; color: var(--muted); }
+.leaflet-marker-icon:focus-visible .cbadge, .cbadge:hover { border-color: var(--accent); }
+.leaflet-marker-icon:focus-visible { outline: none; }
+
 .leaflet-bar a, .leaflet-bar a:hover { background: var(--panel-raised); color: var(--text); border-bottom-color: var(--line); }
 .leaflet-touch .leaflet-bar, .leaflet-bar { border-color: var(--line); }
 .leaflet-tooltip {
@@ -298,19 +347,46 @@ tbody tr:last-child td { border-bottom: none; }
 .leaflet-tooltip-bottom::before { border-bottom-color: var(--line); }
 .leaflet-tooltip-left::before { border-left-color: var(--line); }
 .leaflet-tooltip-right::before { border-right-color: var(--line); }
-/* Permanent zone names on the schematic map. */
-.leaflet-tooltip.zone-label {
-  background: transparent; border: none; box-shadow: none; padding: 0;
-  font-family: var(--font-ui); font-size: 12px; font-weight: 700; color: var(--text);
-  text-align: center; white-space: normal; width: 112px;
-}
-.leaflet-tooltip.zone-label::before { display: none; }
+.leaflet-tooltip.device-label { padding: 0 4px; line-height: 16px; border-color: var(--muted); box-shadow: none; }
+.leaflet-tooltip.device-label::before { display: none; }
 
-.legend { font-size: 12px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; align-self: start; }
-.legend h3 { margin: 0 0 8px; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.map-popup .leaflet-popup-content-wrapper {
+  background: var(--panel-raised); color: var(--text);
+  border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+.map-popup .leaflet-popup-tip { background: var(--panel-raised); border: 1px solid var(--line); box-shadow: none; }
+.map-popup .leaflet-popup-content { margin: 12px 16px; font-size: 13px; line-height: 1.5; }
+.map-popup a.leaflet-popup-close-button { color: var(--muted); }
+.map-popup a.leaflet-popup-close-button:hover { color: var(--text); }
+.map-pop .pop-title { font-size: 15px; margin: 0 16px 2px 0; }
+.map-pop .label { margin: 0 0 8px; }
+.map-pop .pop-sub { font-size: 12px; color: var(--muted); margin: 8px 0 4px; }
+.map-pop .pop-block { border-top: 1px solid var(--line); }
+.pop-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.pop-dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; margin: 0; font-size: 12px; }
+.pop-dl dt { color: var(--muted); }
+.pop-dl dd { margin: 0; }
+
+.building-summary { border-top: 1px solid var(--line); margin-top: 8px; padding-top: 8px; }
+.bs-head { display: flex; align-items: center; gap: 8px; font-size: 13px; margin: 0 0 4px; }
+.bs-count { font-size: 12px; margin: 0 0 4px; }
+.bs-cats { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--muted); }
+.bs-cats li { display: inline-flex; gap: 4px; }
+.bs-cats .mono { color: var(--text); font-size: 12px; }
+.bs-latest { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 12px; }
+.bs-latest li { display: grid; gap: 0; padding-left: 8px; border-left: 2px dashed var(--line); }
+.bs-latest time { font-size: 11px; }
+
+.legend { font-size: 12px; padding: 12px; }
+.legend > .label { margin: 0 0 8px; }
 .legend ul { padding: 0; margin: 0 0 8px; }
 .legend li { list-style: none; display: flex; gap: 8px; align-items: center; margin: 4px 0; }
-.swatch { width: 26px; height: 14px; flex: none; }
+.legend-note { font-size: 12px; margin: 8px 0 0; padding-top: 8px; border-top: 1px solid var(--line); }
+.swatch { width: 24px; height: 14px; flex: none; }
+.map-about { max-width: 100ch; }
+.map-about .label { margin: 0 0 4px; }
+.map-about p { font-size: 12px; color: var(--muted); margin: 0; }
 
 /* ---- Below 1200 px the rail collapses to status marks and ids ---- */
 @media (max-width: 1199px) {

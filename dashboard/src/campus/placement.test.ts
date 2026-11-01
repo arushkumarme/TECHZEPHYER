@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { IMAGE_BOUNDS, MAP_CROP, toLatLng } from "./coords";
 import { CAMPUS_FEATURES } from "./features";
-import { placeDevices, ZONE_TO_BUILDING } from "./placement";
+import { LABEL_BELOW, placeDevices, ZONE_TO_BUILDING } from "./placement";
 
 const zones = [
   "ZONE_DATA_CENTRE", "ZONE_DATA_CENTRE", "ZONE_DATA_CENTRE", "ZONE_HOSTEL_A", "ZONE_HOSTEL_B",
@@ -50,5 +50,27 @@ describe("placeDevices", () => {
       expect(p.y).toBeGreaterThanOrEqual(MAP_CROP.y);
       expect(p.y).toBeLessThanOrEqual(MAP_CROP.y + MAP_CROP.h);
     }
+  });
+  it("keeps switches off the building label: never on the label side", () => {
+    const { placed } = placeDevices(fixture);
+    for (const p of placed) {
+      const f = CAMPUS_FEATURES.find((c) => c.id === p.buildingId)!;
+      const dx = p.x - f.x;
+      const dy = p.y - f.y;
+      // Never in the label's direction: labels sit straight above or below the anchor.
+      if (LABEL_BELOW.has(f.id)) expect(dy).toBeLessThanOrEqual(0.5);
+      else expect(dy).toBeGreaterThanOrEqual(-0.5);
+      expect(Math.hypot(dx, dy)).toBeGreaterThan(30);
+    }
+    const sbs = placed.find((p) => p.id === "SW_CAMPUS_6")!; // label above: goes sideways
+    expect(sbs.y).toBe(CAMPUS_FEATURES.find((c) => c.id === "sbs")!.y);
+    const mhr = placed.find((p) => p.id === "SW_CAMPUS_4")!; // label below: goes straight up
+    expect(mhr.x).toBe(CAMPUS_FEATURES.find((c) => c.id === "mhr")!.x);
+    expect(mhr.y).toBeLessThan(CAMPUS_FEATURES.find((c) => c.id === "mhr")!.y);
+  });
+  it("keeps markers apart at the same building", () => {
+    const many = Array.from({ length: 5 }, (_, i) => dev(i + 20, "ZONE_DATA_CENTRE", "access"));
+    const dc = placeDevices([...fixture, ...many]).placed.filter((p) => p.buildingId === "admin");
+    for (const a of dc) for (const b of dc) if (a !== b) expect(Math.hypot(a.x - b.x, a.y - b.y)).toBeGreaterThan(28);
   });
 });

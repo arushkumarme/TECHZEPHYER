@@ -1,134 +1,198 @@
-import { CRS, type LatLngBoundsExpression, type LatLngExpression } from "leaflet";
-import "leaflet/dist/leaflet.css";
-import { useEffect, useState } from "react";
-import { CircleMarker, MapContainer, Polygon, Polyline, Tooltip } from "react-leaflet";
-import { api, type BlastRadius, type IncidentSummary, type MapLayers, type Overlay } from "../api";
+import { useEffect, useMemo, useState } from "react";
+import { api, type BlastRadius, type IncidentSummary, type MapLayers, type Overlay, type Report } from "../api";
+import { CampusMap, DEVICE_STATE_LABEL } from "../campus/CampusMap";
+import { CAMPUS_FEATURES } from "../campus/features";
+import { deriveHighlight, type DeviceState, type Highlight } from "../campus/highlight";
+import { PLACEMENT_NOTE, placeDevices } from "../campus/placement";
+import { clusterByBuilding } from "../complaints/source";
+import { sampleComplaintSource } from "../complaints/sample";
+import type { ComplaintCluster } from "../complaints/types";
 
-const C = { link: "#1f5fa8", red: "#b42318", amber: "#b7791f", violet: "#6941c6", ink: "#1c2833", grey: "#8a96a3" };
+const featureName = new Map(CAMPUS_FEATURES.map((f) => [f.id, f.name]));
 
-// Schematic, non-geographic map (decision ID-17): Leaflet CRS.Simple with x/y units, so no
-// tile server is needed and nothing implies real campus geography.
+/** Swatches mirror the marker styles in CampusMap (solid = finding, hollow = consequence). */
+function Swatch({ kind }: { kind: "reported" | "corroborated" | "critical" | "isolated" | "warning" | "neutral" | "sample" | "path" }) {
+  const box = { width: 24, height: 14, viewBox: "0 0 24 14", className: "swatch", "aria-hidden": true } as const;
+  switch (kind) {
+    case "reported":
+      return <svg {...box}><circle cx="12" cy="7" r="5.5" fill="var(--warning)" fillOpacity=".08" stroke="var(--warning)" strokeWidth="1.5" strokeDasharray="3 2" /></svg>;
+    case "corroborated":
+      return <svg {...box}><circle cx="12" cy="7" r="5.5" fill="#a48bf0" fillOpacity=".08" stroke="#a48bf0" strokeWidth="1.5" /></svg>;
+    case "critical":
+      return <svg {...box}><circle cx="12" cy="7" r="5" fill="var(--critical)" /></svg>;
+    case "isolated":
+      return <svg {...box}><circle cx="12" cy="7" r="4.5" fill="var(--bg)" stroke="var(--critical)" strokeWidth="2" /></svg>;
+    case "warning":
+      return <svg {...box}><circle cx="12" cy="7" r="4.5" fill="var(--bg)" stroke="var(--warning)" strokeWidth="2" /></svg>;
+    case "neutral":
+      return <svg {...box}><circle cx="12" cy="7" r="4.5" fill="var(--bg)" stroke="var(--text)" strokeWidth="1.5" /></svg>;
+    case "path":
+      return <svg {...box}><path d="M2 10 Q12 2 22 10" fill="none" stroke="var(--critical)" strokeWidth="2.5" strokeLinecap="round" /></svg>;
+    case "sample":
+      return <svg {...box}><rect x="1" y="2" width="22" height="10" rx="3" fill="none" stroke="var(--muted)" strokeDasharray="2 2" /></svg>;
+  }
+}
+
+/** Overlay the structural reach of a clicked device on the incident highlight, or hide it. */
+function withBlast(base: Highlight, blast: BlastRadius | null, show: boolean): Highlight {
+  const devices: Record<string, DeviceState> = {};
+  for (const [id, s] of Object.entries(base.devices)) {
+    // A clicked device's reach replaces the incident's; with the toggle off, no reach is drawn.
+    const reach = s === "warning" || s === "isolated";
+    devices[id] = reach && (!show || blast) ? "neutral" : s;
+  }
+  if (show && blast) {
+    for (const id of blast.degraded) if (devices[id] === "neutral") devices[id] = "warning";
+    for (const id of blast.isolated) if (devices[id] === "neutral") devices[id] = "isolated";
+  }
+  const focus = blast && show && !base.focus.includes(blast.failed) ? [...base.focus, blast.failed] : base.focus;
+  return { ...base, devices, focus };
+}
+
+// The Campus map tab: the shared CampusMap, full width, with its controls, legend and footer.
 export function MapView({ incidents, layers: shared }: { incidents: IncidentSummary[]; layers?: MapLayers | null }) {
   const [fetched, setFetched] = useState<MapLayers | null>(null);
+  const [layersMissing, setLayersMissing] = useState(false);
   const [incident, setIncident] = useState<string>("");
+  const [report, setReport] = useState<Report | null>(null);
   const [overlay, setOverlay] = useState<Overlay | null>(null);
   const [blast, setBlast] = useState<BlastRadius | null>(null);
   const [showBlast, setShowBlast] = useState(true);
+  const [showSample, setShowSample] = useState(false);
+  const [complaints, setComplaints] = useState<ComplaintCluster[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Prefer the layers App already fetched; fetch here only if they are not there yet.
   useEffect(() => {
     if (shared) return;
-    api.layers().then(setFetched).catch((e: Error) => setError(e.message));
+    api.layers().then(setFetched).catch(() => setLayersMissing(true));
   }, [shared]);
   const layers = shared ?? fetched;
+
   useEffect(() => {
-    if (!incident) return setOverlay(null);
-    api.overlay(incident).then(setOverlay).catch((e: Error) => setError(e.message));
+    setReport(null);
+    setOverlay(null);
+    if (!incident) return;
+    let current = true;
+    api.incident(incident).then((d) => current && setReport(d.report)).catch((e: Error) => current && setError(e.message));
+    api.overlay(incident).then((o) => current && setOverlay(o)).catch((e: Error) => current && setError(e.message));
+    return () => { current = false; };
   }, [incident]);
 
-  if (error) return <div className="error-box">Map unavailable: {error}</div>;
-  if (!layers) return <p className="muted">Loading map…</p>;
+  useEffect(() => {
+    if (!showSample || complaints) return;
+    let current = true;
+    sampleComplaintSource.list().then((m) => current && setComplaints(clusterByBuilding(m)));
+    return () => { current = false; };
+  }, [showSample, complaints]);
 
-  const reported = new Set(overlay?.reported_areas.map((a) => a.zone));
-  const corroborated = new Set(overlay?.corroborated.map((a) => a.zone));
-  const detected = new Set(overlay?.detected_faults.map((d) => d.entity));
-  const shown = blast ?? Object.values(overlay?.blast_radius ?? {})[0] ?? null;
-  const isolated = new Set(showBlast ? shown?.isolated : []);
-  const degraded = new Set(showBlast ? shown?.degraded : []);
+  const placement = useMemo(() => (layers ? placeDevices(layers.devices) : null), [layers]);
+  const highlight = useMemo(
+    () => (layers ? withBlast(deriveHighlight(report, layers, overlay), blast, showBlast) : null),
+    [layers, report, overlay, blast, showBlast],
+  );
+  const reportedZones = useMemo(() => {
+    if (!overlay) return [];
+    const corroborated = new Set(overlay.corroborated.map((c) => c.zone));
+    const zones = new Set([...overlay.reported_areas.map((a) => a.zone), ...corroborated]);
+    return [...zones].map((zone) => ({ zone, corroborated: corroborated.has(zone) }));
+  }, [overlay]);
+
+  const shown = showBlast ? (blast ?? Object.values(overlay?.blast_radius ?? {})[0] ?? null) : null;
+
+  const deviceInfo = (id: string) => {
+    const d = placement?.placed.find((p) => p.id === id);
+    const state = highlight?.devices[id] ?? "neutral";
+    const b = blast?.failed === id ? blast : null;
+    return (
+      <>
+        <h3 className="pop-title mono">{id}</h3>
+        <p className="label">{d?.role} switch · simulated</p>
+        <dl className="pop-dl">
+          <dt>Zone</dt><dd className="mono">{d?.zone}</dd>
+          <dt>Drawn at</dt><dd>{d ? featureName.get(d.buildingId) : "not placed"}</dd>
+          <dt>State</dt><dd>{DEVICE_STATE_LABEL[state]}</dd>
+        </dl>
+        <p className="pop-sub">If this switch failed</p>
+        {b ? (
+          <p className="small">{b.isolated.length} would be isolated, {b.degraded.length} would lose redundancy. Structural reach in the simulated topology, not measured impact.</p>
+        ) : (
+          <p className="small muted">Working out the structural reach…</p>
+        )}
+      </>
+    );
+  };
+
+  if (!layers && !layersMissing) return <p className="muted">Loading map…</p>;
 
   return (
-    <div>
-      <h2>Campus map</h2>
-      <p className="muted small">{layers.provenance_note}</p>
-      <div className="row" style={{ marginBottom: "0.75rem" }}>
-        <label htmlFor="map-incident" style={{ margin: 0 }}>Show incident</label>
-        <select id="map-incident" value={incident} onChange={(e) => { setBlast(null); setIncident(e.target.value); }} style={{ maxWidth: "22rem" }}>
-          <option value="">None — topology only</option>
-          {incidents.filter((i) => i.status).map((i) => (
-            <option key={i.incident_id} value={i.incident_id}>{i.incident_id} — {i.label ?? ""} ({i.status})</option>
-          ))}
-        </select>
-        <label style={{ margin: 0, display: "flex", gap: "0.35rem", alignItems: "center" }}>
-          <input type="checkbox" checked={showBlast} onChange={(e) => setShowBlast(e.target.checked)} style={{ width: "auto" }} />
-          Blast radius
-        </label>
+    <div className="map-tab">
+      <div className="map-head">
+        <h2>Campus map</h2>
+        <div className="map-controls" role="group" aria-label="Map controls">
+          <label htmlFor="map-incident">Show incident</label>
+          <select
+            id="map-incident"
+            value={incident}
+            onChange={(e) => { setBlast(null); setError(null); setIncident(e.target.value); }}
+          >
+            <option value="">None — topology only</option>
+            {incidents.filter((i) => i.status).map((i) => (
+              <option key={i.incident_id} value={i.incident_id}>{i.incident_id} — {i.label ?? ""} ({i.status})</option>
+            ))}
+          </select>
+          <label className="toggle">
+            <input type="checkbox" checked={showBlast} onChange={(e) => setShowBlast(e.target.checked)} />
+            Blast radius
+          </label>
+          <label className="toggle">
+            <input type="checkbox" checked={showSample} onChange={(e) => setShowSample(e.target.checked)} />
+            Sample reports (demo data)
+          </label>
+        </div>
       </div>
+      {error && <div className="error-box" role="alert">Map data unavailable: {error}</div>}
+
       <div className="map-wrap">
-        <MapContainer
-          className="map"
-          crs={CRS.Simple}
-          bounds={layers.bounds as LatLngBoundsExpression}
-          minZoom={-2}
-          maxZoom={2}
-          zoomSnap={0.25}
-          attributionControl={false}
-        >
-          {layers.zones.map((z) => {
-            const isRep = reported.has(z.zone);
-            const isCor = corroborated.has(z.zone);
-            return (
-              <Polygon
-                key={z.zone}
-                positions={z.polygon as LatLngExpression[]}
-                pathOptions={{
-                  color: isCor ? C.violet : isRep ? C.amber : C.grey,
-                  weight: isRep || isCor ? 3 : 1,
-                  dashArray: isRep && !isCor ? "8 6" : undefined,
-                  fillOpacity: isCor ? 0.18 : isRep ? 0.12 : 0.04,
-                  fillColor: isCor ? C.violet : isRep ? C.amber : C.grey,
-                }}
-              >
-                <Tooltip permanent direction="center" offset={[0, -24]} className="zone-label">
-                  {z.label.replace(" (placeholder)", "")}
-                  {isCor ? " · confirmed" : isRep ? " · reported" : ""}
-                </Tooltip>
-              </Polygon>
-            );
-          })}
-          {layers.links.map((l) => (
-            <Polyline key={l.id} positions={[l.from, l.to] as LatLngExpression[]} pathOptions={{ color: C.link, weight: 2, opacity: 0.7 }} />
-          ))}
-          {layers.devices.map((d) => {
-            const isDet = detected.has(d.id);
-            const iso = isolated.has(d.id);
-            const deg = degraded.has(d.id);
-            return (
-              <CircleMarker
-                key={d.id}
-                center={d.position as LatLngExpression}
-                radius={d.core ? 11 : isDet ? 10 : 7}
-                eventHandlers={{ click: () => api.blast(d.id).then(setBlast) }}
-                pathOptions={{
-                  color: isDet ? C.red : iso ? C.ink : deg ? C.amber : C.link,
-                  weight: isDet ? 4 : iso || deg ? 3 : 2,
-                  dashArray: deg ? "3 3" : undefined,
-                  fillColor: isDet ? C.red : iso ? C.ink : "#ffffff",
-                  fillOpacity: isDet || iso ? 0.85 : 1,
-                }}
-              >
-                <Tooltip>
-                  {d.id} ({d.role}){isDet ? " — detected fault" : iso ? " — would be isolated" : deg ? " — would lose redundancy" : ""}
-                </Tooltip>
-              </CircleMarker>
-            );
-          })}
-        </MapContainer>
-        <aside className="legend" aria-label="Map legend">
-          <h3>Legend</h3>
+        <CampusMap
+          variant="full"
+          layers={layers}
+          highlight={highlight}
+          reportedZones={reportedZones}
+          complaints={showSample ? complaints : null}
+          deviceInfo={layers ? deviceInfo : undefined}
+          onDeviceClick={(id) => { api.blast(id).then(setBlast).catch((e: Error) => setError(e.message)); }}
+        />
+        <aside className="legend panel" aria-label="Map legend">
+          <h3 className="label">Legend</h3>
           <ul>
-            <li><svg className="swatch"><rect x="1" y="1" width="24" height="12" fill="none" stroke={C.amber} strokeWidth="2.5" strokeDasharray="5 3" /></svg>Reported by users (unverified)</li>
-            <li><svg className="swatch"><rect x="1" y="1" width="24" height="12" fill={C.violet} fillOpacity=".2" stroke={C.violet} strokeWidth="2.5" /></svg>Reported and confirmed by telemetry</li>
-            <li><svg className="swatch"><circle cx="13" cy="7" r="6" fill={C.red} stroke={C.red} strokeWidth="3" /></svg>Detected fault (telemetry)</li>
-            <li><svg className="swatch"><circle cx="13" cy="7" r="5" fill={C.ink} /></svg>Would be isolated</li>
-            <li><svg className="swatch"><circle cx="13" cy="7" r="5" fill="#fff" stroke={C.amber} strokeWidth="2.5" strokeDasharray="2 2" /></svg>Would lose redundancy</li>
-            <li><svg className="swatch"><circle cx="13" cy="7" r="5" fill="#fff" stroke={C.link} strokeWidth="2" /></svg>Device, no finding</li>
+            <li><Swatch kind="reported" />Reported by users (unverified)</li>
+            <li><Swatch kind="corroborated" />Reported and confirmed by telemetry</li>
+            <li><Swatch kind="critical" />Detected fault (telemetry)</li>
+            <li><Swatch kind="path" />Path from the fault to the core</li>
+            <li><Swatch kind="isolated" />Would be isolated</li>
+            <li><Swatch kind="warning" />Would lose redundancy</li>
+            <li><Swatch kind="neutral" />Device, no finding</li>
+            {showSample && <li><Swatch kind="sample" />Illustrative demo data, not real reports</li>}
           </ul>
-          <p className="small muted">
-            Click a device to see what would happen if it failed. {shown ? `Showing failure of ${shown.failed}: ${shown.isolated.length} isolated, ${shown.degraded.length} degraded.` : ""} Blast radius is structural reach in the simulated topology, not measured impact.
+          {placement && placement.notPlaced.length > 0 && (
+            <p className="legend-note">Not placed: <span className="mono">{placement.notPlaced.join(", ")}</span></p>
+          )}
+          <p className="legend-note">{PLACEMENT_NOTE}</p>
+          <p className="legend-note muted">
+            Click a switch to see what would happen if it failed.
+            {shown && <> Showing failure of <span className="mono">{shown.failed}</span>: {shown.isolated.length} isolated, {shown.degraded.length} would lose redundancy.</>}
+            {" "}Blast radius is structural reach in the simulated topology, not measured impact.
           </p>
         </aside>
       </div>
+
+      {layers && (
+        <footer className="map-about">
+          <h3 className="label">About this data</h3>
+          <p>{layers.provenance_note}</p>
+        </footer>
+      )}
     </div>
   );
 }
