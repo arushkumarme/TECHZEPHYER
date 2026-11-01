@@ -1,0 +1,42 @@
+{
+  "properties": {
+    "code": {
+      "title": "Code",
+      "type": "string"
+    },
+    "details": {
+      "additionalProperties": true,
+      "title": "Details",
+      "type": "object"
+    },
+    "message": {
+      "title": "Message",
+      "type": "string"
+    },
+    "recoverable": {
+      "title": "Recoverable",
+      "type": "boolean"
+    },
+    "related_message_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Related Message Id"
+    }
+  },
+  "required": [
+    "code",
+    "message",
+    "recoverable"
+  ],
+  "title": "AgentError",
+  "type": "object",
+  "x-netcoop-payload-schema-version": "1.0",
+  "x-netcoop-protocol-version": "1.2"
+}

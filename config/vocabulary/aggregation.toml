@@ -1,0 +1,35 @@
+# Controlled vocabulary 'aggregation'. Source of truth for its metadata; the term set
+# itself is enforced in code where `code_literal` is given (a test keeps them equal).
+name = "aggregation"
+version = "1.0"
+extensible = false
+id_style = "snake"
+description = "How one observation value summarizes several samples (PROVISIONAL, D-19)."
+
+[[terms]]
+id = "worst_by_severity"
+label = "Worst by severity"
+definition = "The sample with the highest severity, ties broken by magnitude; what the specialists report today."
+status = "active"
+source = "agents/base.py"
+
+[[terms]]
+id = "last_value"
+label = "Last value"
+definition = "The most recent sample."
+status = "active"
+source = "PROPOSAL"
+
+[[terms]]
+id = "mean"
+label = "Mean"
+definition = "Arithmetic mean of the samples."
+status = "active"
+source = "PROPOSAL"
+
+[[terms]]
+id = "max"
+label = "Maximum"
+definition = "Largest sample."
+status = "active"
+source = "PROPOSAL"

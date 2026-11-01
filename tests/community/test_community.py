@@ -13,12 +13,23 @@ import pytest
 
 from netcoop.community.extract import extract_rules
 from netcoop.community.pipeline import CommunityPipeline
+from netcoop.config.settings import load_settings
 from netcoop.core.log_store import LogStore
 from netcoop.llm.gateway import LLMGateway, StaticProvider
 from netcoop.orchestrator.workflow import Orchestrator
 from netcoop.scenarios.runner import load_scenario
 
 T = datetime(2026, 10, 31, 12, 3, tzinfo=UTC)
+
+
+def _community_on(store: LogStore) -> Orchestrator:
+    """Setup (protocol upgrade P4): community input is admitted only with the
+    community_signals extension switched on (EXTENSION_DISABLED otherwise)."""
+    s = load_settings()
+    on = s.model_copy(
+        update={"features": s.features.model_copy(update={"community_signals": True})}
+    )
+    return Orchestrator(store, settings=on)
 
 
 @pytest.fixture
@@ -158,7 +169,7 @@ def test_corroborated_when_telemetry_agrees(tmp_path: Path) -> None:  # S-14
     cand = _candidate(pipe)
     result = pipe.investigate(
         cand.candidate_id,
-        Orchestrator(store),  # type: ignore[attr-defined]
+        _community_on(store),
         load_scenario("S-02").input_bytes,
     )
     r = result.report
@@ -177,7 +188,7 @@ def test_reported_unverified_when_telemetry_normal(tmp_path: Path) -> None:  # S
     cand = _candidate(pipe)
     r = pipe.investigate(
         cand.candidate_id,
-        Orchestrator(store),  # type: ignore[attr-defined]
+        _community_on(store),
         load_scenario("S-01").input_bytes,
     ).report
     assert r["status"] != "diagnosed"
@@ -193,7 +204,7 @@ def test_detected_without_matching_complaints(tmp_path: Path) -> None:
     submit(pipe, "library wifi so slow", "b", minutes=2)
     cand = pipe.candidates()[0]
     r = pipe.investigate(
-        cand.candidate_id, Orchestrator(store), load_scenario("S-02").input_bytes
+        cand.candidate_id, _community_on(store), load_scenario("S-02").input_bytes
     ).report  # fault is in Hostel A
     sig = r["netcoop_extensions"]["community_signals"][0]
     assert sig["trust_label"] == "reported_unverified"

@@ -66,7 +66,14 @@ def _incident(tmp_path: Path, scenario: str, community: bool) -> tuple[LogStore,
     pipe.submit("Hostel A Wi-Fi is disconnecting.", channel="web_form", reporter="a", received_at=T)
     pipe.submit("hostel a wifi keeps dropping", channel="web_form", reporter="b", received_at=T)
     cand = pipe.candidates()[0]
-    return store, pipe.investigate(cand.candidate_id, Orchestrator(store), raw).incident_id
+    # Setup (P4): community input needs the community_signals extension switched on.
+    s = load_settings()
+    on = s.model_copy(
+        update={"features": s.features.model_copy(update={"community_signals": True})}
+    )
+    return store, pipe.investigate(
+        cand.candidate_id, Orchestrator(store, settings=on), raw
+    ).incident_id
 
 
 def test_reported_and_detected_layers_are_separate(tmp_path: Path) -> None:  # T-GEO-LAYER

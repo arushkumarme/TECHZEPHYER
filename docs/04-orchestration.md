@@ -47,6 +47,16 @@ Every transition is logged with timestamp, trigger and (if any) message ID.
 - Clarification answers are processed one at a time, in request order, so replay is deterministic.
 - Timeouts and tool budgets are configuration values (not fixed here).
 
+### 4.1 Which messages are legal in which state (protocol 1.1)
+
+Each incident state allows only certain messages. The conversation guard (doc 05 §15, generated authority matrix) enforces this against the orchestrator's current state:
+- `READY` / `READY_WITH_WARNINGS` / `DISPATCHED` / `COLLECTING`: investigate tasks (sent before the `DISPATCHED` transition; retries during `COLLECTING`). Specialist findings arrive in `DISPATCHED` / `COLLECTING`.
+- `CORRELATING`: correlate tasks, and the correlation agent's answer, either a `clarification_request` (counted toward the round limit) or the single `decision`.
+- `CLARIFYING`: the relayed question to the named target, and its `clarification_response`.
+- `REPORTING`: the report task and the single `report_ready`, only after a decision.
+- Any open state: `agent_error` (either direction) and, with the extension on, `community_candidate`.
+- `COMPLETE` / `FAILED` / `REJECTED`: nothing (`INCIDENT_CLOSED`).
+
 ## 5. Degraded operation and failure handling
 
 | Situation | Orchestrator behaviour | Effect on result |
@@ -66,11 +76,14 @@ Every transition is logged with timestamp, trigger and (if any) message ID.
 
 Authority: A-CORR applies the rules; the orchestrator only ensures every conflict is recorded. Rules and precedence are in [doc 08 §5](08-diagnosis-and-confidence.md). Summary: direct measurement beats inference beats user report; fresher beats staler within a tolerance; topology-consistent beats inconsistent; unresolved conflicts keep both explanations, lower confidence, and drop nothing.
 
+**Conflict exchange (protocol 1.2, `IMPLEMENTED`):** when A-CORR answers a `correlate` task with a `conflict_report`, the orchestrator moves to `CLARIFYING`, relays the report unchanged to the party it names, and records the party's `conflict_response` in the same context slot as a clarification answer; A-CORR's resolution logic is unchanged. The guard enforces sender, recipient, reply and round limit (doc 05 §15, §19). The decision's `conflict_trail` records every conflict and its rule.
+
 ## 7. Replay and reproducibility
 
 - The log contains enough to replay an incident without re-running agents: task messages, tool-call records with results, findings, clarifications, decision.
 - Re-running a scenario with the same configuration and data must give the same states, decision and score (`T-REPRO-*`). Whether the generator supports fixed seeds is `UNKNOWN` (doc 09).
-- Pause/resume across restarts is **not** promised (`SRC-1 p3 §4`: optional).
+- Pause/resume across restarts **is implemented** (optional in `SRC-1 p3 §4`; built in M10, §10 below), and is not extended by the protocol upgrade.
+- The conversation state (open tasks, questions, rounds used, decision/report sent) is rebuilt from the message log alone: `MessageBus.rebuild_state(incident)` equals the live state (`tests/core/test_bus_v11.py`). Replaying a run with the same clock, ids and configuration gives a byte-identical log export (`LogStore.export_jsonl`).
 
 ## 8. Extension hooks
 

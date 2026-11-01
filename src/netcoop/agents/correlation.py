@@ -20,6 +20,8 @@ from typing import Any
 from netcoop.config.fields import FieldDictionary, load_field_dictionary
 from netcoop.core.blocks import (
     ClarificationRecord,
+    ConflictTrailEntry,
+    EvidenceRef,
     Limitation,
     NotAssessableItem,
     Observation,
@@ -29,6 +31,9 @@ from netcoop.core.messages import (
     AgentError,
     ClarificationRequest,
     ClarificationResponse,
+    ConflictParty,
+    ConflictReport,
+    ConflictSide,
     Decision,
     Envelope,
     Finding,
@@ -103,9 +108,19 @@ class CorrelationAgent:
         try:
             if not isinstance(msg.payload, TaskRequest):
                 raise ValueError(f"correlation_agent cannot handle {msg.envelope.message_type}")
-            reply = self.correlate(msg.payload.context)
+            ctx = msg.payload.context
+            reply = self.correlate(ctx)
             if isinstance(reply, ClarificationRequest):
+                # One question per round, so the round number identifies it.
+                reply = reply.model_copy(update={"clarification_id": f"CLR-{reply.round:04d}"})
+                report = self.conflict_report(reply, ctx) if reply.reason == "conflict" else None
+                if report is not None:  # protocol 1.2: the conflict re-check, as a conflict
+                    return self.bus.reply(msg, message_type="conflict_report", payload=report)
                 return self.bus.reply(msg, message_type="clarification_request", payload=reply)
+            # One decision per incident (doc 04 §5).
+            reply = reply.model_copy(
+                update={"decision_id": "DEC-0001", "conflict_trail": _trail(reply, ctx)}
+            )
             return self.bus.reply(msg, message_type="decision", payload=reply)
         except Exception as exc:
             return self.bus.reply(
@@ -116,6 +131,74 @@ class CorrelationAgent:
                 ),
                 status="error",
             )
+
+    # ------------------------------------------------------------------ conflicts (1.2)
+    def conflict_report(
+        self, question: ClarificationRequest, ctx: dict[str, Any]
+    ) -> ConflictReport | None:
+        """The existing conflict re-check (doc 08 §5: an unresolved observation conflict),
+        stated as a conflict_report: parties, the evidence on each side, the rule. Detection
+        and resolution are unchanged; this only makes the disagreement a logged exchange."""
+        view, _, _ = self.build(ctx)
+        entity, metric = question.parameters.get("entity"), question.parameters.get("metric")
+        conflict = next(
+            (
+                c
+                for c in view.conflicts
+                if c.rule == "unresolved" and c.description.split(":")[0] == f"{entity} {metric}"
+            ),
+            None,
+        )
+        if conflict is None:
+            return None
+        observations = {
+            o.observation_id: o
+            for f in ctx["findings"].values()
+            for o in Finding.model_validate(f).observations
+        }
+        involved = [observations[i] for i in conflict.observation_ids if i in observations]
+        if len(involved) < 2:
+            return None
+        hypotheses: dict[str, list[str]] = {}
+        for agent, f in ctx["findings"].items():
+            for h in Finding.model_validate(f).hypotheses:
+                if set(h.supporting_observation_ids) & set(conflict.observation_ids):
+                    hypotheses.setdefault(agent, []).append(h.hypothesis_id)
+        parties = [
+            ConflictParty(
+                agent=agent,
+                hypothesis_ids=hypotheses.get(agent, []),
+                observation_ids=[o.observation_id for o in involved if o.agent == agent],
+            )
+            for agent in sorted({o.agent for o in involved})
+        ]
+        sides = [
+            ConflictSide(
+                agent=o.agent,
+                claim=f"{o.entity} {o.metric} = {o.value} {o.unit} ({o.severity})",
+                evidence=[
+                    EvidenceRef(
+                        evidence_type="observation", evidence_id=o.observation_id, stance="supports"
+                    )
+                ],
+            )
+            for o in involved
+        ]
+        return ConflictReport(
+            conflict_id=conflict.conflict_id,
+            conflict_type="observation_contradiction",
+            parties=parties,
+            sides=sides,
+            reason_code="CONFLICTING_READINGS",
+            reason_text=conflict.description,
+            proposed_rule=conflict.rule,
+            effect_on_confidence="Both readings are kept; the conflict caps confidence until a "
+            "re-check settles it (doc 08 §5).",
+            target=question.target,
+            recheck={"question_type": question.question_type, **question.parameters},
+            round=question.round,
+            clarification_id=question.clarification_id,
+        )
 
     # ------------------------------------------------------------------ core
     def build(self, ctx: dict[str, Any]) -> tuple[EvidenceView, DiagnosisContext, float]:
@@ -301,3 +384,18 @@ def _summary(c: dict[str, Any]) -> str:
         )
     checked = [f"{o['entity']} {o['metric']}={o['severity']}" for o in resp.get("observations", [])]
     return "re-checked " + ", ".join(checked)
+
+
+def _trail(decision: Decision, ctx: dict[str, Any]) -> list[ConflictTrailEntry]:
+    """Every conflict with the rule applied; an unresolved one keeps both sides."""
+    raised = {c["request"].get("conflict_id") for c in ctx.get("clarifications", [])} - {None}
+    return [
+        ConflictTrailEntry(
+            conflict_id=c.conflict_id,
+            rule=c.rule,
+            status="unresolved_preserved" if c.rule == "unresolved" else "resolved",
+            raised=c.conflict_id in raised,
+            preserved_observation_ids=list(c.observation_ids) if c.rule == "unresolved" else [],
+        )
+        for c in decision.conflicts
+    ]

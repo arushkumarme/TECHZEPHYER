@@ -1,0 +1,83 @@
+{
+  "$defs": {
+    "TimeWindow": {
+      "properties": {
+        "end": {
+          "format": "date-time",
+          "title": "End",
+          "type": "string"
+        },
+        "start": {
+          "format": "date-time",
+          "title": "Start",
+          "type": "string"
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ],
+      "title": "TimeWindow",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "candidate_id": {
+      "title": "Candidate Id",
+      "type": "string"
+    },
+    "complaint_count": {
+      "minimum": 1,
+      "title": "Complaint Count",
+      "type": "integer"
+    },
+    "complaint_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Complaint Ids",
+      "type": "array"
+    },
+    "distinct_reporters": {
+      "minimum": 1,
+      "title": "Distinct Reporters",
+      "type": "integer"
+    },
+    "symptom_categories": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Symptom Categories",
+      "type": "array"
+    },
+    "trust_label": {
+      "default": "reported_unverified",
+      "enum": [
+        "reported_unverified",
+        "detected",
+        "corroborated"
+      ],
+      "title": "Trust Label",
+      "type": "string"
+    },
+    "window": {
+      "$ref": "#/$defs/TimeWindow"
+    },
+    "zone": {
+      "title": "Zone",
+      "type": "string"
+    }
+  },
+  "required": [
+    "candidate_id",
+    "zone",
+    "symptom_categories",
+    "window",
+    "complaint_count",
+    "distinct_reporters"
+  ],
+  "title": "CommunityCandidate",
+  "type": "object",
+  "x-netcoop-payload-schema-version": "1.0",
+  "x-netcoop-protocol-version": "1.2"
+}

@@ -1,0 +1,29 @@
+# Controlled vocabulary 'trust_label'. Source of truth for its metadata; the term set
+# itself is enforced in code where `code_literal` is given (a test keeps them equal).
+name = "trust_label"
+version = "1.0"
+extensible = false
+id_style = "snake"
+description = "How far user reports are confirmed by telemetry."
+code_literal = "netcoop.core.vocab:TrustLabel"
+
+[[terms]]
+id = "reported_unverified"
+label = "Reported, unverified"
+definition = "Users reported a problem; telemetry does not show a matching fault."
+status = "active"
+source = "doc 08 §6; doc 10 §6"
+
+[[terms]]
+id = "detected"
+label = "Detected"
+definition = "Telemetry shows a fault that no user report refers to."
+status = "active"
+source = "doc 08 §6"
+
+[[terms]]
+id = "corroborated"
+label = "Corroborated"
+definition = "User reports and a diagnosed telemetry fault point to the same devices."
+status = "active"
+source = "doc 08 §6"

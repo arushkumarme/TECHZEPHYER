@@ -27,3 +27,10 @@ tool_transport = "direct"         # "mcp": agents read data through the NetCoop 
 performance_agent = 30
 infrastructure_agent = 30
 connectivity_agent = 40
+
+[protocol]
+# Messages larger than this are rejected unread (MESSAGE_TOO_LARGE). PROVISIONAL (D-23):
+# about 20x the largest message produced by the scenario suite (~47 KB).
+max_message_bytes = 1048576
+# Incident ids are <prefix>-NNNN (PROVISIONAL, D-22; the problem statement mandates none).
+incident_prefix = "INC"

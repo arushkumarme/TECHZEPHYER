@@ -126,7 +126,7 @@ def test_checkpoints_are_append_only(tmp_path: Path) -> None:
     o = _fresh(tmp_path)
     o.run(load_scenario("S-01").input_bytes, pause_after="COLLECTING")
     with pytest.raises(sqlite3.DatabaseError, match="append-only"):
-        o.store.execute_unsafe_for_tests("DELETE FROM checkpoints")
+        o.store._execute_raw_for_tests("DELETE FROM checkpoints")
 
 
 def test_unknown_incident(tmp_path: Path) -> None:

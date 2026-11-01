@@ -1,0 +1,41 @@
+# Controlled vocabulary 'conflict_type'. Source of truth for its metadata (registry-only).
+name = "conflict_type"
+version = "1.0"
+extensible = false
+id_style = "snake"
+description = "Kinds of conflict the correlation agent can raise (protocol 1.2)."
+
+[[terms]]
+id = "hypothesis_competition"
+label = "Hypothesis competition"
+definition = "Two hypotheses that cannot both be the explanation (relation competes or contradicts)."
+status = "active"
+source = "doc 05 §19 (protocol 1.2, P8)"
+
+[[terms]]
+id = "observation_contradiction"
+label = "Observation contradiction"
+definition = "Observations of the same entity, metric and time disagree (doc 08 §5)."
+status = "active"
+source = "doc 05 §19 (protocol 1.2, P8)"
+
+[[terms]]
+id = "severity_disagreement"
+label = "Severity disagreement"
+definition = "Agents grade the same evidence with different severities."
+status = "active"
+source = "doc 05 §19 (protocol 1.2, P8)"
+
+[[terms]]
+id = "scope_disagreement"
+label = "Scope disagreement"
+definition = "Agents disagree on which entities are affected."
+status = "active"
+source = "doc 05 §19 (protocol 1.2, P8)"
+
+[[terms]]
+id = "data_quality_disagreement"
+label = "Data-quality disagreement"
+definition = "Agents disagree on whether the data for an item is usable."
+status = "active"
+source = "doc 05 §19 (protocol 1.2, P8)"

@@ -1,0 +1,111 @@
+# Controlled vocabulary 'unit'. Source of truth for its metadata; the term set
+# itself is enforced in code where `code_literal` is given (a test keeps them equal).
+name = "unit"
+version = "1.0"
+extensible = false
+id_style = "snake"
+description = "Units the code reads or emits. `factor` converts to the canonical unit of the dimension."
+
+[[terms]]
+id = "millisecond"
+label = "ms"
+definition = "Thousandth of a second; canonical time unit."
+status = "active"
+source = "doc 06 §2"
+[terms.attributes]
+symbol = "ms"
+dimension = "time"
+factor = 1.0
+canonical = true
+spellings = ["ms", "millisecond"]
+
+[[terms]]
+id = "second"
+label = "s"
+definition = "One second."
+status = "active"
+source = "config/aliases.toml (team-authored)"
+[terms.attributes]
+symbol = "s"
+dimension = "time"
+factor = 1000.0
+canonical = false
+spellings = ["s", "second"]
+
+[[terms]]
+id = "microsecond"
+label = "us"
+definition = "Millionth of a second."
+status = "active"
+source = "config/aliases.toml (team-authored)"
+[terms.attributes]
+symbol = "us"
+dimension = "time"
+factor = 0.001
+canonical = false
+spellings = ["us", "microsecond"]
+
+[[terms]]
+id = "percent"
+label = "%"
+definition = "Parts per hundred; canonical ratio unit."
+status = "active"
+source = "doc 06 §2"
+[terms.attributes]
+symbol = "%"
+dimension = "ratio"
+factor = 1.0
+canonical = true
+spellings = ["pct", "percent", "%"]
+
+[[terms]]
+id = "ratio"
+label = "ratio"
+definition = "Fraction of one (0.94 means 94 percent); only ever used when declared."
+status = "active"
+source = "config/aliases.toml (team-authored)"
+[terms.attributes]
+symbol = "ratio"
+dimension = "ratio"
+factor = 100.0
+canonical = false
+spellings = ["ratio", "fraction"]
+
+[[terms]]
+id = "count"
+label = "count"
+definition = "Number of events reported in one sample."
+status = "active"
+source = "doc 06 §2"
+[terms.attributes]
+symbol = "count"
+dimension = "count"
+factor = 1.0
+canonical = true
+spellings = ["count"]
+
+[[terms]]
+id = "none"
+label = "-"
+definition = "No unit: a named state such as device status."
+status = "active"
+source = "doc 06 §2"
+[terms.attributes]
+symbol = "-"
+dimension = "categorical"
+factor = 1.0
+canonical = true
+spellings = []
+
+[[terms]]
+id = "outcome"
+label = "outcome"
+definition = "Result of a service probe: success, failure or timeout."
+status = "active"
+source = "doc 08 §3.3"
+[terms.attributes]
+symbol = "outcome"
+dimension = "categorical"
+factor = 1.0
+canonical = false
+spellings = []

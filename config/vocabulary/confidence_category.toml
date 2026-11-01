@@ -1,0 +1,36 @@
+# Controlled vocabulary 'confidence_category'. Source of truth for its metadata; the term set
+# itself is enforced in code where `code_literal` is given (a test keeps them equal).
+name = "confidence_category"
+version = "1.0"
+extensible = false
+id_style = "snake"
+description = "Category reported next to the numeric confidence."
+code_literal = "netcoop.core.vocab:ConfidenceCategory"
+
+[[terms]]
+id = "high"
+label = "High"
+definition = "Score at or above t_high."
+status = "active"
+source = "doc 08 §4.6"
+
+[[terms]]
+id = "medium"
+label = "Medium"
+definition = "Score at or above t_med but below t_high."
+status = "active"
+source = "doc 08 §4.6"
+
+[[terms]]
+id = "low"
+label = "Low"
+definition = "Score below t_med."
+status = "active"
+source = "doc 08 §4.6"
+
+[[terms]]
+id = "insufficient"
+label = "Insufficient"
+definition = "The decision gate failed."
+status = "active"
+source = "doc 08 §4.6"

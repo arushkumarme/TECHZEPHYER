@@ -10,9 +10,11 @@ orchestrator (doc 03 §3); agents cannot message each other directly.
 from __future__ import annotations
 
 import json
+import threading
 from collections.abc import Callable
 from typing import Any
 
+from netcoop.core.guard import ConversationGuard, ConversationState, Violation, rebuild_state
 from netcoop.core.ids import Clock, IdFactory, SystemClock
 from netcoop.core.log_store import LogStore
 from netcoop.core.messages import (
@@ -22,6 +24,8 @@ from netcoop.core.messages import (
     make_message,
     parse_message,
 )
+from netcoop.core.parse import DEFAULT_MAX_MESSAGE_BYTES, ParseIssue, try_parse
+from netcoop.core.snapshot import DataSnapshot
 from netcoop.core.vocab import AgentId, MessageStatus, MessageType
 
 Handler = Callable[[ParsedMessage], Envelope | str]
@@ -33,6 +37,19 @@ _HUB: AgentId = "orchestrator"
 class BusRoutingError(RuntimeError):
     """A message violates the routing rules or has no destination."""
 
+    def __init__(self, message: str, *, code: str = "RECIPIENT_NOT_ALLOWED") -> None:
+        super().__init__(message)
+        self.code = code
+
+
+class GuardViolationError(MessageValidationError):
+    """The conversation guard rejected a message (doc 05 §15). ``code`` is the first
+    violation; ``violations`` holds all of them, each with a plain-English reason."""
+
+    def __init__(self, code: str, detail: str, violations: tuple[Violation, ...]) -> None:
+        super().__init__(code, detail)
+        self.violations = violations
+
 
 class MessageBus:
     def __init__(
@@ -41,12 +58,25 @@ class MessageBus:
         *,
         clock: Clock | None = None,
         ids: IdFactory | None = None,
+        snapshot: DataSnapshot | None = None,
+        max_message_bytes: int = DEFAULT_MAX_MESSAGE_BYTES,
+        guard: ConversationGuard | None = None,
+        incident_state: Callable[[str], str | None] | None = None,
     ) -> None:
         self.store = store
         self.clock: Clock = clock or SystemClock()
         self.ids = ids or IdFactory()
+        #: Protocol 1.1 stamp: every message this bus builds carries the snapshot fields.
+        self.snapshot = snapshot
+        self.max_message_bytes = max_message_bytes
         self._handlers: dict[str, Handler] = {}
         self._listeners: dict[str, Listener] = {}
+        self._seq: dict[str, int] = {}
+        self._seq_lock = threading.Lock()
+        #: Authority matrix + conversation rules (doc 05 §15); None = not enforced.
+        self.guard = guard
+        self._incident_state = incident_state
+        self._conversations: dict[str, ConversationState] = {}
 
     # ------------------------------------------------------------------ registration
     def register(self, agent_id: AgentId, handler: Handler) -> None:
@@ -70,7 +100,11 @@ class MessageBus:
         status: MessageStatus = "ok",
         message_id: str | None = None,
     ) -> Envelope:
+        snap = self.snapshot
         return make_message(
+            snapshot_id=snap.snapshot_id if snap else None,
+            mode=snap.mode if snap else None,
+            data_provenance=snap.data_provenance if snap else None,
             message_id=message_id or self.ids.message(),
             sender=sender,
             recipient=recipient,
@@ -120,8 +154,17 @@ class MessageBus:
             header.setdefault("sender", req.recipient)
             header.setdefault("recipient", req.sender)
             header.setdefault("in_reply_to", req.message_id)
+        received = self.clock.now()
+        result = try_parse(raw, max_bytes=self.max_message_bytes)
+        warnings = [_issue(w) for w in result.warnings]
         try:
-            parsed = parse_message(raw)
+            if result.message is None:
+                first = result.errors[0]
+                raise MessageValidationError(
+                    first.code,
+                    "; ".join(f"{e.path or '<message>'}: {e.reason}" for e in result.errors),
+                )
+            parsed = result.message
             _check_route(parsed.envelope.sender, parsed.envelope.recipient)
             if expect_reply_to is not None:
                 _check_reply(parsed, expect_reply_to)
@@ -132,6 +175,10 @@ class MessageBus:
                 valid=False,
                 error_code=exc.code,
                 error_detail=exc.detail[:2000],
+                received_at=received,
+                violations=[_issue(e) for e in result.errors]
+                or [{"code": exc.code, "reason": exc.detail[:2000], "path": ""}],
+                warnings=warnings,
             )
             raise
         except BusRoutingError as exc:
@@ -139,17 +186,111 @@ class MessageBus:
                 raw_json=raw,
                 header=header,
                 valid=False,
-                error_code="MESSAGE_ROUTING_INVALID",
+                error_code=exc.code,
                 error_detail=str(exc),
+                received_at=received,
+                violations=[{"code": exc.code, "reason": str(exc), "path": ""}],
+                warnings=warnings,
             )
             raise
-        self.store.append_message(
-            raw_json=raw,
-            header=parsed.envelope.model_dump(mode="json", exclude={"payload"}),
-            valid=True,
-            ignored_fields=parsed.ignored_fields,
-        )
+        # Guard check, state update, seq and log append happen under ONE lock, in order:
+        # the conversation state always follows the log exactly (deterministic by seq).
+        with self._seq_lock:
+            incident = parsed.envelope.incident_id
+            if self.guard is not None and incident is not None:
+                state = self.conversation(incident)
+                verdict = self.guard.check(parsed.envelope, state)
+                if not verdict.allowed:
+                    top = verdict.violations[0]
+                    detail = " ".join(x.reason for x in verdict.violations)
+                    self.store.append_message(
+                        raw_json=raw,
+                        header=parsed.envelope.model_dump(mode="json", exclude={"payload"}),
+                        valid=False,
+                        error_code=top.code,
+                        error_detail=detail[:2000],
+                        received_at=received,
+                        violations=[
+                            {"code": x.code, "reason": x.reason, "path": ""}
+                            for x in verdict.violations
+                        ],
+                        warnings=warnings,
+                    )
+                    raise GuardViolationError(top.code, detail, verdict.violations)
+                self._conversations[incident] = state.apply(parsed.envelope, self.guard.rules)
+            parsed, raw = self._stamp_seq(parsed, raw)
+            self.store.append_message(
+                raw_json=raw,
+                header=parsed.envelope.model_dump(mode="json", exclude={"payload"}),
+                valid=True,
+                ignored_fields=parsed.ignored_fields,
+                received_at=received,
+                warnings=warnings,
+            )
         return parsed
+
+    # ------------------------------------------------------------------ read API
+    def get_message(self, message_id: str) -> ParsedMessage | None:
+        """An accepted message by id (agents/tools read earlier messages by reference)."""
+        logged = self.store.get_message(message_id)
+        if logged is None or not logged.valid:
+            return None
+        return parse_message(logged.raw_json)
+
+    def messages_for(
+        self, incident_id: str, types: tuple[str, ...] | list[str] | None = None
+    ) -> list[ParsedMessage]:
+        """Accepted messages of an incident in log order, optionally of some types only.
+        Reading never changes anything."""
+        return [
+            parse_message(m.raw_json)
+            for m in self.store.messages(incident_id)
+            if m.valid and (types is None or m.message_type in types)
+        ]
+
+    def rebuild_state(self, incident_id: str) -> ConversationState:
+        """The conversation state rebuilt from the log alone (replay), ignoring any cache."""
+        current = self._incident_state(incident_id) if self._incident_state else None
+        return rebuild_state(
+            (
+                Envelope.model_validate_json(m.raw_json)
+                for m in self.store.messages(incident_id)
+                if m.valid
+            ),
+            incident_state=current,
+            rules=self.guard.rules if self.guard else None,
+        )
+
+    def conversation(self, incident: str) -> ConversationState:
+        """The incident's conversation state (rebuilt from the log on first use, e.g. after
+        a restart), with the current incident state from the orchestrator."""
+        state = self._conversations.get(incident)
+        if state is None:
+            state = rebuild_state(
+                (
+                    Envelope.model_validate_json(m.raw_json)
+                    for m in self.store.messages(incident)
+                    if m.valid
+                ),
+                rules=self.guard.rules if self.guard else None,
+            )
+            self._conversations[incident] = state
+        current = self._incident_state(incident) if self._incident_state else None
+        return state.with_incident_state(current, self.guard.rules if self.guard else None)
+
+    def _stamp_seq(self, parsed: ParsedMessage, raw: str) -> tuple[ParsedMessage, str]:
+        """Assign the next per-incident sequence number to an accepted message (protocol
+        1.1). Numbering continues from the log after a restart. Caller holds the lock."""
+        incident = parsed.envelope.incident_id
+        if incident is None or parsed.envelope.seq is not None:
+            return parsed, raw
+        if incident not in self._seq:
+            self._seq[incident] = self.store.max_seq(incident)
+        self._seq[incident] += 1
+        n = self._seq[incident]
+        envelope = parsed.envelope.model_copy(update={"seq": n})
+        stamped = ParsedMessage(envelope, parsed.payload, parsed.ignored_fields, parsed.warnings)
+        return stamped, envelope.to_json()
 
     def request(
         self,
@@ -199,8 +340,16 @@ class MessageBus:
 
     def deliver(self, sent: ParsedMessage) -> ParsedMessage:
         """Hand a logged request to its recipient; validate and log the reply."""
-        handler = self._handlers[sent.envelope.recipient]
-        return self.transmit(handler(sent), expect_reply_to=sent)
+        return self.accept_reply(self.call_handler(sent), sent)
+
+    def call_handler(self, sent: ParsedMessage) -> Envelope | str:
+        """Run the recipient's handler and return its raw reply WITHOUT logging it (lets a
+        caller run handlers in worker threads and log replies in a fixed order)."""
+        return self._handlers[sent.envelope.recipient](sent)
+
+    def accept_reply(self, wire: Envelope | str, sent: ParsedMessage) -> ParsedMessage:
+        """Validate and log a reply produced by :meth:`call_handler`."""
+        return self.transmit(wire, expect_reply_to=sent)
 
     def notify(
         self,
@@ -234,10 +383,14 @@ class MessageBus:
 def _check_route(sender: str, recipient: str) -> None:
     if _HUB not in (sender, recipient):
         raise BusRoutingError(
-            f"{sender} -> {recipient}: agents communicate only through the orchestrator"
+            f"Rejected: {sender} tried to message {recipient} directly; agents talk only "
+            "through the orchestrator.",
+            code="DIRECT_AGENT_MESSAGE_FORBIDDEN",
         )
     if sender == recipient:
-        raise BusRoutingError(f"{sender} cannot message itself")
+        raise BusRoutingError(
+            f"Rejected: {sender} cannot message itself.", code="RECIPIENT_NOT_ALLOWED"
+        )
 
 
 def _check_reply(reply: ParsedMessage, request: ParsedMessage) -> None:
@@ -260,3 +413,7 @@ def _best_effort_header(raw: str) -> dict[str, Any]:
     except (json.JSONDecodeError, TypeError):
         return {}
     return {k: v for k, v in data.items() if k != "payload"} if isinstance(data, dict) else {}
+
+
+def _issue(i: ParseIssue) -> dict[str, str]:
+    return {"code": i.code, "reason": i.reason, "path": i.path}

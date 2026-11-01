@@ -1,0 +1,124 @@
+{
+  "$defs": {
+    "SupportingEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "interpretation": {
+          "title": "Interpretation",
+          "type": "string"
+        },
+        "metric": {
+          "title": "Metric",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Value"
+        }
+      },
+      "required": [
+        "metric",
+        "value",
+        "interpretation"
+      ],
+      "title": "SupportingEvidence",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "affected_devices": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Affected Devices",
+      "type": "array"
+    },
+    "alternative_causes": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Alternative Causes",
+      "type": "array"
+    },
+    "confidence": {
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "title": "Confidence",
+      "type": "number"
+    },
+    "evidence_sources": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Evidence Sources",
+      "type": "array"
+    },
+    "incident_id": {
+      "minLength": 1,
+      "title": "Incident Id",
+      "type": "string"
+    },
+    "limitations": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Limitations",
+      "type": "array"
+    },
+    "recommended_actions": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Recommended Actions",
+      "type": "array"
+    },
+    "status": {
+      "enum": [
+        "diagnosed",
+        "insufficient_evidence",
+        "no_fault_detected",
+        "failed"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "supporting_evidence": {
+      "items": {
+        "$ref": "#/$defs/SupportingEvidence"
+      },
+      "title": "Supporting Evidence",
+      "type": "array"
+    },
+    "suspected_root_cause": {
+      "title": "Suspected Root Cause",
+      "type": "string"
+    }
+  },
+  "required": [
+    "incident_id",
+    "status",
+    "suspected_root_cause",
+    "confidence",
+    "affected_devices",
+    "supporting_evidence",
+    "alternative_causes",
+    "recommended_actions",
+    "evidence_sources",
+    "limitations"
+  ],
+  "title": "OfficialReport",
+  "type": "object",
+  "x-netcoop-payload-schema-version": "1.0",
+  "x-netcoop-protocol-version": "1.2"
+}

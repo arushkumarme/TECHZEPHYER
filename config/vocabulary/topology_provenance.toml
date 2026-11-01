@@ -1,0 +1,29 @@
+# Controlled vocabulary 'topology_provenance'. Source of truth for its metadata; the term set
+# itself is enforced in code where `code_literal` is given (a test keeps them equal).
+name = "topology_provenance"
+version = "1.0"
+extensible = false
+id_style = "free"
+description = "Provenance label carried by a topology file."
+code_literal = "netcoop.tools.topology:Topology.provenance"
+
+[[terms]]
+id = "SIMULATED"
+label = "Simulated"
+definition = "Team-authored synthetic topology."
+status = "active"
+source = "doc 11 §2; ID-04"
+
+[[terms]]
+id = "VERIFIED-PUBLIC"
+label = "Verified public"
+definition = "Not available in this build."
+status = "blocked"
+source = "doc 11 §2"
+
+[[terms]]
+id = "VERIFIED-IITBBS"
+label = "Verified IIT Bhubaneswar"
+definition = "Needs network-team access."
+status = "blocked"
+source = "doc 11 §2"

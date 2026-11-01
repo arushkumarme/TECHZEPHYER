@@ -1,0 +1,70 @@
+# Controlled vocabulary 'rationale_code'. Source of truth for its metadata; the term set
+# itself is enforced in code where `code_literal` is given (a test keeps them equal).
+name = "rationale_code"
+version = "1.0"
+extensible = true
+id_style = "upper"
+description = "Why a specialist attached a local hypothesis. Extensible with 'x-' ids for site-specific rules."
+
+[[terms]]
+id = "HIGH_UTILIZATION_WITH_DELAY"
+label = "High utilization with delay"
+definition = "Link utilization and latency or jitter are both abnormal."
+status = "active"
+source = "agents/performance.py"
+
+[[terms]]
+id = "DELAY_WITH_NORMAL_LOCAL_UTILIZATION"
+label = "Delay with normal local utilization"
+definition = "Delay is abnormal although the device's own link load is normal."
+status = "active"
+source = "agents/performance.py"
+
+[[terms]]
+id = "LOSS_WITHOUT_LOAD"
+label = "Loss without load"
+definition = "Packet loss is abnormal without high link utilization."
+status = "active"
+source = "agents/performance.py"
+
+[[terms]]
+id = "DEVICE_REPORTS_CRITICAL"
+label = "Device reports critical"
+definition = "The device's own status is Critical."
+status = "active"
+source = "agents/infrastructure.py"
+
+[[terms]]
+id = "HIGH_CPU"
+label = "High CPU"
+definition = "CPU utilization is abnormal."
+status = "active"
+source = "agents/infrastructure.py"
+
+[[terms]]
+id = "INTERFACE_ERRORS"
+label = "Interface errors"
+definition = "Interface error counts are abnormal."
+status = "active"
+source = "agents/infrastructure.py"
+
+[[terms]]
+id = "QUEUE_DROPS"
+label = "Queue drops"
+definition = "Egress queue drops are abnormal."
+status = "active"
+source = "agents/infrastructure.py"
+
+[[terms]]
+id = "SERVICE_PROBES_FAIL"
+label = "Service probes fail"
+definition = "Team-authored DNS/DHCP probes from the device fail or time out."
+status = "active"
+source = "agents/connectivity.py"
+
+[[terms]]
+id = "CONFLICTING_READINGS"
+label = "Conflicting readings"
+definition = "Observations of the same entity, metric and time disagree and no conflict rule settles them (reason code of a conflict_report, protocol 1.2)."
+status = "active"
+source = "doc 08 §5; doc 05 §19"

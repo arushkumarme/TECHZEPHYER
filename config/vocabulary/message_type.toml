@@ -1,0 +1,78 @@
+# Controlled vocabulary 'message_type'. Source of truth for its metadata; the term set
+# itself is enforced in code where `code_literal` is given (a test keeps them equal).
+name = "message_type"
+version = "1.0"
+extensible = false
+id_style = "snake"
+description = "Kinds of protocol message."
+code_literal = "netcoop.core.vocab:MessageType"
+
+[[terms]]
+id = "task_request"
+label = "Task request"
+definition = "Orchestrator asks one agent to do a scoped piece of work within a budget and deadline."
+status = "active"
+source = "doc 05 §3"
+
+[[terms]]
+id = "finding"
+label = "Finding"
+definition = "A specialist's independent observations, hypotheses, unknowns and tool trail for one task."
+status = "active"
+source = "doc 05 §3"
+
+[[terms]]
+id = "clarification_request"
+label = "Clarification request"
+definition = "A bounded, typed question one agent asks another through the orchestrator."
+status = "active"
+source = "doc 05 §3; doc 03 §3"
+
+[[terms]]
+id = "clarification_response"
+label = "Clarification response"
+definition = "The answer to a clarification request, or a stated reason it cannot be answered."
+status = "active"
+source = "doc 05 §3"
+
+[[terms]]
+id = "decision"
+label = "Decision"
+definition = "The correlation agent's ranked hypotheses and its verdict: diagnosed, insufficient evidence or no fault."
+status = "active"
+source = "doc 05 §3"
+
+[[terms]]
+id = "report_ready"
+label = "Report ready"
+definition = "The reporting agent delivers the validated report and its Markdown rendering."
+status = "active"
+source = "doc 05 §3"
+
+[[terms]]
+id = "agent_error"
+label = "Agent error"
+definition = "A failure, timeout or invalid message, with a code and whether it is recoverable."
+status = "active"
+source = "doc 05 §3"
+
+[[terms]]
+id = "community_candidate"
+label = "Community candidate"
+definition = "An unverified candidate incident built from user complaints (Extension A)."
+status = "active"
+source = "doc 05 §3; doc 10"
+
+[[terms]]
+id = "conflict_report"
+label = "Conflict report"
+definition = "The correlation agent states a real conflict (parties, evidence on each side, proposed rule) and asks a party to respond, through the orchestrator (protocol 1.2)."
+status = "active"
+source = "doc 05 §19"
+
+[[terms]]
+id = "conflict_response"
+label = "Conflict response"
+definition = "A party's stance on a conflict report (maintain, revise, withdraw, cannot_assess) with any new evidence (protocol 1.2)."
+status = "active"
+source = "doc 05 §19"

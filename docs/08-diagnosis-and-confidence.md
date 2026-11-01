@@ -133,6 +133,8 @@ Applied in order by A-CORR; each application is logged in the extension block (`
 4. **Unresolved:** keep both explanations as ranked candidates, lower the score via the margin rule, and say so in `limitations`.
 5. **Never** discard a specialist's finding silently; a disregarded observation is listed with the reason.
 
+**In the protocol (1.2):** an unresolved observation conflict is now raised as a `conflict_report` (type `observation_contradiction`, reason `CONFLICTING_READINGS`, proposed rule `unresolved`) and the party's re-check comes back as a `conflict_response`. The decision carries a `conflict_trail`: each conflict with the rule applied and status `resolved` or `unresolved_preserved` (both sides' observation ids kept). Only hypothesis relations `competes`/`contradicts` are conflicts; `compatible`/`refines` never are. See doc 05 §19.
+
 ## 6. Community signals (`X-CSI-07`)
 
 Complaints are *unverified* evidence from non-expert people. Treatment:

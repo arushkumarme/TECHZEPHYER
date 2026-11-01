@@ -5,7 +5,10 @@ from __future__ import annotations
 import json
 from typing import Any
 
+from pydantic import ValidationError
+
 from netcoop.report.builder import OFFICIAL_KEYS
+from netcoop.report.official import OfficialReport
 
 STATUSES = {"diagnosed", "insufficient_evidence", "no_fault_detected", "failed"}
 EXTENSION_KEY = "netcoop_extensions"
@@ -63,6 +66,17 @@ def validate_report(
                 continue
             if isinstance(e["value"], bool) or not isinstance(e["value"], int | float | str):
                 errors.append(f"supporting_evidence[{i}].value must be a number or string")
+
+    # Structure and types from the strict ten-key model (doc 07 §1); messages already
+    # reported above are not repeated.
+    try:
+        OfficialReport.model_validate({k: report[k] for k in OFFICIAL_KEYS})
+    except ValidationError as exc:
+        for err in exc.errors():
+            key = str(err["loc"][0])
+            if not any(key in e for e in errors):
+                loc = ".".join(str(x) for x in err["loc"])
+                errors.append(f"official report {loc}: {err['msg']}")
 
     sources = set(report["evidence_sources"]) if _str_list(report["evidence_sources"]) else set()
     if "community_module" in sources:

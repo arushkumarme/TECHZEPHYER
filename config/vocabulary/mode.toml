@@ -1,0 +1,22 @@
+# Controlled vocabulary 'mode'. Source of truth for its metadata; the term set
+# itself is enforced in code where `code_literal` is given (a test keeps them equal).
+name = "mode"
+version = "1.0"
+extensible = false
+id_style = "snake"
+description = "Operating mode. Only simulation is accepted in this build."
+code_literal = "netcoop.config.settings:Settings.mode"
+
+[[terms]]
+id = "simulation"
+label = "Simulation"
+definition = "Synthetic or authorized test data, scenario playback, simulated actions."
+status = "active"
+source = "doc 00 §4; R-17"
+
+[[terms]]
+id = "deployment"
+label = "Deployment"
+definition = "Authorized campus feeds; defined for documentation only and never accepted."
+status = "blocked"
+source = "doc 15"

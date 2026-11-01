@@ -1,0 +1,29 @@
+# Controlled vocabulary 'bundle_acceptance'. Source of truth for its metadata; the term set
+# itself is enforced in code where `code_literal` is given (a test keeps them equal).
+name = "bundle_acceptance"
+version = "1.0"
+extensible = false
+id_style = "upper"
+description = "Result of ingestion for one telemetry bundle."
+code_literal = "netcoop.ingestion.models:Acceptance"
+
+[[terms]]
+id = "READY"
+label = "Ready"
+definition = "No warnings."
+status = "active"
+source = "doc 05 §6.2"
+
+[[terms]]
+id = "READY_WITH_WARNINGS"
+label = "Ready with warnings"
+definition = "Usable, with recorded problems such as missing metrics."
+status = "active"
+source = "doc 05 §6.2"
+
+[[terms]]
+id = "REJECTED"
+label = "Rejected"
+definition = "Unusable: nothing parseable, identifiable, datable or measurable."
+status = "active"
+source = "doc 05 §6.2"

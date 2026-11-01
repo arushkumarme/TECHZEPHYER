@@ -1,0 +1,114 @@
+{
+  "description": "a specialist tries to raise a conflict itself",
+  "max_clarification_rounds": 2,
+  "extensions": [],
+  "steps": [
+    {
+      "incident_state": "READY",
+      "message": {
+        "protocol_version": "1.2",
+        "message_id": "INC-0001-MSG-000001",
+        "incident_id": "INC-0001",
+        "in_reply_to": null,
+        "sender": "orchestrator",
+        "recipient": "performance_agent",
+        "message_type": "task_request",
+        "sent_at": "2026-11-01T09:00:00Z",
+        "payload_schema_version": "1.0",
+        "status": "ok",
+        "snapshot_id": "SNAP-0123456789ab",
+        "mode": "simulation",
+        "data_provenance": "synthetic-generator",
+        "payload": {
+          "goal": "assess_performance",
+          "scope_entities": [
+            "SW_CAMPUS_1",
+            "SW_CAMPUS_4"
+          ],
+          "window": {
+            "start": "2026-11-01T09:00:00Z",
+            "end": "2026-11-01T09:15:00Z"
+          },
+          "tool_budget": 30,
+          "deadline_s": 10,
+          "task_id": "TASK-0001",
+          "task_kind": "investigate",
+          "input_message_ids": [],
+          "incident_context": {
+            "description": "illustrative example",
+            "trigger": "telemetry_bundle"
+          }
+        }
+      }
+    },
+    {
+      "incident_state": "COLLECTING",
+      "message": {
+        "protocol_version": "1.2",
+        "message_id": "INC-0001-MSG-000001.R",
+        "incident_id": "INC-0001",
+        "in_reply_to": "INC-0001-MSG-000001",
+        "sender": "performance_agent",
+        "recipient": "orchestrator",
+        "message_type": "conflict_report",
+        "sent_at": "2026-11-01T09:00:00Z",
+        "payload_schema_version": "1.0",
+        "status": "ok",
+        "snapshot_id": "SNAP-0123456789ab",
+        "mode": "simulation",
+        "data_provenance": "synthetic-generator",
+        "payload": {
+          "conflict_id": "CONF-001",
+          "conflict_type": "observation_contradiction",
+          "parties": [
+            {
+              "agent": "performance_agent",
+              "hypothesis_ids": [],
+              "observation_ids": [
+                "OBS-PERF-000001-001",
+                "OBS-PERF-000001-003"
+              ]
+            }
+          ],
+          "sides": [
+            {
+              "agent": "performance_agent",
+              "claim": "SW_CAMPUS_4 latency_ms = 180.0 (critical)",
+              "evidence": [
+                {
+                  "evidence_type": "observation",
+                  "evidence_id": "OBS-PERF-000001-001",
+                  "stance": "supports"
+                }
+              ]
+            },
+            {
+              "agent": "performance_agent",
+              "claim": "SW_CAMPUS_4 latency_ms = 15.0 (normal)",
+              "evidence": [
+                {
+                  "evidence_type": "observation",
+                  "evidence_id": "OBS-PERF-000001-003",
+                  "stance": "supports"
+                }
+              ]
+            }
+          ],
+          "reason_code": "CONFLICTING_READINGS",
+          "reason_text": "SW_CAMPUS_4 latency_ms: records for the same time disagree",
+          "proposed_rule": "unresolved",
+          "status": "open",
+          "effect_on_confidence": "Both readings are kept; confidence is capped until re-checked.",
+          "target": "performance_agent",
+          "recheck": {
+            "question_type": "recheck_metric",
+            "entity": "SW_CAMPUS_4",
+            "metric": "latency_ms"
+          },
+          "round": 1,
+          "clarification_id": "CLR-0001"
+        }
+      }
+    }
+  ]
+}

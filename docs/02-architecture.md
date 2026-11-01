@@ -19,7 +19,7 @@
 | C-SRC | Telemetry source adapter | Deterministic | Reads telemetry into the ingestion stage. `sim_source` reads generator output; a live adapter is not built | `sim_source`: `PLANNED`/`SIMULATED`; live: `FUTURE`/`NEEDS-ACCESS` |
 | C-ING | Ingestion, validation, normalization | Deterministic | Structure check, schema-version check, field mapping, unit conversion, plausibility, data-quality note, bundle acceptance (doc 05 §6) | `PLANNED` |
 | C-TOOL | Read-only tool layer | Deterministic | The only way agents read data: telemetry query, coverage query, topology neighbours/path, what-if failure, data-quality report. No write operations exist | `PLANNED` |
-| C-BUS | Message bus and log store | Deterministic | Routes JSON messages, validates each against the envelope, appends every message to an append-only log | `PLANNED` |
+| C-BUS | Message bus and log store | Deterministic | Routes JSON messages; validates each (envelope, payload rules, conversation guard); appends **every attempt, accepted or rejected**, to an append-only SQLite log with verdict, plain-English violations, warnings, snapshot id and per-incident sequence; read API by message id; replay of the conversation state from the log (doc 05 §16) | `IMPLEMENTED` |
 | C-ORC | Orchestrator | Deterministic state machine | Creates incidents, assigns tasks, enforces timeouts and clarification limits, collects findings, drives the workflow (doc 04) | `PLANNED` |
 | A-PERF | Telemetry & Performance Agent (`performance_agent`) | Agent | Performance behaviour: latency, jitter, loss, throughput, bandwidth, utilization, wireless signal if present | `PLANNED` |
 | A-INFRA | Infrastructure Health Agent (`infrastructure_agent`) | Agent | Device status, CPU, memory, interface errors, queue drops | `PLANNED` |
@@ -102,6 +102,7 @@ netcoop-ai/
 │   └── topology/            # simulated topology and campus layers (labelled)
 ├── src/netcoop/
 │   ├── core/                # messages (envelope, payloads), IDs, errors, log_store
+│   │   └── vocabulary/      # controlled-vocabulary registry over the term Literals
 │   ├── ingestion/           # sim_source, validate, normalize, data_quality
 │   ├── tools/               # read-only tools: telemetry, topology
 │   ├── agents/              # performance, infrastructure, connectivity, correlation, reporting
@@ -114,6 +115,7 @@ netcoop-ai/
 │   ├── api/                 # FastAPI
 │   └── cli/
 ├── dashboard/               # React + Leaflet
+├── conformance/             # protocol conformance kit: schemas, examples, manifest
 ├── scripts/
 └── tests/
 ```

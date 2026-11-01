@@ -1,0 +1,28 @@
+# Controlled vocabulary 'recommendation_priority'. Source of truth for its metadata; the term set
+# itself is enforced in code where `code_literal` is given (a test keeps them equal).
+name = "recommendation_priority"
+version = "1.0"
+extensible = false
+id_style = "snake"
+description = "Priority of a recommendation (PROVISIONAL, D-19; not used yet)."
+
+[[terms]]
+id = "high"
+label = "High"
+definition = "Act first."
+status = "active"
+source = "PROPOSAL"
+
+[[terms]]
+id = "medium"
+label = "Medium"
+definition = "Act after high-priority items."
+status = "active"
+source = "PROPOSAL"
+
+[[terms]]
+id = "low"
+label = "Low"
+definition = "Optional."
+status = "active"
+source = "PROPOSAL"

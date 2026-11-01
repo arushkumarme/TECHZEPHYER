@@ -10,7 +10,7 @@
 | 1 | Clean installation from documented instructions | `git clone` → `uv sync` (1.9 s) → `npm --prefix dashboard ci` (3.1 s, 0 vulnerabilities) | PASS |
 | 2 | Configuration and environment validation | `load_settings()` → `simulation`, all optional features off, `tool_transport=direct`; tests refuse any other mode and unknown `NETCOOP_ENABLE` names | PASS |
 | 3 | Unit tests | `tests/{core,config,ingestion,tools,diagnosis,agents,scenarios}` (incl. Hypothesis property tests) | PASS |
-| 4 | Contract tests | `tests/core/test_messages.py` (T-PROTO-01..10), schema freshness (`schemas/protocol/`), report contract (`T-RPT-SCHEMA`) | PASS |
+| 4 | Contract tests | `tests/core/test_messages.py` (T-PROTO-01..10), schema freshness (`schemas/protocol/`, since moved to `conformance/schemas/`), report contract (`T-RPT-SCHEMA`) | PASS |
 | 5 | Integration tests | bus + SQLite log, agents on real tool layer, orchestrator (`tests/orchestrator`), MCP (`tests/mcp`), API (`tests/api`) | PASS |
 | 6 | End-to-end scenario tests | `tests/e2e` (13 scenarios, CLI subprocess) and `netcoop scenarios run-all` → **13/13 PASS** | PASS |
 | 7 | Regression suite | full `uv run pytest -q` → **311 passed** (+ 7 browser tests run separately) | PASS |

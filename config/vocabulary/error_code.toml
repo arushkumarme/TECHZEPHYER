@@ -1,0 +1,657 @@
+# Controlled vocabulary 'error_code'. Source of truth for its metadata; the term set
+# itself is enforced in code where `code_literal` is given (a test keeps them equal).
+name = "error_code"
+version = "1.0"
+extensible = false
+id_style = "upper"
+description = "Every error, warning and limitation code the system emits. Severity: fatal stops the incident, error degrades it, warning is surfaced, info is logged."
+
+[[terms]]
+id = "AGENT_FAILED"
+label = "Agent failed"
+definition = "An agent reported or suffered a failure."
+status = "active"
+source = "doc 05 §7; doc 04 §5"
+[terms.attributes]
+severity = "error"
+kind = "orchestration"
+
+[[terms]]
+id = "AGENT_MISSING"
+label = "Agent missing"
+definition = "No finding arrived from an agent; its evidence is absent."
+status = "active"
+source = "doc 04 §5"
+[terms.attributes]
+severity = "warning"
+kind = "limitation"
+
+[[terms]]
+id = "AGENT_TIMEOUT"
+label = "Agent timeout"
+definition = "An agent did not reply before its deadline."
+status = "active"
+source = "doc 05 §7; doc 04 §5"
+[terms.attributes]
+severity = "error"
+kind = "orchestration"
+
+[[terms]]
+id = "CAUSE_NOT_ASSESSABLE"
+label = "Cause not assessable"
+definition = "A cause cannot be assessed because its required evidence is not in the data."
+status = "active"
+source = "doc 08 §3.2"
+[terms.attributes]
+severity = "info"
+kind = "limitation"
+
+[[terms]]
+id = "CLARIFICATION_LIMIT_REACHED"
+label = "Clarification limit reached"
+definition = "The round limit was reached; the correlation agent decided on what it had."
+status = "active"
+source = "doc 05 §7; doc 03 §3"
+[terms.attributes]
+severity = "info"
+kind = "orchestration"
+
+[[terms]]
+id = "CONFLICT_UNRESOLVED"
+label = "Conflict unresolved"
+definition = "Conflicting observations could not be resolved by the rules."
+status = "active"
+source = "doc 08 §5"
+[terms.attributes]
+severity = "warning"
+kind = "limitation"
+
+[[terms]]
+id = "DATA_STALE"
+label = "Data stale"
+definition = "A device's newest data is older than the freshness limit."
+status = "active"
+source = "doc 05 §7; doc 05 §11"
+[terms.attributes]
+severity = "warning"
+kind = "ingestion"
+
+[[terms]]
+id = "ENTITY_NOT_IN_TOPOLOGY"
+label = "Entity not in topology"
+definition = "A device is absent from the topology."
+status = "active"
+source = "doc 05 §7; doc 05 §11"
+[terms.attributes]
+severity = "warning"
+kind = "ingestion"
+
+[[terms]]
+id = "ENTITY_UNUSABLE"
+label = "Entity unusable"
+definition = "A record has no usable device id."
+status = "active"
+source = "doc 05 §7; doc 05 §11"
+[terms.attributes]
+severity = "warning"
+kind = "ingestion"
+
+[[terms]]
+id = "FIELD_ALIAS_APPLIED"
+label = "Field alias applied"
+definition = "A listed alternate field name was mapped."
+status = "active"
+source = "doc 05 §7; doc 05 §11"
+[terms.attributes]
+severity = "warning"
+kind = "ingestion"
+
+[[terms]]
+id = "FIELD_IGNORED"
+label = "Field ignored"
+definition = "An unknown field was ignored and reported."
+status = "active"
+source = "doc 05 §7; doc 05 §11"
+[terms.attributes]
+severity = "info"
+kind = "ingestion"
+
+[[terms]]
+id = "FIELD_UNMAPPED"
+label = "Field unmapped"
+definition = "A field has no listed alias and is not interpreted."
+status = "active"
+source = "doc 05 §7; doc 05 §11"
+[terms.attributes]
+severity = "warning"
+kind = "ingestion"
+
+[[terms]]
+id = "GATE_NOT_MET"
+label = "Gate not met"
+definition = "The decision gate failed, so no single cause is asserted."
+status = "active"
+source = "doc 08 §4.5"
+[terms.attributes]
+severity = "info"
+kind = "limitation"
+
+[[terms]]
+id = "INPUT_MODE_UNSUPPORTED"
+label = "Input mode unsupported"
+definition = "The bundle declares a mode other than simulation."
+status = "active"
+source = "doc 05 §7; doc 05 §11"
+[terms.attributes]
+severity = "fatal"
+kind = "ingestion"
+
+[[terms]]
+id = "INPUT_NO_ENTITY"
+label = "Input no entity"
+definition = "No record identifies a device."
+status = "active"
+source = "doc 05 §7; doc 05 §11"
+[terms.attributes]
+severity = "fatal"
+kind = "ingestion"
+
+[[terms]]
+id = "INPUT_NO_TIMESTAMP"
+label = "Input no timestamp"
+definition = "No record has a usable timestamp."
+status = "active"
+source = "doc 05 §7; doc 05 §11"
+[terms.attributes]
+severity = "fatal"
+kind = "ingestion"
+
+[[terms]]
+id = "INPUT_NO_USABLE_METRIC"
+label = "Input no usable metric"
+definition = "No record carries a usable metric."
+status = "active"
+source = "doc 05 §7; doc 05 §11"
+[terms.attributes]
+severity = "fatal"
+kind = "ingestion"
+
+[[terms]]
+id = "INPUT_SCHEMA_VERSION_UNSUPPORTED"
+label = "Input schema version unsupported"
+definition = "The bundle declares a schema major version with no adapter."
+status = "active"
+source = "doc 05 §7; doc 05 §11"
+[terms.attributes]
+severity = "fatal"
+kind = "ingestion"
+
+[[terms]]
+id = "INPUT_UNPARSEABLE"
+label = "Input unparseable"
+definition = "The input is not valid JSON or not a bundle."
+status = "active"
+source = "doc 05 §7; doc 05 §11"
+[terms.attributes]
+severity = "fatal"
+kind = "ingestion"
+
+[[terms]]
+id = "LLM_OUTPUT_REJECTED"
+label = "Llm output rejected"
+definition = "LLM wording failed the grounding check; template text was used."
+status = "active"
+source = "doc 05 §7; doc 12 §9"
+[terms.attributes]
+severity = "info"
+kind = "llm"
+
+[[terms]]
+id = "LLM_UNAVAILABLE"
+label = "Llm unavailable"
+definition = "No LLM was available; template text was used."
+status = "active"
+source = "doc 05 §7; doc 12 §9"
+[terms.attributes]
+severity = "info"
+kind = "llm"
+
+[[terms]]
+id = "MESSAGE_INVALID"
+label = "Message invalid"
+definition = "A message failed validation; it is logged and not delivered."
+status = "active"
+source = "doc 05 §7"
+[terms.attributes]
+severity = "error"
+kind = "protocol"
+
+[[terms]]
+id = "MESSAGE_ROUTING_INVALID"
+label = "Message routing invalid"
+definition = "A message bypassed the orchestrator or addressed its own sender. Deprecated since protocol 1.1: replaced by DIRECT_AGENT_MESSAGE_FORBIDDEN and RECIPIENT_NOT_ALLOWED."
+status = "deprecated"
+source = "doc 03 §3; M2"
+[terms.attributes]
+severity = "error"
+kind = "protocol"
+
+[[terms]]
+id = "METRIC_MISSING"
+label = "Metric missing"
+definition = "A metric is missing for some devices but present for others."
+status = "active"
+source = "doc 05 §7; doc 05 §11"
+[terms.attributes]
+severity = "warning"
+kind = "ingestion"
+
+[[terms]]
+id = "METRIC_NOT_PROVIDED"
+label = "Metric not provided"
+definition = "A metric is absent from every record of the bundle."
+status = "active"
+source = "doc 05 §7; doc 05 §11"
+[terms.attributes]
+severity = "info"
+kind = "ingestion"
+
+[[terms]]
+id = "NO_SERVICE_PROBES"
+label = "No service probes"
+definition = "No DNS/DHCP probe data was supplied."
+status = "active"
+source = "doc 08 §3.3"
+[terms.attributes]
+severity = "info"
+kind = "limitation"
+
+[[terms]]
+id = "PAYLOAD_SCHEMA_VERSION_UNSUPPORTED"
+label = "Payload schema version unsupported"
+definition = "The payload schema major version is not supported."
+status = "active"
+source = "doc 05 §10"
+[terms.attributes]
+severity = "error"
+kind = "protocol"
+
+[[terms]]
+id = "PROBE_INVALID"
+label = "Probe invalid"
+definition = "A service-probe entry was malformed and dropped."
+status = "active"
+source = "doc 05 §7; doc 05 §11"
+[terms.attributes]
+severity = "warning"
+kind = "ingestion"
+
+[[terms]]
+id = "PROTOCOL_VERSION_UNSUPPORTED"
+label = "Protocol version unsupported"
+definition = "The envelope's protocol major version is not supported."
+status = "active"
+source = "doc 05 §10"
+[terms.attributes]
+severity = "error"
+kind = "protocol"
+
+[[terms]]
+id = "RECORD_CONFLICT"
+label = "Record conflict"
+definition = "Different records exist for the same device and time."
+status = "active"
+source = "doc 05 §7; doc 05 §11"
+[terms.attributes]
+severity = "warning"
+kind = "ingestion"
+
+[[terms]]
+id = "RECORD_DUPLICATE"
+label = "Record duplicate"
+definition = "An identical duplicate record was removed."
+status = "active"
+source = "doc 05 §7; doc 05 §11"
+[terms.attributes]
+severity = "info"
+kind = "ingestion"
+
+[[terms]]
+id = "SCHEMA_ADAPTER_APPLIED"
+label = "Schema adapter applied"
+definition = "A registered adapter converted an older bundle layout."
+status = "active"
+source = "doc 05 §7; doc 05 §11"
+[terms.attributes]
+severity = "warning"
+kind = "ingestion"
+
+[[terms]]
+id = "STATUS_UNRECOGNIZED"
+label = "Status unrecognized"
+definition = "A device status is not Healthy, Warning or Critical."
+status = "active"
+source = "doc 05 §7; doc 05 §11"
+[terms.attributes]
+severity = "warning"
+kind = "ingestion"
+
+[[terms]]
+id = "TIMESTAMP_UNUSABLE"
+label = "Timestamp unusable"
+definition = "A record's timestamp is missing, unparseable or has no timezone."
+status = "active"
+source = "doc 05 §7; doc 05 §11"
+[terms.attributes]
+severity = "warning"
+kind = "ingestion"
+
+[[terms]]
+id = "TOOL_BUDGET_EXHAUSTED"
+label = "Tool budget exhausted"
+definition = "An agent used all its tool calls; its investigation may be incomplete."
+status = "active"
+source = "doc 03 §1"
+[terms.attributes]
+severity = "warning"
+kind = "orchestration"
+
+[[terms]]
+id = "TOPOLOGY_MISSING"
+label = "Topology missing"
+definition = "No topology is available."
+status = "active"
+source = "doc 05 §7; doc 05 §11"
+[terms.attributes]
+severity = "warning"
+kind = "ingestion"
+
+[[terms]]
+id = "UNIT_AMBIGUOUS"
+label = "Unit ambiguous"
+definition = "A unit is missing, unknown or contradictory."
+status = "active"
+source = "doc 05 §7; doc 05 §11"
+[terms.attributes]
+severity = "warning"
+kind = "ingestion"
+
+[[terms]]
+id = "UNIT_CONVERTED"
+label = "Unit converted"
+definition = "A value was converted to the canonical unit."
+status = "active"
+source = "doc 05 §7; doc 05 §11"
+[terms.attributes]
+severity = "info"
+kind = "ingestion"
+
+[[terms]]
+id = "VALUE_IMPLAUSIBLE"
+label = "Value implausible"
+definition = "A value is outside its definitional range."
+status = "active"
+source = "doc 05 §7; doc 05 §11"
+[terms.attributes]
+severity = "warning"
+kind = "ingestion"
+
+[[terms]]
+id = "VALUE_MALFORMED"
+label = "Value malformed"
+definition = "A value is not a finite number."
+status = "active"
+source = "doc 05 §7; doc 05 §11"
+[terms.attributes]
+severity = "warning"
+kind = "ingestion"
+
+[[terms]]
+id = "MESSAGE_TOO_LARGE"
+label = "Message too large"
+definition = "The message exceeds the configured size limit and is rejected unread."
+status = "active"
+source = "doc 05 §10 (P2); D-23"
+[terms.attributes]
+severity = "error"
+kind = "protocol"
+
+[[terms]]
+id = "MODE_NOT_ALLOWED"
+label = "Mode not allowed"
+definition = "The envelope declares a mode other than simulation; it is never defaulted to live."
+status = "active"
+source = "doc 05 §2 (P2)"
+[terms.attributes]
+severity = "error"
+kind = "protocol"
+
+[[terms]]
+id = "UNKNOWN_TERM"
+label = "Unknown term"
+definition = "A field holds a value that is not a registered (or is a blocked) vocabulary term."
+status = "active"
+source = "doc 05 App. A (P2)"
+[terms.attributes]
+severity = "error"
+kind = "protocol"
+
+[[terms]]
+id = "PROTOCOL_MINOR_NEWER"
+label = "Protocol minor newer"
+definition = "The sender uses a newer minor protocol version; the message is accepted and unknown fields are ignored."
+status = "active"
+source = "doc 05 §5 (P2)"
+[terms.attributes]
+severity = "warning"
+kind = "protocol"
+
+[[terms]]
+id = "ASSESSABILITY_VALUE_MISMATCH"
+label = "Assessability and value disagree"
+definition = "Rule 1: a not_assessable observation carries a value, a severity other than unknown, or no reason; or an assessed observation has no value."
+status = "active"
+source = "doc 05 §14 (P3)"
+[terms.attributes]
+severity = "error"
+kind = "protocol"
+
+[[terms]]
+id = "UNIT_INCOMPATIBLE"
+label = "Unit incompatible"
+definition = "Rule 2: the declared unit is unknown or does not fit the dimension of the observation's metric."
+status = "active"
+source = "doc 05 §14 (P3)"
+[terms.attributes]
+severity = "error"
+kind = "protocol"
+
+[[terms]]
+id = "HYPOTHESIS_WITHOUT_EVIDENCE"
+label = "Hypothesis without evidence"
+definition = "Rule 3: a hypothesis cites no supporting evidence and names no missing expected evidence."
+status = "active"
+source = "doc 05 §14 (P3)"
+[terms.attributes]
+severity = "error"
+kind = "protocol"
+
+[[terms]]
+id = "EVIDENCE_STANCE_MISMATCH"
+label = "Evidence stance mismatch"
+definition = "Rule 3: a supporting reference without stance supports, or a contradicting one without stance contradicts."
+status = "active"
+source = "doc 05 §14 (P3)"
+[terms.attributes]
+severity = "error"
+kind = "protocol"
+
+[[terms]]
+id = "EVIDENCE_REFS_DISAGREE"
+label = "Evidence references disagree"
+definition = "A hypothesis's evidence references and its observation-id lists name different observations."
+status = "active"
+source = "doc 05 §14 (P3)"
+[terms.attributes]
+severity = "error"
+kind = "protocol"
+
+[[terms]]
+id = "EVIDENCE_PREFIX_MISMATCH"
+label = "Evidence id prefix mismatch"
+definition = "Rule 5: the evidence id does not start with the prefix of its evidence type."
+status = "active"
+source = "doc 05 §14 (P3)"
+[terms.attributes]
+severity = "error"
+kind = "protocol"
+
+[[terms]]
+id = "RECOMMENDATION_SAFETY_VIOLATION"
+label = "Recommendation safety violation"
+definition = "Rule 6: a recommendation tried to set requires_human_approval or simulated to false."
+status = "active"
+source = "doc 05 §14 (P3)"
+[terms.attributes]
+severity = "error"
+kind = "protocol"
+
+[[terms]]
+id = "ABSTENTION_MISMATCH"
+label = "Abstention block mismatch"
+definition = "An insufficient_evidence decision has no abstention block, or a diagnosed decision has one."
+status = "active"
+source = "doc 05 §14 (P3)"
+[terms.attributes]
+severity = "error"
+kind = "protocol"
+
+[[terms]]
+id = "CLARIFICATION_PARAMETERS_INVALID"
+label = "Clarification parameters invalid"
+definition = "A clarification request lacks a parameter its question type needs."
+status = "active"
+source = "doc 05 §14 (P3)"
+[terms.attributes]
+severity = "error"
+kind = "protocol"
+
+[[terms]]
+id = "CLARIFICATION_ANSWER_MISMATCH"
+label = "Clarification answer mismatch"
+definition = "A clarification response's answerable value contradicts its answered flag."
+status = "active"
+source = "doc 05 §14 (P3)"
+[terms.attributes]
+severity = "error"
+kind = "protocol"
+
+[[terms]]
+id = "SENDER_NOT_AUTHORIZED"
+label = "Sender not authorized"
+definition = "The authority matrix does not allow this participant to send this message type."
+status = "active"
+source = "doc 05 §15 (P4)"
+[terms.attributes]
+severity = "error"
+kind = "conversation"
+
+[[terms]]
+id = "RECIPIENT_NOT_ALLOWED"
+label = "Recipient not allowed"
+definition = "This message type from this sender may not go to this recipient (or a participant messaged itself)."
+status = "active"
+source = "doc 05 §15 (P4)"
+[terms.attributes]
+severity = "error"
+kind = "conversation"
+
+[[terms]]
+id = "MESSAGE_OUT_OF_SEQUENCE"
+label = "Message out of sequence"
+definition = "The message is legal only in other incident states, was already sent once, or needs an earlier decision."
+status = "active"
+source = "doc 05 §15 (P4)"
+[terms.attributes]
+severity = "error"
+kind = "conversation"
+
+[[terms]]
+id = "REPLY_MISMATCH"
+label = "Reply mismatch"
+definition = "in_reply_to is missing, or does not point to an open request addressed to the sender."
+status = "active"
+source = "doc 05 §15 (P4)"
+[terms.attributes]
+severity = "error"
+kind = "conversation"
+
+[[terms]]
+id = "DUPLICATE_MESSAGE"
+label = "Duplicate message"
+definition = "A message with this id was already accepted in the incident."
+status = "active"
+source = "doc 05 §15 (P4)"
+[terms.attributes]
+severity = "error"
+kind = "conversation"
+
+[[terms]]
+id = "INCIDENT_CLOSED"
+label = "Incident closed"
+definition = "The incident is complete, failed or rejected; no further messages are accepted."
+status = "active"
+source = "doc 05 §15 (P4)"
+[terms.attributes]
+severity = "error"
+kind = "conversation"
+
+[[terms]]
+id = "CLARIFICATION_LIMIT_EXCEEDED"
+label = "Clarification limit exceeded"
+definition = "A clarification question beyond the configured rounds per incident (default 2)."
+status = "active"
+source = "doc 05 §15 (P4)"
+[terms.attributes]
+severity = "error"
+kind = "conversation"
+
+[[terms]]
+id = "DIRECT_AGENT_MESSAGE_FORBIDDEN"
+label = "Direct agent message forbidden"
+definition = "Hub and spoke: every message is to or from the orchestrator; agents never message each other directly."
+status = "active"
+source = "doc 05 §15 (P4)"
+[terms.attributes]
+severity = "error"
+kind = "conversation"
+
+[[terms]]
+id = "EXTENSION_DISABLED"
+label = "Extension disabled"
+definition = "The message belongs to an extension whose feature flag is off (e.g. community_candidate without community_signals)."
+status = "active"
+source = "doc 05 §15 (P4)"
+[terms.attributes]
+severity = "error"
+kind = "conversation"
+
+[[terms]]
+id = "CONFLICT_RELATION_NOT_CONFLICTING"
+label = "Not a conflict"
+definition = "A conflict_report names a relation that is not a conflict (compatible or refines), or a hypothesis_competition without competes/contradicts."
+status = "active"
+source = "doc 05 §19 (P8)"
+[terms.attributes]
+severity = "error"
+kind = "protocol"
+
+[[terms]]
+id = "CONFLICT_TARGET_NOT_PARTY"
+label = "Conflict target not a party"
+definition = "A conflict_report asks an agent to respond that is not a party to the conflict."
+status = "active"
+source = "doc 05 §19 (P8)"
+[terms.attributes]
+severity = "error"
+kind = "protocol"

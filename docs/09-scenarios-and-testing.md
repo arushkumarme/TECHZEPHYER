@@ -25,10 +25,10 @@
 | S-06 | Interoperability failure (incompatible field names, units, schema versions, missing message information) | Generator variant, or **team-authored incompatibility** (doc 05 §6.4) | Handled per policy: aliases applied with warnings, or affected metrics not assessable; broken data is **not** misdiagnosed as a network fault |
 | S-07 | Partially missing metric (some devices) | Team-authored | `READY_WITH_WARNINGS`; missing items listed; confidence ceiling lowered; missing never treated as healthy |
 | S-08 | Insufficient evidence (key evidence removed) | Team-authored | `insufficient_evidence`; no single cause asserted; leading candidates named |
-| S-09 | Ambiguous (two near-equal explanations) | Team-authored | Clarification attempted; if unresolved, `insufficient_evidence` with both candidates |
+| S-09 | Ambiguous (two near-equal explanations) | Team-authored | Clarification attempted; if unresolved, `insufficient_evidence` with both candidates. A narrow margin is not a conflict: plain clarification messages, no `conflict_report` (protocol 1.2) |
 | S-10 | Specialist agent fails or times out (fault injection) | Team-authored | Degraded run; missing agent in limitations; ceiling lowered |
 | S-11 | Topology missing | Team-authored | Scope `unknown`; no blast radius claim; diagnosis continues on telemetry |
-| S-12 | Conflicting or stale measurements | Team-authored | Conflict rules applied and recorded; both explanations kept if unresolved |
+| S-12 | Conflicting or stale measurements | Team-authored | Conflict rules applied and recorded; both explanations kept if unresolved. Protocol 1.2: the disagreement is exchanged as `conflict_report` → `conflict_response` and kept in the decision's `conflict_trail` (`tests/core/test_conflicts.py`) |
 | S-13 | Complaints only, telemetry normal (ext A) | Synthetic complaints + S-01 | "Reported, not technically verified"; never `diagnosed` |
 | S-14 | Complaints + matching telemetry fault (ext A) | Synthetic complaints + S-02/S-04 | Trust label `corroborated`; reports shown separately from telemetry evidence |
 | S-15 | Duplicate, spam and injection-style complaints (ext A) | Synthetic | Duplicates merged, spam ignored, injection text treated as data |
@@ -54,13 +54,13 @@ The expected outcome is *ground truth by construction* unless the generator prov
 | `T-AGT-CONN-*`, `T-AGT-*` | Each agent stand-alone against recorded task messages |
 | `T-AGT-BEHAV-*` | The 8-point agent checklist (doc 03 §1): scope respected; tool budget enforced; investigation path differs by scenario; independent finding identical with other agents absent; abstention; clarification bounded; message-only coordination; output adapts to uncertainty |
 | `T-ORCH-*`, `T-ORCH-COLLAB-*` | State transitions, timeouts, retries, clarification round cap, degraded runs, collaboration |
-| `T-PROTO-*` | Envelope validation; unknown fields ignored and logged; missing required fields rejected; version rules |
+| `T-PROTO-*` | Envelope validation; unknown fields ignored and logged; missing required fields rejected; version rules; payload semantic rules; authority matrix and conversation rules (`tests/core/test_messages.py`, `test_envelope_v11.py`, `test_payload_rules.py`, `test_guard.py`); conformance kit: every example in `conformance/manifest.json` through the real parser and guard, schema freshness, third-party agent helper (`tests/conformance/test_kit.py`, `uv run netcoop conformance`) |
 | `T-ING-*`, `T-ING-FIELDS-*` | Normalization, alias use, unit conversion, data-quality note, field coverage |
 | `T-ERR-*`, `T-ERR-MISSING-*` | Error catalog (§5); missing ≠ healthy |
 | `T-RPT-*` (`T-RPT-EVID`, `T-RPT-ACT`, `T-RPT-SCHEMA`) | Report content; official keys exact (doc 07 §8); evidence traceability |
 | `T-MODE-*` | Mode refusal of unknown values; simulation banner and provenance present; no live wording |
 | `T-SAFE-*`, `T-HITL-*` | No state-changing tool exists; actions simulated; approval recorded |
-| `T-LOG-*` | Message and state log completeness; replay |
+| `T-LOG-*` | Message and state log completeness; replay; every attempt logged with verdict and reasons; migration of old databases; no update/delete (`tests/core/test_bus_log.py`, `test_bus_v11.py`, `tests/orchestrator/test_persistence.py`) |
 | `T-UI-*`, `T-UI-LABEL-*` | Dashboard views and labels (after core) |
 | `T-REPRO-*` | Fresh checkout → documented run → expected output |
 | `T-LLM-OFF-01` | Diagnosis fields identical with LLM disabled vs a mock provider |

@@ -1,0 +1,35 @@
+{
+  "protocol_version": "1.2",
+  "message_id": "INC-0001-MSG-000001",
+  "incident_id": "INC-0001",
+  "in_reply_to": null,
+  "sender": "orchestrator",
+  "recipient": "performance_agent",
+  "message_type": "task_request",
+  "sent_at": "2026-11-01T09:00:00",
+  "payload_schema_version": "1.0",
+  "status": "ok",
+  "snapshot_id": "SNAP-0123456789ab",
+  "mode": "simulation",
+  "data_provenance": "synthetic-generator",
+  "payload": {
+    "goal": "assess_performance",
+    "scope_entities": [
+      "SW_CAMPUS_1",
+      "SW_CAMPUS_4"
+    ],
+    "window": {
+      "start": "2026-11-01T09:00:00Z",
+      "end": "2026-11-01T09:15:00Z"
+    },
+    "tool_budget": 30,
+    "deadline_s": 10,
+    "task_id": "TASK-0001",
+    "task_kind": "investigate",
+    "input_message_ids": [],
+    "incident_context": {
+      "description": "illustrative example",
+      "trigger": "telemetry_bundle"
+    }
+  }
+}

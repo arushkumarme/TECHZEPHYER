@@ -1,0 +1,589 @@
+{
+  "description": "A complete legal incident: task, finding, two clarification rounds, decision, report",
+  "max_clarification_rounds": 2,
+  "extensions": [],
+  "steps": [
+    {
+      "incident_state": "READY",
+      "message": {
+        "protocol_version": "1.2",
+        "message_id": "INC-0001-MSG-000001",
+        "incident_id": "INC-0001",
+        "in_reply_to": null,
+        "sender": "orchestrator",
+        "recipient": "performance_agent",
+        "message_type": "task_request",
+        "sent_at": "2026-11-01T09:00:00Z",
+        "payload_schema_version": "1.0",
+        "status": "ok",
+        "snapshot_id": "SNAP-0123456789ab",
+        "mode": "simulation",
+        "data_provenance": "synthetic-generator",
+        "payload": {
+          "goal": "assess_performance",
+          "scope_entities": [
+            "SW_CAMPUS_1",
+            "SW_CAMPUS_4"
+          ],
+          "window": {
+            "start": "2026-11-01T09:00:00Z",
+            "end": "2026-11-01T09:15:00Z"
+          },
+          "tool_budget": 30,
+          "deadline_s": 10,
+          "task_id": "TASK-0001",
+          "task_kind": "investigate",
+          "input_message_ids": [],
+          "incident_context": {
+            "description": "illustrative example",
+            "trigger": "telemetry_bundle"
+          }
+        }
+      }
+    },
+    {
+      "incident_state": "COLLECTING",
+      "message": {
+        "protocol_version": "1.2",
+        "message_id": "INC-0001-MSG-000001.R",
+        "incident_id": "INC-0001",
+        "in_reply_to": "INC-0001-MSG-000001",
+        "sender": "performance_agent",
+        "recipient": "orchestrator",
+        "message_type": "finding",
+        "sent_at": "2026-11-01T09:00:00Z",
+        "payload_schema_version": "1.0",
+        "status": "ok",
+        "snapshot_id": "SNAP-0123456789ab",
+        "mode": "simulation",
+        "data_provenance": "synthetic-generator",
+        "payload": {
+          "task_id": "TASK-0001",
+          "observations": [
+            {
+              "observation_id": "OBS-PERF-000001-001",
+              "entity": "SW_CAMPUS_4",
+              "metric": "latency_ms",
+              "metric_category": "Latency",
+              "value": 180.0,
+              "unit": "millisecond",
+              "window": {
+                "start": "2026-11-01T09:00:00Z",
+                "end": "2026-11-01T09:15:00Z"
+              },
+              "severity": "critical",
+              "assessability": "assessed",
+              "agent": "performance_agent",
+              "aggregation": "worst_by_severity",
+              "sample_count": 3,
+              "source_ref": [
+                "REC-0001"
+              ]
+            },
+            {
+              "observation_id": "OBS-PERF-000001-002",
+              "entity": "SW_CAMPUS_1",
+              "metric": "status",
+              "metric_category": "Device status",
+              "value": null,
+              "unit": "none",
+              "window": {
+                "start": "2026-11-01T09:00:00Z",
+                "end": "2026-11-01T09:15:00Z"
+              },
+              "severity": "unknown",
+              "assessability": "not_assessable",
+              "agent": "performance_agent",
+              "aggregation": null,
+              "sample_count": 0,
+              "source_ref": [],
+              "not_assessable_reason": "MISSING"
+            }
+          ],
+          "hypotheses": [
+            {
+              "hypothesis_id": "HYP-PERF-000001-001",
+              "cause_type": "link_congestion",
+              "entities": [
+                "SW_CAMPUS_4"
+              ],
+              "supporting": [
+                {
+                  "evidence_type": "observation",
+                  "evidence_id": "OBS-PERF-000001-001",
+                  "stance": "supports",
+                  "strength": 0.8
+                }
+              ],
+              "local_score": 0.8,
+              "score_method": "agent_local_heuristic",
+              "rationale_code": "HIGH_UTILIZATION_WITH_DELAY"
+            }
+          ],
+          "not_assessable": [
+            {
+              "entity": "SW_CAMPUS_1",
+              "metric": "status",
+              "reason": "MISSING",
+              "detail": "no status in the window"
+            }
+          ],
+          "limitations": [],
+          "tool_calls": [
+            {
+              "tool": "telemetry_query",
+              "arguments": {
+                "entities": 2
+              },
+              "result_summary": "6 samples",
+              "at": "2026-11-01T09:00:00Z"
+            }
+          ],
+          "self_assessment": {
+            "assessed_fraction": 0.5,
+            "budget_exhausted": false
+          }
+        }
+      }
+    },
+    {
+      "incident_state": "CORRELATING",
+      "message": {
+        "protocol_version": "1.2",
+        "message_id": "INC-0001-MSG-000002",
+        "incident_id": "INC-0001",
+        "in_reply_to": null,
+        "sender": "orchestrator",
+        "recipient": "correlation_agent",
+        "message_type": "task_request",
+        "sent_at": "2026-11-01T09:00:00Z",
+        "payload_schema_version": "1.0",
+        "status": "ok",
+        "snapshot_id": "SNAP-0123456789ab",
+        "mode": "simulation",
+        "data_provenance": "synthetic-generator",
+        "payload": {
+          "goal": "correlate",
+          "scope_entities": [
+            "SW_CAMPUS_1",
+            "SW_CAMPUS_4"
+          ],
+          "window": {
+            "start": "2026-11-01T09:00:00Z",
+            "end": "2026-11-01T09:15:00Z"
+          },
+          "tool_budget": 0,
+          "deadline_s": 10,
+          "task_id": "TASK-0002",
+          "task_kind": "correlate",
+          "input_message_ids": [
+            "INC-0001-MSG-000001.R"
+          ],
+          "incident_context": {
+            "description": "illustrative example",
+            "trigger": "telemetry_bundle"
+          }
+        }
+      }
+    },
+    {
+      "incident_state": "CORRELATING",
+      "message": {
+        "protocol_version": "1.2",
+        "message_id": "INC-0001-MSG-000002.R",
+        "incident_id": "INC-0001",
+        "in_reply_to": "INC-0001-MSG-000002",
+        "sender": "correlation_agent",
+        "recipient": "orchestrator",
+        "message_type": "clarification_request",
+        "sent_at": "2026-11-01T09:00:00Z",
+        "payload_schema_version": "1.0",
+        "status": "ok",
+        "snapshot_id": "SNAP-0123456789ab",
+        "mode": "simulation",
+        "data_provenance": "synthetic-generator",
+        "payload": {
+          "question_type": "recheck_metric",
+          "target": "performance_agent",
+          "parameters": {
+            "entity": "SW_CAMPUS_4",
+            "metric": "latency_ms"
+          },
+          "reason": "narrow_margin",
+          "round": 1,
+          "clarification_id": "CLR-0001"
+        }
+      }
+    },
+    {
+      "incident_state": "CLARIFYING",
+      "message": {
+        "protocol_version": "1.2",
+        "message_id": "INC-0001-MSG-000003",
+        "incident_id": "INC-0001",
+        "in_reply_to": "INC-0001-MSG-000002.R",
+        "sender": "orchestrator",
+        "recipient": "performance_agent",
+        "message_type": "clarification_request",
+        "sent_at": "2026-11-01T09:00:00Z",
+        "payload_schema_version": "1.0",
+        "status": "ok",
+        "snapshot_id": "SNAP-0123456789ab",
+        "mode": "simulation",
+        "data_provenance": "synthetic-generator",
+        "payload": {
+          "question_type": "recheck_metric",
+          "target": "performance_agent",
+          "parameters": {
+            "entity": "SW_CAMPUS_4",
+            "metric": "latency_ms"
+          },
+          "reason": "narrow_margin",
+          "round": 1,
+          "clarification_id": "CLR-0001"
+        }
+      }
+    },
+    {
+      "incident_state": "CLARIFYING",
+      "message": {
+        "protocol_version": "1.2",
+        "message_id": "INC-0001-MSG-000003.R",
+        "incident_id": "INC-0001",
+        "in_reply_to": "INC-0001-MSG-000003",
+        "sender": "performance_agent",
+        "recipient": "orchestrator",
+        "message_type": "clarification_response",
+        "sent_at": "2026-11-01T09:00:00Z",
+        "payload_schema_version": "1.0",
+        "status": "ok",
+        "snapshot_id": "SNAP-0123456789ab",
+        "mode": "simulation",
+        "data_provenance": "synthetic-generator",
+        "payload": {
+          "answered": false,
+          "answerable": "no",
+          "clarification_id": "CLR-0001",
+          "reason": "no new data"
+        }
+      }
+    },
+    {
+      "incident_state": "CORRELATING",
+      "message": {
+        "protocol_version": "1.2",
+        "message_id": "INC-0001-MSG-000004",
+        "incident_id": "INC-0001",
+        "in_reply_to": null,
+        "sender": "orchestrator",
+        "recipient": "correlation_agent",
+        "message_type": "task_request",
+        "sent_at": "2026-11-01T09:00:00Z",
+        "payload_schema_version": "1.0",
+        "status": "ok",
+        "snapshot_id": "SNAP-0123456789ab",
+        "mode": "simulation",
+        "data_provenance": "synthetic-generator",
+        "payload": {
+          "goal": "correlate",
+          "scope_entities": [
+            "SW_CAMPUS_1",
+            "SW_CAMPUS_4"
+          ],
+          "window": {
+            "start": "2026-11-01T09:00:00Z",
+            "end": "2026-11-01T09:15:00Z"
+          },
+          "tool_budget": 0,
+          "deadline_s": 10,
+          "task_id": "TASK-0003",
+          "task_kind": "correlate",
+          "input_message_ids": [
+            "INC-0001-MSG-000001.R"
+          ],
+          "incident_context": {
+            "description": "illustrative example",
+            "trigger": "telemetry_bundle"
+          }
+        }
+      }
+    },
+    {
+      "incident_state": "CORRELATING",
+      "message": {
+        "protocol_version": "1.2",
+        "message_id": "INC-0001-MSG-000004.R",
+        "incident_id": "INC-0001",
+        "in_reply_to": "INC-0001-MSG-000004",
+        "sender": "correlation_agent",
+        "recipient": "orchestrator",
+        "message_type": "clarification_request",
+        "sent_at": "2026-11-01T09:00:00Z",
+        "payload_schema_version": "1.0",
+        "status": "ok",
+        "snapshot_id": "SNAP-0123456789ab",
+        "mode": "simulation",
+        "data_provenance": "synthetic-generator",
+        "payload": {
+          "question_type": "recheck_metric",
+          "target": "performance_agent",
+          "parameters": {
+            "entity": "SW_CAMPUS_4",
+            "metric": "latency_ms"
+          },
+          "reason": "narrow_margin",
+          "round": 2,
+          "clarification_id": "CLR-0002"
+        }
+      }
+    },
+    {
+      "incident_state": "CLARIFYING",
+      "message": {
+        "protocol_version": "1.2",
+        "message_id": "INC-0001-MSG-000005",
+        "incident_id": "INC-0001",
+        "in_reply_to": "INC-0001-MSG-000004.R",
+        "sender": "orchestrator",
+        "recipient": "performance_agent",
+        "message_type": "clarification_request",
+        "sent_at": "2026-11-01T09:00:00Z",
+        "payload_schema_version": "1.0",
+        "status": "ok",
+        "snapshot_id": "SNAP-0123456789ab",
+        "mode": "simulation",
+        "data_provenance": "synthetic-generator",
+        "payload": {
+          "question_type": "recheck_metric",
+          "target": "performance_agent",
+          "parameters": {
+            "entity": "SW_CAMPUS_4",
+            "metric": "latency_ms"
+          },
+          "reason": "narrow_margin",
+          "round": 2,
+          "clarification_id": "CLR-0002"
+        }
+      }
+    },
+    {
+      "incident_state": "CLARIFYING",
+      "message": {
+        "protocol_version": "1.2",
+        "message_id": "INC-0001-MSG-000005.R",
+        "incident_id": "INC-0001",
+        "in_reply_to": "INC-0001-MSG-000005",
+        "sender": "performance_agent",
+        "recipient": "orchestrator",
+        "message_type": "clarification_response",
+        "sent_at": "2026-11-01T09:00:00Z",
+        "payload_schema_version": "1.0",
+        "status": "ok",
+        "snapshot_id": "SNAP-0123456789ab",
+        "mode": "simulation",
+        "data_provenance": "synthetic-generator",
+        "payload": {
+          "answered": false,
+          "answerable": "no",
+          "clarification_id": "CLR-0002",
+          "reason": "no new data"
+        }
+      }
+    },
+    {
+      "incident_state": "CORRELATING",
+      "message": {
+        "protocol_version": "1.2",
+        "message_id": "INC-0001-MSG-000006",
+        "incident_id": "INC-0001",
+        "in_reply_to": null,
+        "sender": "orchestrator",
+        "recipient": "correlation_agent",
+        "message_type": "task_request",
+        "sent_at": "2026-11-01T09:00:00Z",
+        "payload_schema_version": "1.0",
+        "status": "ok",
+        "snapshot_id": "SNAP-0123456789ab",
+        "mode": "simulation",
+        "data_provenance": "synthetic-generator",
+        "payload": {
+          "goal": "correlate",
+          "scope_entities": [
+            "SW_CAMPUS_1",
+            "SW_CAMPUS_4"
+          ],
+          "window": {
+            "start": "2026-11-01T09:00:00Z",
+            "end": "2026-11-01T09:15:00Z"
+          },
+          "tool_budget": 0,
+          "deadline_s": 10,
+          "task_id": "TASK-0004",
+          "task_kind": "correlate",
+          "input_message_ids": [
+            "INC-0001-MSG-000001.R"
+          ],
+          "incident_context": {
+            "description": "illustrative example",
+            "trigger": "telemetry_bundle"
+          }
+        }
+      }
+    },
+    {
+      "incident_state": "CORRELATING",
+      "message": {
+        "protocol_version": "1.2",
+        "message_id": "INC-0001-MSG-000006.R",
+        "incident_id": "INC-0001",
+        "in_reply_to": "INC-0001-MSG-000006",
+        "sender": "correlation_agent",
+        "recipient": "orchestrator",
+        "message_type": "decision",
+        "sent_at": "2026-11-01T09:00:00Z",
+        "payload_schema_version": "1.0",
+        "status": "ok",
+        "snapshot_id": "SNAP-0123456789ab",
+        "mode": "simulation",
+        "data_provenance": "synthetic-generator",
+        "payload": {
+          "decision": "diagnosed",
+          "decision_id": "DEC-0001",
+          "ranked": [
+            {
+              "cause_type": "link_congestion",
+              "entities": [
+                "SW_CAMPUS_4"
+              ],
+              "score": 0.82,
+              "support": 0.9,
+              "contradiction": 0.0,
+              "corroboration": 1.0,
+              "ceiling": 1.0,
+              "score_method": "heuristic"
+            }
+          ],
+          "margin": 0.3,
+          "gate_checks": {
+            "score_at_least_tau": true,
+            "margin_at_least_delta": true
+          },
+          "confidence": 0.82,
+          "confidence_category": "high",
+          "score_method": "heuristic",
+          "affected_entities": [
+            "SW_CAMPUS_4"
+          ],
+          "abstention": null
+        }
+      }
+    },
+    {
+      "incident_state": "REPORTING",
+      "message": {
+        "protocol_version": "1.2",
+        "message_id": "INC-0001-MSG-000007",
+        "incident_id": "INC-0001",
+        "in_reply_to": null,
+        "sender": "orchestrator",
+        "recipient": "reporting_agent",
+        "message_type": "task_request",
+        "sent_at": "2026-11-01T09:00:00Z",
+        "payload_schema_version": "1.0",
+        "status": "ok",
+        "snapshot_id": "SNAP-0123456789ab",
+        "mode": "simulation",
+        "data_provenance": "synthetic-generator",
+        "payload": {
+          "goal": "report",
+          "scope_entities": [
+            "SW_CAMPUS_1",
+            "SW_CAMPUS_4"
+          ],
+          "window": {
+            "start": "2026-11-01T09:00:00Z",
+            "end": "2026-11-01T09:15:00Z"
+          },
+          "tool_budget": 0,
+          "deadline_s": 10,
+          "task_id": "TASK-0005",
+          "task_kind": "report",
+          "input_message_ids": [
+            "INC-0001-MSG-000001.R",
+            "INC-0001-MSG-000006.R"
+          ],
+          "incident_context": {
+            "description": "illustrative example",
+            "trigger": "telemetry_bundle"
+          }
+        }
+      }
+    },
+    {
+      "incident_state": "REPORTING",
+      "message": {
+        "protocol_version": "1.2",
+        "message_id": "INC-0001-MSG-000007.R",
+        "incident_id": "INC-0001",
+        "in_reply_to": "INC-0001-MSG-000007",
+        "sender": "reporting_agent",
+        "recipient": "orchestrator",
+        "message_type": "report_ready",
+        "sent_at": "2026-11-01T09:00:00Z",
+        "payload_schema_version": "1.0",
+        "status": "ok",
+        "snapshot_id": "SNAP-0123456789ab",
+        "mode": "simulation",
+        "data_provenance": "synthetic-generator",
+        "payload": {
+          "report": {
+            "incident_id": "INC-0001",
+            "status": "diagnosed",
+            "suspected_root_cause": "Likely link congestion on SW_CAMPUS_4",
+            "confidence": 0.82,
+            "affected_devices": [
+              "SW_CAMPUS_4"
+            ],
+            "supporting_evidence": [
+              {
+                "metric": "latency_ms",
+                "value": 180.0,
+                "interpretation": "Elevated network latency"
+              }
+            ],
+            "alternative_causes": [
+              "Upstream link congestion"
+            ],
+            "recommended_actions": [
+              "Inspect egress link utilization on SW_CAMPUS_4"
+            ],
+            "evidence_sources": [
+              "performance_agent"
+            ],
+            "limitations": [
+              "Simulated data; root cause requires further verification"
+            ]
+          },
+          "recommendations": [
+            {
+              "recommendation_id": "RCM-0001",
+              "action_text": "Inspect egress link utilization on SW_CAMPUS_4",
+              "kind": "corrective",
+              "target_entities": [
+                "SW_CAMPUS_4"
+              ],
+              "reason": "Likely link congestion on SW_CAMPUS_4",
+              "priority": "high",
+              "precautions": [
+                "Simulated only: nothing is executed on a network."
+              ],
+              "requires_human_approval": true,
+              "simulated": true,
+              "verification_step": "Re-run the diagnosis on fresh simulated data"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

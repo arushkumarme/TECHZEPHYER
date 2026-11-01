@@ -1,0 +1,34 @@
+# Controlled vocabulary 'conflict_stance'. Source of truth for its metadata (registry-only).
+name = "conflict_stance"
+version = "1.0"
+extensible = false
+id_style = "snake"
+description = "A party's answer to a conflict report (protocol 1.2)."
+
+[[terms]]
+id = "maintain"
+label = "Maintain"
+definition = "The re-check confirms the party's reading as it was."
+status = "active"
+source = "doc 05 §19 (protocol 1.2, P8)"
+
+[[terms]]
+id = "revise"
+label = "Revise"
+definition = "The re-check gives a revised reading, sent as new evidence."
+status = "active"
+source = "doc 05 §19 (protocol 1.2, P8)"
+
+[[terms]]
+id = "withdraw"
+label = "Withdraw"
+definition = "The party withdraws its reading (the data is not usable)."
+status = "active"
+source = "doc 05 §19 (protocol 1.2, P8)"
+
+[[terms]]
+id = "cannot_assess"
+label = "Cannot assess"
+definition = "The party could not re-check (no data or budget)."
+status = "active"
+source = "doc 05 §19 (protocol 1.2, P8)"

@@ -1,0 +1,319 @@
+{
+  "$defs": {
+    "EvidenceRef": {
+      "description": "A typed pointer to evidence (never a copy of it).",
+      "properties": {
+        "evidence_id": {
+          "minLength": 1,
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "evidence_type": {
+          "title": "Evidence Type",
+          "type": "string"
+        },
+        "note": {
+          "default": "",
+          "title": "Note",
+          "type": "string"
+        },
+        "stance": {
+          "title": "Stance",
+          "type": "string"
+        },
+        "strength": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Strength"
+        }
+      },
+      "required": [
+        "evidence_type",
+        "evidence_id",
+        "stance"
+      ],
+      "title": "EvidenceRef",
+      "type": "object"
+    },
+    "Observation": {
+      "description": "A measured or derived fact about one entity and one metric.",
+      "properties": {
+        "agent": {
+          "enum": [
+            "orchestrator",
+            "performance_agent",
+            "infrastructure_agent",
+            "connectivity_agent",
+            "correlation_agent",
+            "reporting_agent",
+            "community_module"
+          ],
+          "title": "Agent",
+          "type": "string"
+        },
+        "aggregation": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Aggregation"
+        },
+        "assessability": {
+          "enum": [
+            "assessed",
+            "assessed_with_caveat",
+            "not_assessable"
+          ],
+          "title": "Assessability",
+          "type": "string"
+        },
+        "baseline_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Id of the threshold in config/diagnosis.toml it was judged by",
+          "title": "Baseline Ref"
+        },
+        "entity": {
+          "title": "Entity",
+          "type": "string"
+        },
+        "evidence_class": {
+          "default": "direct_measurement",
+          "enum": [
+            "direct_measurement",
+            "derived",
+            "user_report"
+          ],
+          "title": "Evidence Class",
+          "type": "string"
+        },
+        "metric": {
+          "description": "Canonical metric name (doc 06), e.g. 'latency_ms'",
+          "title": "Metric",
+          "type": "string"
+        },
+        "metric_category": {
+          "title": "Metric Category",
+          "type": "string"
+        },
+        "not_assessable_reason": {
+          "anyOf": [
+            {
+              "enum": [
+                "MISSING",
+                "MALFORMED",
+                "UNMAPPED_FIELD",
+                "UNIT_AMBIGUOUS",
+                "STALE",
+                "INSUFFICIENT_SAMPLES",
+                "NO_TOPOLOGY",
+                "OUT_OF_SCOPE",
+                "IMPLAUSIBLE"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Not Assessable Reason"
+        },
+        "observation_id": {
+          "title": "Observation Id",
+          "type": "string"
+        },
+        "quality_flags": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Quality Flags",
+          "type": "array"
+        },
+        "sample_count": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sample Count"
+        },
+        "severity": {
+          "enum": [
+            "normal",
+            "elevated",
+            "critical",
+            "unknown"
+          ],
+          "title": "Severity",
+          "type": "string"
+        },
+        "source_ref": {
+          "description": "Normalized record IDs",
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Ref",
+          "type": "array"
+        },
+        "unit": {
+          "title": "Unit",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Value"
+        },
+        "window": {
+          "$ref": "#/$defs/TimeWindow"
+        }
+      },
+      "required": [
+        "observation_id",
+        "entity",
+        "metric",
+        "metric_category",
+        "value",
+        "unit",
+        "window",
+        "severity",
+        "assessability",
+        "agent"
+      ],
+      "title": "Observation",
+      "type": "object"
+    },
+    "TimeWindow": {
+      "properties": {
+        "end": {
+          "format": "date-time",
+          "title": "End",
+          "type": "string"
+        },
+        "start": {
+          "format": "date-time",
+          "title": "Start",
+          "type": "string"
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ],
+      "title": "TimeWindow",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "clarification_id": {
+      "anyOf": [
+        {
+          "pattern": "^CLR-\\d{4,}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Clarification Id"
+    },
+    "conflict_id": {
+      "pattern": "^CONF-\\d{3,}$",
+      "title": "Conflict Id",
+      "type": "string"
+    },
+    "evidence": {
+      "description": "New evidence refs",
+      "items": {
+        "$ref": "#/$defs/EvidenceRef"
+      },
+      "title": "Evidence",
+      "type": "array"
+    },
+    "note": {
+      "default": "",
+      "title": "Note",
+      "type": "string"
+    },
+    "observations": {
+      "items": {
+        "$ref": "#/$defs/Observation"
+      },
+      "title": "Observations",
+      "type": "array"
+    },
+    "source": {
+      "anyOf": [
+        {
+          "enum": [
+            "orchestrator",
+            "performance_agent",
+            "infrastructure_agent",
+            "connectivity_agent",
+            "correlation_agent",
+            "reporting_agent",
+            "community_module"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Source"
+    },
+    "stance": {
+      "title": "Stance",
+      "type": "string"
+    }
+  },
+  "required": [
+    "conflict_id",
+    "stance"
+  ],
+  "title": "ConflictResponse",
+  "type": "object",
+  "x-netcoop-payload-schema-version": "1.0",
+  "x-netcoop-protocol-version": "1.2"
+}

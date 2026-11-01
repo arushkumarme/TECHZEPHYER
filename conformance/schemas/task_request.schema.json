@@ -1,0 +1,155 @@
+{
+  "$defs": {
+    "IncidentContext": {
+      "properties": {
+        "description": {
+          "default": "",
+          "title": "Description",
+          "type": "string"
+        },
+        "incident_time": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Incident Time"
+        },
+        "trigger": {
+          "default": "telemetry_bundle",
+          "enum": [
+            "telemetry_bundle",
+            "community_candidate"
+          ],
+          "title": "Trigger",
+          "type": "string"
+        },
+        "zone": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Zone"
+        }
+      },
+      "title": "IncidentContext",
+      "type": "object"
+    },
+    "TimeWindow": {
+      "properties": {
+        "end": {
+          "format": "date-time",
+          "title": "End",
+          "type": "string"
+        },
+        "start": {
+          "format": "date-time",
+          "title": "Start",
+          "type": "string"
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ],
+      "title": "TimeWindow",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "context": {
+      "additionalProperties": true,
+      "title": "Context",
+      "type": "object"
+    },
+    "deadline_s": {
+      "exclusiveMinimum": 0,
+      "title": "Deadline S",
+      "type": "number"
+    },
+    "goal": {
+      "title": "Goal",
+      "type": "string"
+    },
+    "incident_context": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/IncidentContext"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "input_message_ids": {
+      "description": "Earlier messages (findings, decision) this task works from: references",
+      "items": {
+        "type": "string"
+      },
+      "title": "Input Message Ids",
+      "type": "array"
+    },
+    "scope_entities": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Scope Entities",
+      "type": "array"
+    },
+    "task_id": {
+      "anyOf": [
+        {
+          "pattern": "^TASK-\\d{4,}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Task Id"
+    },
+    "task_kind": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Task Kind"
+    },
+    "tool_budget": {
+      "minimum": 0,
+      "title": "Tool Budget",
+      "type": "integer"
+    },
+    "window": {
+      "$ref": "#/$defs/TimeWindow"
+    }
+  },
+  "required": [
+    "goal",
+    "scope_entities",
+    "window",
+    "tool_budget",
+    "deadline_s"
+  ],
+  "title": "TaskRequest",
+  "type": "object",
+  "x-netcoop-payload-schema-version": "1.0",
+  "x-netcoop-protocol-version": "1.2"
+}

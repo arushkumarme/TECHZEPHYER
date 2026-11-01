@@ -1,0 +1,171 @@
+{
+  "properties": {
+    "data_provenance": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Data Provenance"
+    },
+    "in_reply_to": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "In Reply To"
+    },
+    "incident_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Incident Id"
+    },
+    "message_id": {
+      "minLength": 1,
+      "title": "Message Id",
+      "type": "string"
+    },
+    "message_type": {
+      "enum": [
+        "task_request",
+        "finding",
+        "clarification_request",
+        "clarification_response",
+        "decision",
+        "report_ready",
+        "agent_error",
+        "community_candidate",
+        "conflict_report",
+        "conflict_response"
+      ],
+      "title": "Message Type",
+      "type": "string"
+    },
+    "mode": {
+      "anyOf": [
+        {
+          "const": "simulation",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Only simulation is allowed (MODE_NOT_ALLOWED otherwise)",
+      "title": "Mode"
+    },
+    "payload": {
+      "additionalProperties": true,
+      "title": "Payload",
+      "type": "object"
+    },
+    "payload_schema_version": {
+      "title": "Payload Schema Version",
+      "type": "string"
+    },
+    "protocol_version": {
+      "title": "Protocol Version",
+      "type": "string"
+    },
+    "recipient": {
+      "enum": [
+        "orchestrator",
+        "performance_agent",
+        "infrastructure_agent",
+        "connectivity_agent",
+        "correlation_agent",
+        "reporting_agent",
+        "community_module"
+      ],
+      "title": "Recipient",
+      "type": "string"
+    },
+    "sender": {
+      "enum": [
+        "orchestrator",
+        "performance_agent",
+        "infrastructure_agent",
+        "connectivity_agent",
+        "correlation_agent",
+        "reporting_agent",
+        "community_module"
+      ],
+      "title": "Sender",
+      "type": "string"
+    },
+    "sent_at": {
+      "format": "date-time",
+      "title": "Sent At",
+      "type": "string"
+    },
+    "seq": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Per-incident sequence number assigned by the bus",
+      "title": "Seq"
+    },
+    "snapshot_id": {
+      "anyOf": [
+        {
+          "pattern": "^SNAP-[0-9a-f]{12}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Fingerprint of the data every agent of the incident analyses",
+      "title": "Snapshot Id"
+    },
+    "status": {
+      "default": "ok",
+      "enum": [
+        "ok",
+        "partial",
+        "error"
+      ],
+      "title": "Status",
+      "type": "string"
+    }
+  },
+  "required": [
+    "protocol_version",
+    "message_id",
+    "sender",
+    "recipient",
+    "message_type",
+    "sent_at",
+    "payload_schema_version",
+    "payload"
+  ],
+  "title": "Envelope",
+  "type": "object",
+  "x-netcoop-payload-schema-version": "1.0",
+  "x-netcoop-protocol-version": "1.2"
+}

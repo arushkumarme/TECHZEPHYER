@@ -23,8 +23,11 @@ from __future__ import annotations
 
 import base64
 import concurrent.futures as cf
+import json
+from collections.abc import Callable
 from contextlib import ExitStack
 from dataclasses import dataclass, field
+from functools import partial
 from typing import Any
 
 from netcoop.agents.connectivity import ConnectivityAgent
@@ -33,14 +36,17 @@ from netcoop.agents.infrastructure import InfrastructureAgent
 from netcoop.agents.performance import PerformanceAgent
 from netcoop.agents.reporting import ReportingAgent, reporting_context
 from netcoop.config.settings import Settings, load_settings
-from netcoop.core.blocks import TimeWindow
-from netcoop.core.bus import Handler, MessageBus
+from netcoop.core.blocks import IncidentContext, TimeWindow
+from netcoop.core.bus import GuardViolationError, Handler, MessageBus
+from netcoop.core.guard import ConversationGuard
 from netcoop.core.ids import Clock, IdFactory, SystemClock
 from netcoop.core.log_store import LogStore
 from netcoop.core.messages import (
     AgentError,
     ClarificationRequest,
     CommunityCandidate,
+    ConflictReport,
+    ConflictResponse,
     Decision,
     Finding,
     MessageValidationError,
@@ -48,6 +54,7 @@ from netcoop.core.messages import (
     ReportReady,
     TaskRequest,
 )
+from netcoop.core.snapshot import DataSnapshot, take_snapshot
 from netcoop.core.vocab import SPECIALIST_AGENTS, AgentId
 from netcoop.diagnosis.params import DiagnosisParams, load_diagnosis_params
 from netcoop.ingestion.issues import IngestIssue
@@ -104,6 +111,7 @@ class _Run:
     raw: bytes
     community: list[dict[str, Any]]
     community_errors: list[str] = field(default_factory=list)
+    label: str = ""
     issues: list[IngestIssue] = field(default_factory=list)
     bundle: NormalizedBundle | None = None
     topology: Topology | None = None
@@ -114,6 +122,7 @@ class _Run:
     missing: list[str] | None = None
     clarifications: list[dict[str, Any]] = field(default_factory=list)
     decision: Decision | None = None
+    snapshot: DataSnapshot | None = None
 
 
 class Orchestrator:
@@ -191,9 +200,13 @@ class Orchestrator:
     ) -> IncidentResult:
         data = raw.encode("utf-8") if isinstance(raw, str) else raw
         incident = self.store.register_incident(
-            {"source": source, "mode": self.settings.mode, "label": label}, at=self.clock.now()
+            {"source": source, "mode": self.settings.mode, "label": label},
+            at=self.clock.now(),
+            prefix=self.settings.protocol.incident_prefix,
         )
-        run = _Run(incident=incident, raw=data, community=list(community or []))
+        run = _Run(
+            incident=incident, raw=data, community=list(community or []), label=label or source
+        )
         self._checkpoint(
             run,
             "input",
@@ -239,6 +252,7 @@ class Orchestrator:
             incident=incident,
             raw=base64.b64decode(inp["raw_b64"]),
             community=list(inp.get("community", [])),
+            label=inp.get("label") or inp.get("source") or "",
         )
         for c in cps:
             kind, data = c["kind"], c["data"]
@@ -281,18 +295,30 @@ class Orchestrator:
             warnings = list(run.bundle.data_quality.warnings) + (
                 ["TOPOLOGY_MISSING"] if run.topo_note else []
             )
+            acceptance = "READY_WITH_WARNINGS" if warnings else "READY"
+            snapshot = self._take_snapshot(run, acceptance)
             self._go(
                 incident,
-                "READY_WITH_WARNINGS" if warnings else "READY",
+                acceptance,
                 trigger="ingestion",
                 detail={
                     "warnings": warnings,
                     "q": round(run.bundle.data_quality.q, 4),
                     "topology": run.topo_note,
+                    "snapshot_id": snapshot.snapshot_id,
                 },
             )
         elif self._validate(run) is not None:  # pragma: no cover - input was accepted before
             raise RuntimeError("stored input no longer validates")
+        else:
+            stored = [
+                c["data"] for c in self.store.checkpoints(incident) if c["kind"] == "snapshot"
+            ]
+            run.snapshot = (
+                DataSnapshot.model_validate(stored[-1])
+                if stored
+                else self._take_snapshot(run, run.bundle.data_quality.acceptance)  # type: ignore[union-attr]
+            )
         self._setup_agents(run)
         self._admit_community(run)
 
@@ -374,13 +400,42 @@ class Orchestrator:
         )
         if not already:
             for payload in payloads:
-                run.bus.notify(
-                    sender="community_module",
-                    recipient="orchestrator",
-                    message_type="community_candidate",
-                    payload=payload,
-                    incident_id=run.incident,
-                )
+                try:
+                    run.bus.notify(
+                        sender="community_module",
+                        recipient="orchestrator",
+                        message_type="community_candidate",
+                        payload=payload,
+                        incident_id=run.incident,
+                    )
+                except GuardViolationError as exc:  # e.g. EXTENSION_DISABLED: never fatal
+                    run.community_errors.append(
+                        f"Community input {payload.candidate_id} not admitted ({exc.code}: "
+                        f"{exc.detail}); the core diagnosis is unaffected."
+                    )
+        admitted = {
+            json.loads(m.raw_json)["payload"]["candidate_id"]
+            for m in self.store.messages(run.incident)
+            if m.valid and m.message_type == "community_candidate"
+        }
+        run.community = [e for e in run.community if str(e["candidate_id"]) in admitted]
+
+    def _take_snapshot(self, run: _Run, acceptance: str) -> DataSnapshot:
+        """Fingerprint the data every agent will analyse; checkpointed so a resumed run
+        reuses the identical snapshot (protocol 1.1, doc 05 §1)."""
+        assert run.bundle is not None
+        snapshot = take_snapshot(
+            run.bundle,
+            run.topology,
+            settings=self.settings,
+            params=self.params,
+            source_label=run.label,
+            clock=self.clock,
+            acceptance=acceptance,
+        )
+        self._checkpoint(run, "snapshot", snapshot.model_dump(mode="json"))
+        run.snapshot = snapshot
+        return snapshot
 
     def _validate(self, run: _Run) -> IncidentResult | None:
         result = ingest(run.raw, settings=self.settings)
@@ -418,7 +473,19 @@ class Orchestrator:
         cfg = self.settings.orchestration
         ids = IdFactory(namespace=run.incident)
         ids.seed("MSG", self.store.max_message_seq(run.incident))  # continue after restart
-        bus = MessageBus(self.store, clock=self.clock, ids=ids)
+        bus = MessageBus(
+            self.store,
+            clock=self.clock,
+            ids=ids,
+            snapshot=run.snapshot,
+            max_message_bytes=self.settings.protocol.max_message_bytes,
+            guard=ConversationGuard(
+                max_clarification_rounds=cfg.max_clarification_rounds,
+                extensions=[name for name, on in self.settings.features.model_dump().items() if on],
+            ),
+            incident_state=self._state.get,
+        )
+        self.last_bus: MessageBus | None = bus  # the live bus, for inspection and demos
         toolbox: Any
         if cfg.tool_transport == "mcp":
             # Imported here: the MCP server itself imports the scenario runner (and thus
@@ -464,9 +531,18 @@ class Orchestrator:
             return fut
         return pool.submit(bus.deliver, sent)
 
-    def _outcome(self, fut: cf.Future[ParsedMessage], timeout: float) -> ParsedMessage:
+    def _outcome(
+        self,
+        fut: cf.Future[Any],
+        timeout: float,
+        accept: Callable[[Any], ParsedMessage] | None = None,
+    ) -> ParsedMessage:
+        """Wait for a reply. With ``accept``, the future yields the raw reply and it is
+        validated and logged HERE, in the caller's thread - so replies from parallel
+        specialists are logged (and numbered) in a fixed, deterministic order."""
         try:
-            reply = fut.result(timeout=timeout)
+            raw_reply = fut.result(timeout=timeout)
+            reply: ParsedMessage = accept(raw_reply) if accept is not None else raw_reply
         except cf.TimeoutError as exc:
             raise _AgentFailure("AGENT_TIMEOUT", f"no reply within {timeout:g}s") from exc
         except MessageValidationError as exc:
@@ -503,6 +579,7 @@ class Orchestrator:
                             tool_budget=cfg.tool_budgets.get(agent, 20),
                             deadline_s=deadline,
                             context={"attempt": attempt + 1},
+                            **self._task_meta(run, "investigate"),
                         ),
                         incident_id=incident,
                     )
@@ -519,14 +596,18 @@ class Orchestrator:
                     )
                 if attempt == 0 and state in ("READY", "READY_WITH_WARNINGS", "DISPATCHED"):
                     self._go(incident, "COLLECTING", trigger="auto")
+                # Handlers run in parallel; replies are validated, logged and numbered
+                # below in fixed agent order (deterministic seq, protocol 1.1).
                 futures = (
-                    {a: self._ask(bus, sent[a], pool) for a in to_run} if pool is not None else {}
+                    {a: pool.submit(bus.call_handler, sent[a]) for a in to_run}
+                    if pool is not None
+                    else {}
                 )
                 failed: list[AgentId] = []
                 for a in to_run:  # fixed order; each finding is made durable on arrival
                     fut = futures[a] if pool is not None else _submit(timer_pool, bus, sent[a])
                     try:
-                        out = self._outcome(fut, deadline)
+                        out = self._outcome(fut, deadline, partial(bus.accept_reply, sent=sent[a]))
                     except _AgentFailure as f:
                         failed.append(a)
                         self._agent_error(run, a, sent[a], f, attempt)
@@ -545,6 +626,23 @@ class Orchestrator:
         self._checkpoint(run, "phase1", {"missing": run.missing})
         run.findings = {a: run.findings[a] for a in SPECIALIST_AGENTS if a in run.findings}
 
+    def _task_meta(self, run: _Run, kind: str, inputs: tuple[str, ...] = ()) -> dict[str, Any]:
+        """Protocol 1.1 task fields: a per-incident task id, the task kind, the incident
+        context, and REFERENCES (message ids) to the earlier messages the task works from."""
+        assert run.bundle is not None
+        logged = [m for m in self.store.messages(run.incident) if m.valid]
+        n = sum(1 for m in logged if m.message_type == "task_request") + 1
+        return {
+            "task_id": f"TASK-{n:04d}",
+            "task_kind": kind,
+            "input_message_ids": [m.message_id for m in logged if m.message_type in inputs],
+            "incident_context": IncidentContext(
+                description=run.label,
+                trigger="telemetry_bundle",
+                incident_time=run.bundle.window.end,
+            ),
+        }
+
     def _agent_error(
         self, run: _Run, agent: str, sent: ParsedMessage, failure: _AgentFailure, attempt: int
     ) -> None:
@@ -557,6 +655,7 @@ class Orchestrator:
                 code=failure.code,
                 message=f"attempt {attempt + 1}: {failure.detail}",
                 recoverable=attempt < self.settings.orchestration.agent_retries,
+                related_message_id=sent.envelope.message_id,
             ),
             incident_id=run.incident,
             in_reply_to=sent.envelope.message_id,
@@ -591,7 +690,10 @@ class Orchestrator:
                     recipient=recipient,
                     message_type="agent_error",
                     payload=AgentError(
-                        code=f.code, message=f"attempt {attempt + 1}: {f.detail}", recoverable=True
+                        code=f.code,
+                        message=f"attempt {attempt + 1}: {f.detail}",
+                        recoverable=True,
+                        related_message_id=sent.envelope.message_id,
                     ),
                     incident_id=run.incident,
                     in_reply_to=sent.envelope.message_id,
@@ -634,12 +736,16 @@ class Orchestrator:
                     tool_budget=0,
                     deadline_s=60,
                     context=ctx,
+                    **self._task_meta(run, "correlate", ("finding",)),
                 ),
             )
             if reply is None:
                 return None
             if isinstance(reply.payload, Decision):
                 return reply.payload
+            if isinstance(reply.payload, ConflictReport):
+                self._relay_conflict(run, reply)
+                continue
             if not isinstance(reply.payload, ClarificationRequest):
                 return None
             q = reply.payload
@@ -670,6 +776,62 @@ class Orchestrator:
             self._go(incident, "CORRELATING", trigger="clarification_answered")
         return None
 
+    def _relay_conflict(self, run: _Run, reply: ParsedMessage) -> None:
+        """Protocol 1.2: relay the correlation agent's conflict_report to the party it names
+        and record the exchange exactly like a clarification round (same context entry), so
+        the correlation agent's resolution logic is unchanged."""
+        assert run.bus is not None and isinstance(reply.payload, ConflictReport)
+        report, incident = reply.payload, run.incident
+        self._go(
+            incident,
+            "CLARIFYING",
+            trigger="conflict_report",
+            message_id=reply.envelope.message_id,
+            detail={
+                "conflict_id": report.conflict_id,
+                "target": report.target,
+                "round": report.round,
+            },
+        )
+        response: dict[str, Any]
+        try:
+            answer = run.bus.request(
+                sender="orchestrator",
+                recipient=report.target,
+                message_type="conflict_report",
+                payload=report,
+                incident_id=incident,
+                in_reply_to=reply.envelope.message_id,
+            )
+            if isinstance(answer.payload, ConflictResponse):
+                r = answer.payload
+                response = {
+                    "answered": r.stance != "cannot_assess" and bool(r.observations),
+                    "observations": [o.model_dump(mode="json") for o in r.observations],
+                    "reason": r.note,
+                    "stance": r.stance,
+                    "conflict_id": r.conflict_id,
+                }
+            else:
+                response = {"answered": False, "reason": "target replied with an error"}
+        except Exception as exc:  # unanswered conflicts are recorded, never fatal
+            response = {"answered": False, "reason": f"{type(exc).__name__}: {exc}"}
+        params = {k: v for k, v in report.recheck.items() if k != "question_type"}
+        entry = {
+            "request": {
+                "question_type": report.recheck.get("question_type", "recheck_metric"),
+                "target": report.target,
+                "parameters": params,
+                "reason": "conflict",
+                "round": report.round,
+                "conflict_id": report.conflict_id,
+            },
+            "response": response,
+        }
+        run.clarifications.append(entry)
+        self._checkpoint(run, "clarification", entry)
+        self._go(incident, "CORRELATING", trigger="conflict_answered")
+
     def _report(self, run: _Run) -> tuple[dict[str, Any], str, bool]:
         assert run.bundle is not None and run.decision is not None
         bundle, decision = run.bundle, run.decision
@@ -684,6 +846,13 @@ class Orchestrator:
             generated_at=self.clock.now().isoformat(),
             community=run.community,
             community_errors=run.community_errors,
+            # Identity of the analysed data; its wall-clock created_at stays in the
+            # checkpoint so reports remain reproducible across runs.
+            data_snapshot=(
+                run.snapshot.model_dump(mode="json", exclude={"created_at"})
+                if run.snapshot
+                else None
+            ),
         )
         reply = self._request_with_retry(
             run,
@@ -695,6 +864,7 @@ class Orchestrator:
                 tool_budget=0,
                 deadline_s=60,
                 context=ctx,
+                **self._task_meta(run, "report", ("finding", "decision")),
             ),
         )
         if reply is not None and isinstance(reply.payload, ReportReady):
@@ -711,6 +881,7 @@ class Orchestrator:
             generated_at=self.clock.now(),
             community=run.community,
             community_errors=run.community_errors,
+            data_snapshot=ctx["data_snapshot"],
         )
         problems = validate_report(
             report,
@@ -742,6 +913,6 @@ class Orchestrator:
 
 def _submit(
     pool: cf.ThreadPoolExecutor | None, bus: MessageBus, sent: ParsedMessage
-) -> cf.Future[ParsedMessage]:
+) -> cf.Future[Any]:
     assert pool is not None
-    return pool.submit(bus.deliver, sent)
+    return pool.submit(bus.call_handler, sent)

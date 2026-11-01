@@ -1,0 +1,29 @@
+# Controlled vocabulary 'evidence_class'. Source of truth for its metadata; the term set
+# itself is enforced in code where `code_literal` is given (a test keeps them equal).
+name = "evidence_class"
+version = "1.0"
+extensible = false
+id_style = "snake"
+description = "Strength class used by conflict rule 1."
+code_literal = "netcoop.core.vocab:EvidenceClass"
+
+[[terms]]
+id = "direct_measurement"
+label = "Direct measurement"
+definition = "Read directly from telemetry."
+status = "active"
+source = "doc 08 §5"
+
+[[terms]]
+id = "derived"
+label = "Derived"
+definition = "Computed or inferred from other evidence."
+status = "active"
+source = "doc 08 §5"
+
+[[terms]]
+id = "user_report"
+label = "User report"
+definition = "Reported by a person; unverified."
+status = "active"
+source = "doc 08 §5-6"

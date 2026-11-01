@@ -1,0 +1,35 @@
+# Controlled vocabulary 'recommendation_mode'. Source of truth for its metadata; the term set
+# itself is enforced in code where `code_literal` is given (a test keeps them equal).
+name = "recommendation_mode"
+version = "1.0"
+extensible = false
+id_style = "snake"
+description = "How the reporting agent framed its recommendations."
+
+[[terms]]
+id = "corrective"
+label = "Corrective"
+definition = "Diagnosed: actions that address the probable cause."
+status = "active"
+source = "doc 07 §9"
+
+[[terms]]
+id = "monitoring"
+label = "Monitoring"
+definition = "No fault: keep monitoring and collect what could not be assessed."
+status = "active"
+source = "doc 07 §9"
+
+[[terms]]
+id = "diagnostic_next_steps"
+label = "Diagnostic next steps"
+definition = "Insufficient evidence: steps that would settle the question."
+status = "active"
+source = "doc 07 §9"
+
+[[terms]]
+id = "fix_input"
+label = "Fix input"
+definition = "Failed: correct the input or failing component and re-run."
+status = "active"
+source = "doc 07 §9"

@@ -1,0 +1,34 @@
+# Controlled vocabulary 'hypothesis_relation'. Source of truth for its metadata (registry-only).
+name = "hypothesis_relation"
+version = "1.0"
+extensible = false
+id_style = "snake"
+description = "How one hypothesis relates to another (protocol 1.2). Only competes and contradicts can raise a conflict."
+
+[[terms]]
+id = "compatible"
+label = "Compatible"
+definition = "Both can be true at once; never a conflict (e.g. congestion on a link and on its upstream link may be the same issue)."
+status = "active"
+source = "doc 05 §19 (protocol 1.2, P8)"
+
+[[terms]]
+id = "refines"
+label = "Refines"
+definition = "Narrows the other hypothesis to a more specific cause; never a conflict."
+status = "active"
+source = "doc 05 §19 (protocol 1.2, P8)"
+
+[[terms]]
+id = "competes"
+label = "Competes"
+definition = "Alternative explanations of the same symptoms; at most one is the cause."
+status = "active"
+source = "doc 05 §19 (protocol 1.2, P8)"
+
+[[terms]]
+id = "contradicts"
+label = "Contradicts"
+definition = "The evidence for one argues against the other (e.g. normal CPU argues against device overload)."
+status = "active"
+source = "doc 05 §19 (protocol 1.2, P8)"

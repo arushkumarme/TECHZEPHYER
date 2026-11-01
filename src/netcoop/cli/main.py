@@ -243,7 +243,15 @@ def cmd_community(args: argparse.Namespace) -> int:
 
 
 def cmd_trace(args: argparse.Namespace) -> int:
-    print(render_trace(LogStore(Path(args.db)), args.incident), end="")
+    from netcoop.cli import trace as inspector
+
+    store = LogStore(Path(args.db))
+    if inspector.wants_inspector(args):  # protocol inspector views (doc 05 §18)
+        if hasattr(sys.stdout, "reconfigure"):
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        print(inspector.render(args, store), end="")
+    else:  # the original state + message timeline, unchanged
+        print(render_trace(store, args.incident), end="")
     return 0
 
 
@@ -331,12 +339,38 @@ def build_parser() -> argparse.ArgumentParser:
 
     t = sub.add_parser("trace", help="print an incident's trace from the log")
     t.add_argument("incident")
+    from netcoop.cli.trace import add_arguments as add_inspector_arguments
+
+    add_inspector_arguments(t, with_incident=False)
     t.set_defaults(func=cmd_trace)
 
     v = sub.add_parser("validate-report", help="check a report JSON against doc 07 §8")
     v.add_argument("report")
     v.set_defaults(func=cmd_validate)
+
+    ck = sub.add_parser("conformance", help="run the protocol conformance kit")
+    ck.set_defaults(func=lambda a: _conformance_main([]))
+    vm = sub.add_parser("validate", help="check one protocol message or conversation file")
+    vm.add_argument("file")
+    vm.add_argument("--max-bytes", type=int, default=None)
+    vm.set_defaults(
+        func=lambda a: _validate_main(
+            [a.file, *(["--max-bytes", str(a.max_bytes)] if a.max_bytes else [])]
+        )
+    )
     return p
+
+
+def _conformance_main(argv: list[str]) -> int:
+    from netcoop.cli.conformance import main as run
+
+    return run(argv)
+
+
+def _validate_main(argv: list[str]) -> int:
+    from netcoop.cli.validate import main as run
+
+    return run(argv)
 
 
 def main(argv: list[str] | None = None) -> int:

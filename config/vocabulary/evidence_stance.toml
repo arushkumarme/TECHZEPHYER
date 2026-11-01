@@ -1,0 +1,28 @@
+# Controlled vocabulary 'evidence_stance'. Source of truth for its metadata; the term set
+# itself is enforced in code where `code_literal` is given (a test keeps them equal).
+name = "evidence_stance"
+version = "1.0"
+extensible = false
+id_style = "snake"
+description = "Whether evidence supports or contradicts a hypothesis (PROVISIONAL, D-19)."
+
+[[terms]]
+id = "supports"
+label = "Supports"
+definition = "Makes the hypothesis more likely."
+status = "active"
+source = "doc 05 §4"
+
+[[terms]]
+id = "contradicts"
+label = "Contradicts"
+definition = "Makes the hypothesis less likely."
+status = "active"
+source = "doc 05 §4"
+
+[[terms]]
+id = "neutral"
+label = "Neutral"
+definition = "Relevant context that neither supports nor contradicts."
+status = "active"
+source = "PROPOSAL"

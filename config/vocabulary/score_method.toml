@@ -1,0 +1,28 @@
+# Controlled vocabulary 'score_method'. Source of truth for its metadata; the term set
+# itself is enforced in code where `code_literal` is given (a test keeps them equal).
+name = "score_method"
+version = "1.0"
+extensible = false
+id_style = "snake"
+description = "How a score was produced."
+
+[[terms]]
+id = "heuristic"
+label = "Heuristic"
+definition = "The documented scoring method of doc 08 §4; a ranking, not a probability."
+status = "active"
+source = "doc 08 §4; CD-6"
+
+[[terms]]
+id = "agent_local_heuristic"
+label = "Agent-local heuristic"
+definition = "A specialist's own rough score for its hypothesis; never the final confidence."
+status = "active"
+source = "doc 05 §4"
+
+[[terms]]
+id = "calibrated"
+label = "Calibrated"
+definition = "Validated against ground truth; blocked until the doc 08 §9 gate is recorded."
+status = "blocked"
+source = "doc 08 §9"

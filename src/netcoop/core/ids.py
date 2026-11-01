@@ -58,3 +58,30 @@ class IdFactory:
     def message(self) -> str:
         msg = self.next("MSG", width=6)
         return f"{self.namespace}-{msg}" if self.namespace else msg
+
+
+#: Accepted shapes of every identifier kind. Existing formats are kept (owner ruling); new
+#: kinds use PREFIX-NNNN. ``REC-`` is taken by normalized records, so recommendations use
+#: ``RCM-``. The incident format is PROVISIONAL (D-22).
+ID_PATTERNS: dict[str, str] = {
+    "incident": r"[A-Z]{2,8}-\d{4,}",
+    "message": r"(?:[A-Z]{2,8}-\d{4,}-)?MSG-\d{6}(?:\.R)?",
+    "observation": r"OBS-(?:[A-Z]+-\d{6}-\d{3}|\d{4,})",
+    "hypothesis": r"HYP-(?:[A-Z]+-\d{6}-\d{3}|\d{4,})",
+    "record": r"REC-\d{4,}",
+    "snapshot": r"SNAP-[0-9a-f]{12}",
+    "candidate": r"CAND-\d{4,}",
+    "complaint": r"CMP-\d{4,}",
+    "conflict": r"CONF-\d{3,}",
+    "recommendation": r"RCM-\d{4,}",
+    "task": r"TASK-\d{4,}",
+    "clarification": r"CLR-\d{4,}",
+    "decision": r"DEC-\d{4,}",
+}
+
+
+def validate_id(kind: str, value: str) -> bool:
+    """True if ``value`` has the shape of an id of ``kind`` (KeyError for an unknown kind)."""
+    import re
+
+    return re.fullmatch(ID_PATTERNS[kind], value) is not None

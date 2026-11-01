@@ -1,0 +1,49 @@
+# Controlled vocabulary 'data_provenance'. Source of truth for its metadata; the term set
+# itself is enforced in code where `code_literal` is given (a test keeps them equal).
+name = "data_provenance"
+version = "1.0"
+extensible = false
+id_style = "free"
+description = "Where a telemetry bundle came from (values as used in scenario files)."
+
+[[terms]]
+id = "synthetic-generator"
+label = "Synthetic (generator)"
+definition = "Produced by the organizers' generator with fixed seeds."
+status = "active"
+source = "doc 06; doc 09 §3"
+
+[[terms]]
+id = "team-authored"
+label = "Team-authored synthetic"
+definition = "Generator output deliberately mutated by the team, labelled as such."
+status = "active"
+source = "doc 05 §6.4"
+
+[[terms]]
+id = "synthetic-generator + team-authored probes"
+label = "Synthetic + team-authored probes"
+definition = "Generator telemetry plus team-authored DNS/DHCP probe results."
+status = "active"
+source = "doc 08 §3.3"
+
+[[terms]]
+id = "unspecified"
+label = "Unspecified"
+definition = "The bundle declared no provenance."
+status = "active"
+source = "doc 05 §11"
+
+[[terms]]
+id = "verified-public"
+label = "Verified public"
+definition = "Checked against a public source; not available in this build."
+status = "blocked"
+source = "doc 11 §2"
+
+[[terms]]
+id = "verified-iitbbs"
+label = "Verified IIT Bhubaneswar"
+definition = "Authorized campus data; needs network-team access."
+status = "blocked"
+source = "doc 11 §2; doc 15"

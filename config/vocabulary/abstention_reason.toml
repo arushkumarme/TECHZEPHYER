@@ -1,0 +1,88 @@
+# Controlled vocabulary 'abstention_reason'. Source of truth for its metadata; the term set
+# itself is enforced in code where `code_literal` is given (a test keeps them equal).
+name = "abstention_reason"
+version = "1.0"
+extensible = false
+id_style = "snake"
+description = "Why a decision abstains; one per failed gate check (PROVISIONAL naming, D-18)."
+
+[[terms]]
+id = "below_score_threshold"
+label = "Below score threshold"
+definition = "The top score is below tau_diag."
+status = "active"
+source = "doc 08 §4.5"
+[terms.attributes]
+gate_check = "score_at_least_tau"
+
+[[terms]]
+id = "missing_key_evidence"
+label = "Missing key evidence"
+definition = "None of the cause's key signature items has supporting evidence."
+status = "active"
+source = "doc 08 §11 ID-13"
+[terms.attributes]
+gate_check = "key_evidence_present"
+
+[[terms]]
+id = "too_few_signature_items"
+label = "Too few signature items"
+definition = "Fewer than n_min signature items support the cause."
+status = "active"
+source = "doc 08 §4.5"
+[terms.attributes]
+gate_check = "min_signature_items"
+
+[[terms]]
+id = "too_few_independent_sources"
+label = "Too few independent sources"
+definition = "Fewer than s_min agents support the cause."
+status = "active"
+source = "doc 08 §4.5"
+[terms.attributes]
+gate_check = "min_independent_sources"
+
+[[terms]]
+id = "ambiguous_margin"
+label = "Ambiguous margin"
+definition = "The top two explanations are closer than delta."
+status = "active"
+source = "doc 08 §4.4"
+[terms.attributes]
+gate_check = "margin_at_least_delta"
+
+[[terms]]
+id = "telemetry_unreliable"
+label = "Telemetry unreliable"
+definition = "The best explanation is that the data itself is broken."
+status = "active"
+source = "doc 08 §4.5"
+[terms.attributes]
+gate_check = "not_telemetry_unreliable"
+
+[[terms]]
+id = "not_diagnosable"
+label = "Not diagnosable"
+definition = "The leading cause's required evidence does not exist in the data."
+status = "active"
+source = "doc 08 §3.2"
+[terms.attributes]
+gate_check = "diagnosable"
+
+[[terms]]
+id = "coverage_too_low"
+label = "Coverage too low"
+definition = "Too little of the scope was assessed to call it healthy."
+status = "active"
+source = "doc 08 §4.5"
+[terms.attributes]
+gate_check = "coverage_at_least_min"
+
+[[terms]]
+id = "abnormal_measurements_present"
+label = "Abnormal measurements present"
+definition = "Something is out of range, so 'no fault' cannot be claimed."
+status = "active"
+source = "doc 08 §11 ID-14"
+[terms.attributes]
+gate_check = "no_abnormal_measurements"

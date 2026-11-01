@@ -54,7 +54,7 @@ Every official requirement from `SRC-1` (`Agentic_AI_Hackathon.pdf`) is listed w
 | ID | Criterion | Satisfied through | Test | Demo |
 |---|---|---|---|---|
 | M-01 | At least two collaborating agents with distinct responsibilities | R-08 | T-ORCH-COLLAB-01 | Demo-2 |
-| M-02 | Structured communication between agents | R-09 | T-PROTO-* | Demo-2 |
+| M-02 | Structured communication between agents | R-09 | T-PROTO-*, T-LOG-*, `tests/orchestrator/test_stamping.py`, `tests/e2e/test_payloads_in_runs.py`, `tests/core/test_guard.py`, `tests/core/test_bus_v11.py`, `tests/conformance/test_kit.py` | Demo-2 |
 | M-03 | Evidence from multiple agents contributes to a single diagnosis | R-08, R-11 | T-DIAG-MULTI-01 | Demo-2 |
 | M-04 | At least one malformed, missing or incompatible input case is handled | R-13 | T-ERR-* | Demo-3, 4 |
 | M-05 | A report with probable root cause, supporting evidence and recommended action | R-12 | T-RPT-* | Demo-2 |
@@ -74,9 +74,9 @@ Every official requirement from `SRC-1` (`Agentic_AI_Hackathon.pdf`) is listed w
 
 | ID | Criterion | Weight | How the design addresses it | Evidence a judge can see |
 |---|---|---|---|---|
-| E-01 | Agent interoperability and protocol design | 30% | Versioned message envelope, typed messages, field dictionary, normalization policy (docs 05, 06) | Message log, protocol doc, interoperability-failure scenario |
+| E-01 | Agent interoperability and protocol design | 30% | Versioned message envelope (1.1: data snapshot ID, mode, provenance, seq), typed messages with semantic rules, safe parser, controlled vocabularies, authority matrix + conversation guard, conformance kit (`conformance/`), protocol inspector (doc 05 §18), field dictionary, normalization policy (docs 05, 06) | Message log, protocol doc, interoperability-failure scenario |
 | E-02 | Diagnostic accuracy and evidence quality | 25% | Hypothesis catalog, documented heuristic score, evidence traceable to observations (doc 08) | Report evidence trail, scenario results |
-| E-03 | Agent orchestration and conflict resolution | 15% | State machine, bounded clarification, written conflict rules (docs 03, 04, 08 §5) | Orchestration trace, ambiguous-case scenario |
+| E-03 | Agent orchestration and conflict resolution | 15% | State machine, bounded clarification (round limit enforced by the guard, `tests/core/test_guard.py::test_clarification_round_limit`), message legality per state (doc 04 §4.1), written conflict rules (docs 03, 04, 08 §5); conflicts as logged `conflict_report`/`conflict_response` exchanges with a decision `conflict_trail` (protocol 1.2, `tests/core/test_conflicts.py::test_the_real_correlation_agent_raises_the_conflict`, `::test_the_decision_keeps_the_conflict_in_its_trail`) | Orchestration trace, ambiguous-case scenario |
 | E-04 | Robustness to missing, inconsistent, or incompatible data | 15% | Bundle acceptance policy, not-assessable semantics, degraded operation (docs 04, 05) | Partial-metric, stale, topology-missing, agent-failure scenarios |
 | E-05 | Code quality, documentation, and demonstration | 5% | Traceability, tests, README, demo script | This matrix, test report, video |
 | E-06 | Innovation, usability, and extensibility | 10% | Extensions A and B, mode separation, adapter design (docs 10, 11, 15) | Demo-7, Demo-8 |
@@ -144,19 +144,19 @@ Never counted toward the mandatory rows. Disabled → core must still pass (`T-I
 |---|---|---|
 | R-01 probable root cause | TESTED | `tests/diagnosis/test_scoring.py`, `tests/e2e/test_scenarios.py` (S-02, S-04, S-05) |
 | R-02 affected devices | TESTED | `tests/agents/test_specialists.py` (connectivity what-if), e2e `affected_devices` checks |
-| R-03 supporting evidence | TESTED | `test_evidence_traces_to_observations` |
-| R-04 alternatives / uncertainty | TESTED | `test_hardware_failure_profile_prefers_device_failure` (alternatives), S-09 |
+| R-03 supporting evidence | TESTED | `test_evidence_traces_to_observations`; typed evidence refs and rule 3/5: `tests/core/test_payload_rules.py`, `tests/e2e/test_payloads_in_runs.py` (P3) |
+| R-04 alternatives / uncertainty | TESTED | `test_hardware_failure_profile_prefers_device_failure` (alternatives), S-09; unresolved conflicts preserved as alternatives in the decision's `conflict_trail` (`tests/core/test_conflicts.py::test_the_decision_keeps_the_conflict_in_its_trail`, protocol 1.2) |
 | R-05 confidence + category | TESTED | `test_congestion_is_diagnosed_from_two_agents`, `test_low_data_quality_caps_confidence` |
 | R-06 corrective actions | TESTED | `test_actions_adapt_to_uncertainty` |
 | R-07 no exact cause when insufficient | TESTED | `test_single_weak_symptom_is_insufficient`, S-08, S-09 |
 | R-08 collaborating agents | TESTED | `test_full_run` (5 agents, ≥2 evidence sources) |
-| R-09 interoperability protocol | TESTED | `tests/core/test_messages.py`, `test_bus_log.py`, `schemas/protocol/` |
-| R-10 orchestration | TESTED | `tests/orchestrator/test_workflow.py` |
+| R-09 interoperability protocol | TESTED | `tests/core/test_messages.py`, `test_bus_log.py`, `conformance/schemas/`; field meanings and units: `tests/core/test_vocabulary.py`, `tests/e2e/test_vocabulary_in_runs.py` (protocol upgrade P1); envelope 1.1, data snapshot, safe parsing: `tests/core/test_envelope_v11.py`, `tests/core/test_snapshot.py`, `tests/orchestrator/test_stamping.py` (P2); payload models and semantic rules: `tests/core/test_payload_rules.py`, `tests/e2e/test_payloads_in_runs.py` (P3); authority and conversation rules: `tests/core/test_guard.py` (P4); bus and append-only log: `tests/core/test_bus_v11.py` (P5); conformance kit: `tests/conformance/test_kit.py`, `uv run netcoop conformance` (P6); protocol inspector (field meanings via `--explain`): `tests/inspector/test_inspector.py` (P7); conflict messages, protocol 1.2: `tests/core/test_conflicts.py` (P8) |
+| R-10 orchestration | TESTED | `tests/orchestrator/test_workflow.py`; authority matrix and conversation rules: `tests/core/test_guard.py` (P4) |
 | R-11 fault diagnosis from telemetry | TESTED | e2e S-01..S-12 |
-| R-12 unified report | TESTED | `test_official_keys_exact_and_typed` |
+| R-12 unified report | TESTED | `test_official_keys_exact_and_typed`; strict `OfficialReport` model: `test_rule7_the_pdf_example_validates_and_an_eleventh_key_does_not`, `test_every_scenario_report_validates_as_official_report` (P3) |
 | R-13 validation / error handling | TESTED | `tests/ingestion/test_ingest.py` (E-01..E-12), S-06, S-06b, S-10 |
 | R-14 reproducible testing & docs | TESTED | `test_committed_scenarios_are_reproducible`, `test_scenario_runs_are_deterministic`, doc 13 |
-| R-15 structured JSON report (+ Markdown) | TESTED | `test_cli_run_and_validate` |
+| R-15 structured JSON report (+ Markdown) | TESTED | `test_cli_run_and_validate`; `test_validate_report_uses_the_official_model` (P3) |
 | R-16 documented scoring; report insufficiency | TESTED | doc 08 §11, `test_scoring.py` |
 | R-17 synthetic data / simulation mode | TESTED | `test_other_modes_are_refused`, `test_live_mode_refused` |
 | R-18 suggested scenarios | TESTED (S-03 as "not assessable"; S-05 via team-authored probes) | e2e |
@@ -165,7 +165,7 @@ Never counted toward the mandatory rows. Disabled → core must still pass (`T-I
 | M-01..M-06 minimum acceptance | TESTED | `test_full_run`, protocol tests, `test_congestion_is_diagnosed_from_two_agents`, ingestion tests, report tests, CLI test |
 | O-01 MCP | TESTED | `tests/mcp/test_mcp.py` (server tools/resources, agents via MCP, stdio subprocess); doc 16 |
 | O-02 HITL | TESTED | `tests/orchestrator/test_review.py` (approve/reject, recorded, completes incident, CLI) |
-| O-03 persistent state / pause-resume | TESTED | `tests/orchestrator/test_persistence.py` (pause/resume after restart, crash recovery, CLI) |
+| O-03 persistent state / pause-resume | TESTED | `tests/orchestrator/test_persistence.py` (pause/resume after restart, crash recovery, CLI); message log with verdicts, replayable conversation state and migration: `tests/core/test_bus_v11.py` (P5); log inspector (table/sequence/json, evidence chain): `tests/inspector/test_inspector.py` (P7) |
 | O-04 dashboard | TESTED | `tests/api/test_api.py`, `tests/ui/test_dashboard_e2e.py` (Chromium), `dashboard/src/lib/lanes.test.ts`; screenshots in `docs/results/screenshots/` |
 | O-05 simulated remediation | TESTED | `test_approval_is_recorded_and_outcome_simulated`, `test_simulator_has_no_write_path` |
 | X-CSI-01, 04..08 | TESTED | `tests/community/` (web form, extraction, clustering, orchestrator entry, trust labels, separation from official evidence) |

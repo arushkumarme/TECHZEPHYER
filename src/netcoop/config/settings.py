@@ -47,6 +47,14 @@ class OrchestrationSettings(BaseModel):
     )
 
 
+class ProtocolSettings(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    #: PROVISIONAL (D-23): about 20x the largest message of the scenario suite.
+    max_message_bytes: int = Field(default=1_048_576, ge=1024)
+    #: PROVISIONAL (D-22): incident ids are <prefix>-NNNN; the PDF mandates no format.
+    incident_prefix: str = Field(default="INC", pattern=r"^[A-Z]{2,8}$")
+
+
 class Settings(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
     #: Any value other than "simulation" fails validation: there is no live mode.
@@ -54,6 +62,7 @@ class Settings(BaseModel):
     features: Features = Field(default_factory=Features)
     ingestion: IngestionSettings = Field(default_factory=IngestionSettings)
     orchestration: OrchestrationSettings = Field(default_factory=OrchestrationSettings)
+    protocol: ProtocolSettings = Field(default_factory=ProtocolSettings)
 
 
 def load_settings(path: Path = DEFAULT_SETTINGS_PATH) -> Settings:

@@ -1,0 +1,22 @@
+{
+  "protocol_version": "1.2",
+  "message_id": "INC-0001-MSG-000005.R",
+  "incident_id": "INC-0001",
+  "in_reply_to": "INC-0001-MSG-000005",
+  "sender": "performance_agent",
+  "recipient": "orchestrator",
+  "message_type": "clarification_response",
+  "sent_at": "2026-11-01T09:00:00Z",
+  "payload_schema_version": "1.0",
+  "status": "ok",
+  "snapshot_id": "SNAP-0123456789ab",
+  "mode": "simulation",
+  "data_provenance": "synthetic-generator",
+  "payload": {
+    "answered": false,
+    "answerable": "no",
+    "clarification_id": "CLR-0001",
+    "source": "performance_agent",
+    "reason": "no data for the entity"
+  }
+}

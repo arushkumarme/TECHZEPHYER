@@ -1,0 +1,127 @@
+# Controlled vocabulary 'metric_category'. Source of truth for its metadata; the term set
+# itself is enforced in code where `code_literal` is given (a test keeps them equal).
+name = "metric_category"
+version = "1.0"
+extensible = false
+id_style = "snake"
+description = "Metric categories named in the problem statement (SRC-1 p4 §5). Categories, not field names."
+
+[[terms]]
+id = "latency"
+label = "Latency"
+definition = "The 'latency' category from the problem statement's dataset list."
+status = "active"
+source = "SRC-1 p4 §5"
+[terms.attributes]
+dimension = "time"
+in_generator_data = true
+
+[[terms]]
+id = "jitter"
+label = "Jitter"
+definition = "The 'jitter' category from the problem statement's dataset list."
+status = "active"
+source = "SRC-1 p4 §5"
+[terms.attributes]
+dimension = "time"
+in_generator_data = true
+
+[[terms]]
+id = "packet_loss"
+label = "Packet loss"
+definition = "The 'packet loss' category from the problem statement's dataset list."
+status = "active"
+source = "SRC-1 p4 §5"
+[terms.attributes]
+dimension = "ratio"
+in_generator_data = true
+
+[[terms]]
+id = "throughput"
+label = "Throughput"
+definition = "The 'throughput' category from the problem statement's dataset list."
+status = "active"
+source = "SRC-1 p4 §5"
+[terms.attributes]
+dimension = "data_rate"
+in_generator_data = false
+
+[[terms]]
+id = "bandwidth"
+label = "Bandwidth"
+definition = "The 'bandwidth' category from the problem statement's dataset list."
+status = "active"
+source = "SRC-1 p4 §5"
+[terms.attributes]
+dimension = "data_rate"
+in_generator_data = false
+
+[[terms]]
+id = "link_utilization"
+label = "Link utilization"
+definition = "The 'link utilization' category from the problem statement's dataset list."
+status = "active"
+source = "SRC-1 p4 §5"
+[terms.attributes]
+dimension = "ratio"
+in_generator_data = true
+
+[[terms]]
+id = "device_status"
+label = "Device status"
+definition = "The 'device status' category from the problem statement's dataset list."
+status = "active"
+source = "SRC-1 p4 §5"
+[terms.attributes]
+dimension = "categorical"
+in_generator_data = true
+
+[[terms]]
+id = "cpu_utilization"
+label = "CPU utilization"
+definition = "The 'cpu utilization' category from the problem statement's dataset list."
+status = "active"
+source = "SRC-1 p4 §5"
+[terms.attributes]
+dimension = "ratio"
+in_generator_data = true
+
+[[terms]]
+id = "memory_utilization"
+label = "Memory utilization"
+definition = "The 'memory utilization' category from the problem statement's dataset list."
+status = "active"
+source = "SRC-1 p4 §5"
+[terms.attributes]
+dimension = "ratio"
+in_generator_data = false
+
+[[terms]]
+id = "egress_queue_drops"
+label = "Egress queue drops"
+definition = "The 'egress queue drops' category from the problem statement's dataset list."
+status = "active"
+source = "SRC-1 p4 §5"
+[terms.attributes]
+dimension = "count"
+in_generator_data = true
+
+[[terms]]
+id = "interface_errors"
+label = "Interface errors"
+definition = "The 'interface errors' category from the problem statement's dataset list."
+status = "active"
+source = "SRC-1 p4 §5"
+[terms.attributes]
+dimension = "count"
+in_generator_data = true
+
+[[terms]]
+id = "wireless_signal"
+label = "Wireless signal measurements"
+definition = "The 'wireless signal measurements' category from the problem statement's dataset list."
+status = "active"
+source = "SRC-1 p4 §5"
+[terms.attributes]
+dimension = "power_level"
+in_generator_data = false

@@ -1,0 +1,63 @@
+{
+  "protocol_version": "1.2",
+  "message_id": "INC-0001-MSG-000007.R",
+  "incident_id": "INC-0001",
+  "in_reply_to": "INC-0001-MSG-000007",
+  "sender": "reporting_agent",
+  "recipient": "orchestrator",
+  "message_type": "report_ready",
+  "sent_at": "2026-11-01T09:00:00Z",
+  "payload_schema_version": "1.0",
+  "status": "ok",
+  "snapshot_id": "SNAP-0123456789ab",
+  "mode": "simulation",
+  "data_provenance": "synthetic-generator",
+  "payload": {
+    "report": {
+      "incident_id": "INC-0001",
+      "status": "diagnosed",
+      "suspected_root_cause": "Likely link congestion on SW_CAMPUS_4",
+      "confidence": 0.82,
+      "affected_devices": [
+        "SW_CAMPUS_4"
+      ],
+      "supporting_evidence": [
+        {
+          "metric": "latency_ms",
+          "value": 180.0,
+          "interpretation": "Elevated network latency"
+        }
+      ],
+      "alternative_causes": [
+        "Upstream link congestion"
+      ],
+      "recommended_actions": [
+        "Inspect egress link utilization on SW_CAMPUS_4"
+      ],
+      "evidence_sources": [
+        "performance_agent"
+      ],
+      "limitations": [
+        "Simulated data; root cause requires further verification"
+      ]
+    },
+    "recommendations": [
+      {
+        "recommendation_id": "RCM-0001",
+        "action_text": "Inspect egress link utilization on SW_CAMPUS_4",
+        "kind": "corrective",
+        "target_entities": [
+          "SW_CAMPUS_4"
+        ],
+        "reason": "Likely link congestion on SW_CAMPUS_4",
+        "priority": "high",
+        "precautions": [
+          "Simulated only: nothing is executed on a network."
+        ],
+        "requires_human_approval": true,
+        "simulated": true,
+        "verification_step": "Re-run the diagnosis on fresh simulated data"
+      }
+    ]
+  }
+}

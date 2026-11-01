@@ -124,6 +124,16 @@ Headings 1, 9 and 10 are absent; heading 6 ("Be rigorous about diagnosis and evi
 | D-13 | Any contact with the IIT Bhubaneswar network team | Doc 15 wording | None assumed |
 | D-14 | Python / Node versions and package choices | Doc 13 | TBD at implementation |
 | D-15 | Is there a complete version of `SRC-2`? | Doc 00 §6.2 | Proceed with what exists |
+| D-16 | Metric -> category / unit / dimension map (`config/vocabulary/metric.toml`) | Doc 05 App. A, unit checks | **PROVISIONAL**: derived from the generator fields in doc 06; revisit if another data source is added |
+| D-17 | Data-rate and power-level dimensions (throughput, bandwidth, wireless signal) have no units | Doc 05 App. A | **PROVISIONAL**: no generator field uses them, so no units are defined; never guessed |
+| D-18 | Names of abstention reasons (one per decision-gate check) | Doc 05 App. A, Prompt 3 | **PROVISIONAL**: names mapped 1:1 to the existing gate checks in `diagnosis/scoring.py` |
+| D-19 | Registry-only vocabularies not yet carried in messages: `task_kind`, `evidence_type`, `evidence_stance`, `recommendation_priority`, `aggregation` | Prompt 3 | **PROVISIONAL**: defined now, wired into payloads in Prompt 3 |
+| D-20 | Severity/kind of non-ingestion error and limitation codes (e.g. `GATE_NOT_MET` = info) | Doc 05 App. A | **PROVISIONAL**: team-chosen; ingestion codes keep doc 05 §7 severities (test-enforced) |
+| D-21 | `cause_type` is **closed** (the prompt pack proposed extensible) | Doc 08 | **PROVISIONAL**: a new cause needs a catalog signature and scoring, so `x-` extensions are not accepted; `rationale_code` is the extensible vocabulary instead |
+| D-22 | Incident ID format | Doc 05 §5 | **PROVISIONAL**: `<prefix>-NNNN`, prefix `INC` (configurable `[protocol] incident_prefix`); the PDF mandates no format |
+| D-23 | Maximum message size | Doc 05 §13 | **PROVISIONAL**: 1 MiB (`[protocol] max_message_bytes`), about 20x the largest message of the scenario suite (~47 KB); larger messages are rejected with `MESSAGE_TOO_LARGE` |
+| D-24 | Recommendation priority | Doc 05 §4, doc 07 §5 | **PROVISIONAL**: by order of the official `recommended_actions` (1st `high`, 2nd `medium`, rest `low`); the PDF defines no priority |
+| D-25 | Who may raise a conflict (protocol 1.2) | Doc 05 §19, doc 03 §3 | **PROVISIONAL** (prompt-pack default; owner may switch to "any specialist"): only `correlation_agent` sends `conflict_report`; the orchestrator relays it to the named party and enforces the rules (guard pre-check); only that party answers with `conflict_response` |
 
 ## 8. Assumptions and explicit non-assumptions
 

@@ -9,6 +9,7 @@ from typing import Any
 import pytest
 
 from netcoop.core.blocks import (
+    EvidenceRef,
     Hypothesis,
     NotAssessableItem,
     Observation,
@@ -23,6 +24,10 @@ from netcoop.core.messages import (
     ClarificationRequest,
     ClarificationResponse,
     CommunityCandidate,
+    ConflictParty,
+    ConflictReport,
+    ConflictResponse,
+    ConflictSide,
     Decision,
     Finding,
     MessageValidationError,
@@ -108,9 +113,57 @@ SAMPLE_PAYLOADS: dict[str, Any] = {
         complaint_count=3,
         distinct_reporters=2,
     ),
+    # protocol 1.2 (Prompt 8): sample data for the two new types (setup only)
+    "conflict_report": ConflictReport(
+        conflict_id="CONF-001",
+        conflict_type="observation_contradiction",
+        parties=[
+            ConflictParty(
+                agent="performance_agent",
+                observation_ids=["OBS-PERF-000001-001", "OBS-PERF-000001-002"],
+            )
+        ],
+        sides=[
+            ConflictSide(
+                agent="performance_agent",
+                claim="latency_ms critical",
+                evidence=[
+                    EvidenceRef(
+                        evidence_type="observation",
+                        evidence_id="OBS-PERF-000001-001",
+                        stance="supports",
+                    )
+                ],
+            ),
+            ConflictSide(
+                agent="performance_agent",
+                claim="latency_ms normal",
+                evidence=[
+                    EvidenceRef(
+                        evidence_type="observation",
+                        evidence_id="OBS-PERF-000001-002",
+                        stance="supports",
+                    )
+                ],
+            ),
+        ],
+        reason_code="CONFLICTING_READINGS",
+        reason_text="SW_CAMPUS_1 latency_ms: readings disagree",
+        proposed_rule="unresolved",
+        effect_on_confidence="capped",
+        target="performance_agent",
+        recheck={
+            "question_type": "recheck_metric",
+            "entity": "SW_CAMPUS_1",
+            "metric": "latency_ms",
+        },
+        round=1,
+    ),
+    "conflict_response": ConflictResponse(conflict_id="CONF-001", stance="cannot_assess"),
 }
 
-RESPONSES = {"finding", "clarification_response", "decision", "report_ready"}
+# conflict_response added with protocol 1.2 (Prompt 8; setup data)
+RESPONSES = {"finding", "clarification_response", "decision", "report_ready", "conflict_response"}
 
 
 def _build(mtype: str, **overrides: Any) -> dict[str, Any]:

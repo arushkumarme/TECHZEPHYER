@@ -72,7 +72,7 @@ def test_completing_review_closes_incident_and_versions_report(awaiting) -> None
     assert "[approved]" in md
     # the original report version is preserved (append-only)
     with pytest.raises(sqlite3.DatabaseError, match="append-only"):
-        o.store.execute_unsafe_for_tests("DELETE FROM approvals")
+        o.store._execute_raw_for_tests("DELETE FROM approvals")
 
 
 def test_review_only_in_awaiting_review(tmp_path: Path) -> None:

@@ -1,0 +1,36 @@
+# Controlled vocabulary 'conflict_rule'. Source of truth for its metadata; the term set
+# itself is enforced in code where `code_literal` is given (a test keeps them equal).
+name = "conflict_rule"
+version = "1.0"
+extensible = false
+id_style = "snake"
+description = "Rule that settled a conflict between observations."
+code_literal = "netcoop.core.vocab:ConflictRule"
+
+[[terms]]
+id = "evidence_class"
+label = "Evidence class"
+definition = "Direct measurement beats derived evidence, which beats a user report."
+status = "active"
+source = "doc 08 §5 rule 1"
+
+[[terms]]
+id = "freshness"
+label = "Freshness"
+definition = "A newer observation beats one older by more than the tolerance."
+status = "active"
+source = "doc 08 §5 rule 2"
+
+[[terms]]
+id = "topology_consistency"
+label = "Topology consistency"
+definition = "An explanation consistent with the dependency structure beats one that is not."
+status = "active"
+source = "doc 08 §5 rule 3"
+
+[[terms]]
+id = "unresolved"
+label = "Unresolved"
+definition = "No rule decides: both are kept, the weaker evidence is used and the conflict is stated."
+status = "active"
+source = "doc 08 §5 rule 4"
