@@ -384,6 +384,22 @@ tbody tr:last-child td { border-bottom: none; }
 .legend li { list-style: none; display: flex; gap: 8px; align-items: center; margin: 4px 0; }
 .legend-note { font-size: 12px; margin: 8px 0 0; padding-top: 8px; border-top: 1px solid var(--line); }
 .swatch { width: 24px; height: 14px; flex: none; }
+.map-lists { margin-top: 8px; border-top: 1px solid var(--line); }
+.map-lists details { padding-top: 8px; }
+.map-lists summary { cursor: pointer; font-size: 12px; color: var(--text); list-style-position: inside; }
+.map-lists summary .mono { font-size: 11px; margin-left: 4px; }
+.map-lists ul { list-style: none; margin: 4px 0 0; padding: 0; max-height: 220px; overflow-y: auto; }
+.map-lists li { display: block; margin: 0; }
+.map-lists button {
+  display: flex; justify-content: space-between; gap: 8px; width: 100%;
+  font: inherit; font-size: 12px; text-align: left; color: var(--text);
+  background: none; border: 1px solid transparent; border-radius: 4px; padding: 2px 6px; cursor: pointer;
+  transition: background-color 150ms var(--ease);
+}
+.map-lists button:hover { background: var(--hover); }
+.map-lists button .mono { font-size: 11px; }
+.map-pop .pop-title:focus { outline: none; }
+.map-pop .pop-title:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .map-about { max-width: 100ch; }
 .map-about .label { margin: 0 0 4px; }
 .map-about p { font-size: 12px; color: var(--muted); margin: 0; }

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { api, type BlastRadius, type IncidentSummary, type MapLayers, type Overlay, type Report } from "../api";
 import { CampusMap, DEVICE_STATE_LABEL } from "../campus/CampusMap";
 import { CAMPUS_FEATURES } from "../campus/features";
+import { MapLists } from "../campus/MapLists";
 import { deriveHighlight, type DeviceState, type Highlight } from "../campus/highlight";
 import { PLACEMENT_NOTE, placeDevices } from "../campus/placement";
 import { clusterByBuilding } from "../complaints/source";
@@ -61,6 +62,9 @@ export function MapView({ incidents, layers: shared }: { incidents: IncidentSumm
   const [showSample, setShowSample] = useState(false);
   const [complaints, setComplaints] = useState<ComplaintCluster[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [openRequest, setOpenRequest] = useState<{ kind: "device" | "building"; id: string; seq: number } | null>(null);
+  const requestOpen = (kind: "device" | "building", id: string) =>
+    setOpenRequest((r) => ({ kind, id, seq: (r?.seq ?? 0) + 1 }));
 
   // Prefer the layers App already fetched; fetch here only if they are not there yet.
   useEffect(() => {
@@ -161,6 +165,7 @@ export function MapView({ incidents, layers: shared }: { incidents: IncidentSumm
           reportedZones={reportedZones}
           complaints={showSample ? complaints : null}
           deviceInfo={layers ? deviceInfo : undefined}
+          openRequest={openRequest}
           onDeviceClick={(id) => { api.blast(id).then(setBlast).catch((e: Error) => setError(e.message)); }}
         />
         <aside className="legend panel" aria-label="Map legend">
@@ -184,6 +189,11 @@ export function MapView({ incidents, layers: shared }: { incidents: IncidentSumm
             {shown && <> Showing failure of <span className="mono">{shown.failed}</span>: {shown.isolated.length} isolated, {shown.degraded.length} would lose redundancy.</>}
             {" "}Blast radius is structural reach in the simulated topology, not measured impact.
           </p>
+          <MapLists
+            devices={layers ? (placement?.placed ?? []) : []}
+            onDevice={(id) => requestOpen("device", id)}
+            onBuilding={(id) => requestOpen("building", id)}
+          />
         </aside>
       </div>
 

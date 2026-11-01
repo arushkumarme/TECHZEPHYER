@@ -58,6 +58,8 @@ export interface CampusMapProps {
   deviceInfo?: (id: string) => ReactNode;
   onDeviceClick?: (id: string) => void;
   variant: "hero" | "full";
+  /** Open a switch's or building's popover from outside the map (the legend lists). */
+  openRequest?: { kind: "device" | "building"; id: string; seq: number } | null;
 }
 
 // Sample badges sit on a side that holds neither the building label nor a switch: below when
@@ -119,6 +121,19 @@ function MapUpkeep() {
         // Leaflet skips a pan while it thinks its own first (too small) pan is running.
         (e.popup as unknown as { _autopanning: boolean })._autopanning = false;
         e.popup.update();
+        // Opened from the keyboard (Enter on a marker, or a legend list): move focus inside.
+        // One more frame: React fills the popup's portal after Leaflet opens it.
+        if (FOCUS_ON_OPEN.delete(e.popup)) {
+          requestAnimationFrame(() => {
+            const root = e.popup.getElement();
+            const target =
+              root?.querySelector<HTMLElement>(".pop-title") ?? root?.querySelector<HTMLElement>(".leaflet-popup-close-button");
+            if (target) {
+              if (!target.hasAttribute("tabindex") && target.tagName !== "A") target.setAttribute("tabindex", "-1");
+              target.focus();
+            }
+          });
+        }
       });
     };
     map.on("popupopen", onOpen);
@@ -135,6 +150,15 @@ function MapUpkeep() {
   return null;
 }
 
+const FOCUS_ON_OPEN = new WeakSet<object>();
+
+/** Open a layer's popup and, once it has rendered, move keyboard focus into it. */
+function openWithFocus(layer: LeafletCircleMarker) {
+  const popup = layer.getPopup();
+  if (popup) FOCUS_ON_OPEN.add(popup);
+  layer.openPopup();
+}
+
 /** Make an SVG path reachable and operable from the keyboard (Leaflet only does this for icons). */
 function focusable(label: string) {
   return (e: LeafletEvent) => {
@@ -149,7 +173,7 @@ function focusable(label: string) {
       if (k === "Enter" || k === " ") {
         ev.preventDefault();
         layer.fire("click");
-        layer.openPopup();
+        openWithFocus(layer);
       }
     });
   };
@@ -175,7 +199,7 @@ function BuildingPopover({ building, devices, cluster }: { building: CampusFeatu
   );
 }
 
-export function CampusMap({ layers, highlight, reportedZones, complaints, pulse, deviceInfo, onDeviceClick, variant }: CampusMapProps) {
+export function CampusMap({ layers, highlight, reportedZones, complaints, pulse, deviceInfo, onDeviceClick, variant, openRequest }: CampusMapProps) {
   const { placed } = useMemo(() => (layers ? placeDevices(layers.devices) : { placed: [] as PlacedDevice[] }), [layers]);
   const placedById = useMemo(() => new Map(placed.map((d) => [d.id, d])), [placed]);
   const byBuilding = useMemo(() => {
@@ -207,6 +231,18 @@ export function CampusMap({ layers, highlight, reportedZones, complaints, pulse,
 
   // One 600 ms ring per pulsed id: restart the CSS animation on the marker's own path.
   const markers = useRef(new Map<string, LeafletCircleMarker>());
+  const buildings = useRef(new Map<string, LeafletCircleMarker>());
+  const onDeviceClickRef = useRef(onDeviceClick);
+  onDeviceClickRef.current = onDeviceClick;
+
+  // A list item does what activating the marker does: select it, then open its popover.
+  useEffect(() => {
+    if (!openRequest) return;
+    const layer = (openRequest.kind === "device" ? markers : buildings).current.get(openRequest.id);
+    if (!layer) return;
+    if (openRequest.kind === "device") onDeviceClickRef.current?.(openRequest.id);
+    openWithFocus(layer);
+  }, [openRequest]);
   useEffect(() => {
     if (!pulse?.length) return;
     const timers: number[] = [];
@@ -243,6 +279,10 @@ export function CampusMap({ layers, highlight, reportedZones, complaints, pulse,
         {CAMPUS_FEATURES.map((f) => (
           <CircleMarker
             key={f.id}
+            ref={(m) => {
+              if (m) buildings.current.set(f.id, m);
+              else buildings.current.delete(f.id);
+            }}
             center={at(f)}
             radius={15}
             className="building-hit"
