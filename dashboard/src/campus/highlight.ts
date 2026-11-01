@@ -10,6 +10,20 @@ export interface Highlight {
   focus: string[];
 }
 
+/** Hypotheses that name no fault: they never point at a suspect switch. */
+const NOT_A_FAULT = new Set(["normal_operation", "telemetry_unreliable"]);
+
+/**
+ * The devices of the leading fault hypothesis: the first one (in the report's ranked order)
+ * that names a fault and at least one device. Empty when there is none.
+ */
+function suspectsFromHypotheses(report: Report): string[] {
+  const lead = (report.netcoop_extensions?.hypotheses ?? []).find(
+    (h) => !NOT_A_FAULT.has(h.cause_type) && h.entities.length > 0,
+  );
+  return lead ? [...lead.entities] : [];
+}
+
 export function deriveHighlight(
   report: Report | null,
   layers: MapLayers,
@@ -34,9 +48,7 @@ export function deriveHighlight(
     out.links = [...links];
     out.focus = [...critical];
   } else if (status === "insufficient_evidence") {
-    const ids = report.affected_devices.length
-      ? report.affected_devices
-      : (report.netcoop_extensions?.hypotheses?.[0]?.entities ?? []);
+    const ids = report.affected_devices.length ? report.affected_devices : suspectsFromHypotheses(report);
     for (const id of ids) out.devices[id] = "suspect";
     out.focus = [...ids];
   }

@@ -6,8 +6,8 @@ import { MapLists } from "../campus/MapLists";
 import { deriveHighlight, type DeviceState, type Highlight } from "../campus/highlight";
 import { PLACEMENT_NOTE, placeDevices } from "../campus/placement";
 import { clusterByBuilding } from "../complaints/source";
-import { sampleComplaintSource } from "../complaints/sample";
-import type { ComplaintCluster } from "../complaints/types";
+import type { ComplaintCluster, ComplaintSource } from "../complaints/types";
+import { useLatestBlast } from "../lib/blast";
 
 const featureName = new Map(CAMPUS_FEATURES.map((f) => [f.id, f.name]));
 
@@ -54,14 +54,26 @@ function withBlast(base: Highlight, blast: BlastRadius | null, show: boolean): H
   return { ...base, devices, focus };
 }
 
-// The Campus map tab: the shared CampusMap, full width, with its controls, legend and footer.
-export function MapView({ incidents, layers: shared }: { incidents: IncidentSummary[]; layers?: MapLayers | null }) {
+/**
+ * The Campus map tab: the shared CampusMap, full width, with its controls, legend and footer.
+ * The complaint layer comes from `complaintSource`; a backend source plugs in here with no
+ * change to this view (its label names the toggle, `isSample` decides the SAMPLE marking).
+ */
+export function MapView({
+  incidents,
+  layers: shared,
+  complaintSource,
+}: {
+  incidents: IncidentSummary[];
+  layers?: MapLayers | null;
+  complaintSource: ComplaintSource;
+}) {
   const [fetched, setFetched] = useState<MapLayers | null>(null);
   const [layersMissing, setLayersMissing] = useState(false);
   const [incident, setIncident] = useState<string>("");
   const [report, setReport] = useState<Report | null>(null);
   const [overlay, setOverlay] = useState<Overlay | null>(null);
-  const [blast, setBlast] = useState<BlastRadius | null>(null);
+  const { blast, failed: blastFailed, request: requestBlast, reset: resetBlast } = useLatestBlast(api.blast);
   const [showBlast, setShowBlast] = useState(true);
   const [showSample, setShowSample] = useState(false);
   const [complaints, setComplaints] = useState<ComplaintCluster[] | null>(null);
@@ -87,12 +99,17 @@ export function MapView({ incidents, layers: shared }: { incidents: IncidentSumm
     return () => { current = false; };
   }, [incident]);
 
+  // A different source means different reports: drop the cached clusters.
+  useEffect(() => { setComplaints(null); }, [complaintSource]);
   useEffect(() => {
     if (!showSample || complaints) return;
     let current = true;
-    sampleComplaintSource.list().then((m) => current && setComplaints(clusterByBuilding(m)));
+    complaintSource
+      .list()
+      .then((m) => current && setComplaints(clusterByBuilding(m)))
+      .catch((e: Error) => current && setError(`${complaintSource.label}: ${e.message}`));
     return () => { current = false; };
-  }, [showSample, complaints]);
+  }, [showSample, complaints, complaintSource]);
 
   const placement = useMemo(() => (layers ? placeDevices(layers.devices) : null), [layers]);
   const highlight = useMemo(
@@ -124,6 +141,8 @@ export function MapView({ incidents, layers: shared }: { incidents: IncidentSumm
         <p className="pop-sub">If this switch failed</p>
         {b ? (
           <p className="small">{b.isolated.length} would be isolated, {b.degraded.length} would lose redundancy. Structural reach in the simulated topology, not measured impact.</p>
+        ) : blastFailed === id ? (
+          <p className="small muted">Structural reach unavailable.</p>
         ) : (
           <p className="small muted">Working out the structural reach…</p>
         )}
@@ -142,7 +161,7 @@ export function MapView({ incidents, layers: shared }: { incidents: IncidentSumm
           <select
             id="map-incident"
             value={incident}
-            onChange={(e) => { setBlast(null); setError(null); setIncident(e.target.value); }}
+            onChange={(e) => { resetBlast(); setError(null); setIncident(e.target.value); }}
           >
             <option value="">None — topology only</option>
             {incidents.filter((i) => i.status).map((i) => (
@@ -155,7 +174,7 @@ export function MapView({ incidents, layers: shared }: { incidents: IncidentSumm
           </label>
           <label className="toggle">
             <input type="checkbox" checked={showSample} onChange={(e) => setShowSample(e.target.checked)} />
-            Sample reports (demo data)
+            {complaintSource.label}
           </label>
         </div>
       </div>
@@ -168,9 +187,10 @@ export function MapView({ incidents, layers: shared }: { incidents: IncidentSumm
           highlight={highlight}
           reportedZones={reportedZones}
           complaints={showSample ? complaints : null}
+          complaintsAreSample={complaintSource.isSample}
           deviceInfo={layers ? deviceInfo : undefined}
           openRequest={openRequest}
-          onDeviceClick={(id) => { api.blast(id).then(setBlast).catch((e: Error) => setError(e.message)); }}
+          onDeviceClick={requestBlast}
         />
         <aside className="legend panel" aria-label="Map legend">
           <h3 className="label">Legend</h3>
@@ -182,7 +202,12 @@ export function MapView({ incidents, layers: shared }: { incidents: IncidentSumm
             <li><Swatch kind="isolated" />Would be isolated</li>
             <li><Swatch kind="warning" />Would lose redundancy</li>
             <li><Swatch kind="neutral" />Device, no finding</li>
-            {showSample && <li><Swatch kind="sample" />Illustrative demo data, not real reports</li>}
+            {showSample && (
+              <li>
+                <Swatch kind="sample" />
+                {complaintSource.isSample ? "Illustrative demo data, not real reports" : `${complaintSource.label}: unverified, never used in diagnosis`}
+              </li>
+            )}
           </ul>
           {placement && placement.notPlaced.length > 0 && (
             <p className="legend-note">Not placed: <span className="mono">{placement.notPlaced.join(", ")}</span></p>

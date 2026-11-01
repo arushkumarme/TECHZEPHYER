@@ -29,5 +29,8 @@ describe("DiagnosisPanel", () => {
     expect(screen.getByText(/COLLECTING/)).toBeInTheDocument();
     expect(container.querySelector(".cause")).toBeNull();
     expect(screen.queryByRole("meter")).toBeNull();
+    // Neutral wording: a failed, non-resumable run never fills in.
+    expect(screen.getByText("No report for this incident yet.")).toBeInTheDocument();
+    expect(screen.queryByText(/once the agents finish/)).toBeNull();
   });
 });

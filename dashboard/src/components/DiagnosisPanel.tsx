@@ -73,7 +73,7 @@ export function DiagnosisPanel({
         </div>
       )}
       {!r && !detail.resumable && (
-        <p className="muted small dx-pending">No report yet. The panel fills in once the agents finish.</p>
+        <p className="muted small dx-pending">No report for this incident yet.</p>
       )}
       {r && ext && (
         <>

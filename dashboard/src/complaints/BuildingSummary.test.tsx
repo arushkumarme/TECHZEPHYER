@@ -1,8 +1,10 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it } from "vitest";
 import { CAMPUS_FEATURES } from "../campus/features";
 import { BuildingSummary } from "./BuildingSummary";
 import type { ComplaintCluster } from "./types";
+
+afterEach(cleanup);
 
 const mhr = CAMPUS_FEATURES.find((f) => f.id === "mhr")!;
 
@@ -24,6 +26,13 @@ describe("BuildingSummary", () => {
     expect(screen.getByText(/2 reports/)).toBeInTheDocument();
     expect(screen.getByText("SAMPLE: pages load slowly (demo)")).toBeInTheDocument();
     expect(screen.getByText("SAMPLE: Wi-Fi drops (demo)")).toBeInTheDocument();
+  });
+
+  it("drops the SAMPLE marking for a source that is not sample data", () => {
+    render(<BuildingSummary building={mhr} cluster={cluster} isSample={false} />);
+    expect(screen.queryByText("SAMPLE")).toBeNull();
+    expect(screen.queryByText(/illustrative demo data/)).toBeNull();
+    expect(screen.getByRole("region", { name: /^Reports for Mahanadi/ })).toBeInTheDocument();
   });
 
   it("uses the singular for a single report", () => {

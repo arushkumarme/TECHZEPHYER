@@ -118,6 +118,25 @@ describe("useReplay", () => {
     expect(result.current.cursor).toBe(1);
   });
 
+  it("step from the fully revealed trace starts at row 0", () => {
+    const { result } = renderHook(() => useReplay(5, { ...opts, auto: false }));
+    expect(result.current.cursor).toBe(4);
+    act(() => { result.current.step(); });
+    expect(result.current.cursor).toBe(0);
+    expect(result.current.playing).toBe(false);
+    act(() => { result.current.step(); });
+    expect(result.current.cursor).toBe(1);
+  });
+
+  it("step after a finished replay starts at row 0", () => {
+    const { result } = renderHook(() => useReplay(5, opts));
+    act(() => { vi.advanceTimersByTime(400); });
+    expect(result.current.cursor).toBe(4);
+    expect(result.current.playing).toBe(false);
+    act(() => { result.current.step(); });
+    expect(result.current.cursor).toBe(0);
+  });
+
   it("restart replays from the start", () => {
     const { result } = renderHook(() => useReplay(5, { ...opts, auto: false }));
     act(() => { result.current.restart(); });

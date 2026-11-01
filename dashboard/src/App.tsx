@@ -1,5 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api, type Health, type IncidentSummary, type MapLayers, type ScenarioInfo } from "./api";
+import { CampusMap } from "./campus/CampusMap";
+import { sampleComplaintSource } from "./complaints/sample";
+import type { ComplaintSource } from "./complaints/types";
 import { CommunityView } from "./components/CommunityView";
 import { StatusTag } from "./components/DiagnosisPanel";
 import { IncidentView } from "./components/IncidentView";
@@ -9,15 +12,21 @@ type Tab = "incidents" | "map" | "community";
 const FAULTS = ["", "timeout", "error", "invalid"] as const;
 const AGENTS = ["performance_agent", "infrastructure_agent", "connectivity_agent"];
 
+/** Where the Campus map tab's complaint layer comes from; a backend source replaces this. */
+const COMPLAINT_SOURCE: ComplaintSource = sampleComplaintSource;
+
 export default function App() {
   const [health, setHealth] = useState<Health | null>(null);
   const [scenarios, setScenarios] = useState<ScenarioInfo[]>([]);
   const [incidents, setIncidents] = useState<IncidentSummary[]>([]);
   const [layers, setLayers] = useState<MapLayers | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
-  // The incident just created by Run diagnosis: its exchange replays once on arrival.
+  // The incident just created by Run diagnosis: its exchange replays once on arrival, and
+  // `fresh` is cleared as soon as that replay starts (or the user moves to another tab).
   const [fresh, setFresh] = useState<string | null>(null);
-  const [tab, setTab] = useState<Tab>("incidents");
+  const [tab, setTabState] = useState<Tab>("incidents");
+  const [faultOpen, setFaultOpen] = useState(false);
+  const faultMenu = useRef<HTMLDetailsElement>(null);
   const [scenario, setScenario] = useState("S-02");
   const [faultAgent, setFaultAgent] = useState(AGENTS[0]);
   const [fault, setFault] = useState<(typeof FAULTS)[number]>("");
@@ -25,6 +34,32 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(() => api.incidents().then(setIncidents), []);
+  const setTab = (next: Tab) => {
+    if (next !== tab) {
+      setFresh(null);
+      setFaultOpen(false);
+    }
+    setTabState(next);
+  };
+
+  // The failure menu is a disclosure: it closes on a click elsewhere and on Escape.
+  useEffect(() => {
+    if (!faultOpen) return;
+    const onPointer = (e: PointerEvent) => {
+      if (!faultMenu.current?.contains(e.target as Node)) setFaultOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setFaultOpen(false);
+      faultMenu.current?.querySelector("summary")?.focus();
+    };
+    document.addEventListener("pointerdown", onPointer, true);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointer, true);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [faultOpen]);
   const geospatial = !!health?.features.geospatial;
 
   useEffect(() => {
@@ -41,12 +76,13 @@ export default function App() {
 
   const run = async () => {
     setRunning(true);
+    setFaultOpen(false);
     try {
       const inc = await api.runScenario(scenario, fault ? { [faultAgent]: fault } : {});
       await refresh();
       setFresh(inc.incident_id);
       setSelected(inc.incident_id);
-      setTab("incidents");
+      setTabState("incidents");
       setError(null);
     } catch (e) {
       setError((e as Error).message);
@@ -83,7 +119,12 @@ export default function App() {
             >
               {scenarios.map((s) => <option key={s.id} value={s.id}>{s.id} — {s.title}</option>)}
             </select>
-            <details className={fault ? "fault-menu armed" : "fault-menu"}>
+            <details
+              ref={faultMenu}
+              className={fault ? "fault-menu armed" : "fault-menu"}
+              open={faultOpen}
+              onToggle={(e) => setFaultOpen(e.currentTarget.open)}
+            >
               <summary>Simulate an agent failure</summary>
               <div className="fault-pop panel">
                 <label htmlFor="fault-agent">Agent</label>
@@ -145,16 +186,24 @@ export default function App() {
               onChanged={() => void refresh()}
               layers={layers}
               autoReplay={selected === fresh}
+              onAutoPlayed={() => setFresh(null)}
             />
           ) : (
-            <div className="empty-state panel">
-              <h2>Choose an incident</h2>
-              <p className="muted">
-                Pick a scenario in the top bar and press Run diagnosis. Three specialist agents examine the telemetry in parallel, a correlation agent weighs their findings, and a reporting agent writes one report. You can follow every message between them.
-              </p>
+            // No incident yet: the campus map with every switch neutral, beside the hint.
+            <div className="incident incident-empty">
+              <section className="incident-hero" aria-label="Campus map">
+                <CampusMap variant="hero" layers={layers} highlight={null} />
+              </section>
+              <div className="diagnosis panel empty-state">
+                <h2>Choose an incident</h2>
+                <p className="empty-hint">No incident selected. Pick a scenario in the top bar and press Run diagnosis.</p>
+                <p className="muted">
+                  Three specialist agents examine the telemetry in parallel, a correlation agent weighs their findings, and a reporting agent writes one report. You can follow every message between them, and the affected switches light up on the map.
+                </p>
+              </div>
             </div>
           ))}
-          {tab === "map" && <MapView incidents={incidents} layers={layers} />}
+          {tab === "map" && <MapView incidents={incidents} layers={layers} complaintSource={COMPLAINT_SOURCE} />}
           {tab === "community" && (
             <CommunityView scenarios={scenarios} onInvestigated={async (id) => { await refresh(); setFresh(null); setSelected(id); setTab("incidents"); }} />
           )}

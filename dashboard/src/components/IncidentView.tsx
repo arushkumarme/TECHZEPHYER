@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api, type IncidentDetail, type MapLayers, type Overlay, type ReviewItem, type TraceEvent } from "../api";
 import { CampusMap, DEVICE_STATE_LABEL } from "../campus/CampusMap";
 import { CAMPUS_FEATURES } from "../campus/features";
@@ -33,11 +33,14 @@ export function IncidentView({
   onChanged,
   layers,
   autoReplay,
+  onAutoPlayed,
 }: {
   id: string;
   onChanged: () => void;
   layers: MapLayers | null;
   autoReplay: boolean;
+  /** Called once the automatic replay has begun, so it is not repeated on the next visit. */
+  onAutoPlayed?: () => void;
 }) {
   const [detail, setDetail] = useState<IncidentDetail | null>(null);
   const [trace, setTrace] = useState<TraceEvent[]>([]);
@@ -74,6 +77,13 @@ export function IncidentView({
   }, [id, layers]);
 
   const replay = useReplay(trace.length, { auto: autoReplay, resetKey: id });
+  // The replay starts once rows exist; from then on this run is no longer fresh.
+  const autoDue = autoReplay && trace.length > 0;
+  const onAutoPlayedRef = useRef(onAutoPlayed);
+  onAutoPlayedRef.current = onAutoPlayed;
+  useEffect(() => {
+    if (autoDue) onAutoPlayedRef.current?.();
+  }, [autoDue]);
   const { cursor, playing } = replay;
   const activity = useMemo(() => agentActivity(trace, cursor), [trace, cursor]);
   const row = playing ? trace[cursor] : undefined;

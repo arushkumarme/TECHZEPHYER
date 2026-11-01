@@ -55,6 +55,7 @@ export function AgentStrip({
           <button type="button" className="secondary" onClick={replay.play}>Replay</button>
         )}
         <button type="button" className="secondary" onClick={replay.step}>Step</button>
+        <button type="button" className="secondary" onClick={replay.restart}>Restart</button>
         <button
           type="button"
           className="secondary strip-toggle"

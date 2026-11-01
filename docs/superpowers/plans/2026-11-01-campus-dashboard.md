@@ -34,6 +34,7 @@ Spec deviations (builder-check and test constraints, recorded here so reviewers 
 - Limitations and "What could not be assessed" stay **expanded** (spec §5.2 said collapsed): a browser test reads a limitation without clicking.
 - Not-assessable devices are **not** drawn hollow (spec §6): the generator omits `interface_errors` for all devices outside hardware failures, so every switch would be hollow in almost every run. The device popover lists that device's not-assessable metrics instead, so missing data is never presented as healthy.
 - Campus features ship as a typed module (`src/campus/features.ts`) rather than `public/campus-features.json`.
+- `insufficient_evidence` suspects (spec §6 "leading hypothesis", final-review ruling): `affected_devices`, else the devices of the first hypothesis whose `cause_type` is not `normal_operation` or `telemetry_unreliable` and whose `entities` is non-empty; none if there is no such hypothesis. Literal `hypotheses[0]` is usually `normal_operation` with no entities (S-03), which left the map blank while the panel named a suspect.
 
 ---
 

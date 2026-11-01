@@ -54,6 +54,8 @@ export interface CampusMapProps {
   highlight: Highlight | null;
   reportedZones?: { zone: string; corroborated: boolean }[];
   complaints?: ComplaintCluster[] | null;
+  /** The complaint layer is illustrative demo data: every badge and popover says SAMPLE. */
+  complaintsAreSample?: boolean;
   pulse?: string[];
   deviceInfo?: (id: string) => ReactNode;
   onDeviceClick?: (id: string) => void;
@@ -85,6 +87,13 @@ const PAN_BOUNDS: [[number, number], [number, number]] = [
   [IMAGE_BOUNDS[0][0] - PAN_PAD, IMAGE_BOUNDS[0][1] - PAN_PAD],
   [IMAGE_BOUNDS[1][0] + PAN_PAD, IMAGE_BOUNDS[1][1] + PAN_PAD],
 ];
+
+// The hero's key column is 240 px wide, 12 px in from the right edge (styles.css .hero-aside).
+const HERO_ASIDE_CLEARANCE = 240 + 12 + 16;
+const HERO_POPUP_PAN = {
+  autoPanPaddingTopLeft: [16, 16] as [number, number],
+  autoPanPaddingBottomRight: [HERO_ASIDE_CLEARANCE, 16] as [number, number],
+};
 
 const featureById = new Map(CAMPUS_FEATURES.map((f) => [f.id, f]));
 const at = (p: { x: number; y: number }) => toLatLng(p.x, p.y) as LatLngExpression;
@@ -179,7 +188,17 @@ function focusable(label: string) {
   };
 }
 
-function BuildingPopover({ building, devices, cluster }: { building: CampusFeature; devices: PlacedDevice[]; cluster?: ComplaintCluster }) {
+function BuildingPopover({
+  building,
+  devices,
+  cluster,
+  isSample,
+}: {
+  building: CampusFeature;
+  devices: PlacedDevice[];
+  cluster?: ComplaintCluster;
+  isSample: boolean;
+}) {
   return (
     <div className="map-pop">
       <h3 className="pop-title">{building.name}</h3>
@@ -194,12 +213,26 @@ function BuildingPopover({ building, devices, cluster }: { building: CampusFeatu
           </ul>
         </div>
       )}
-      {cluster && <BuildingSummary building={building} cluster={cluster} />}
+      {cluster && <BuildingSummary building={building} cluster={cluster} isSample={isSample} />}
     </div>
   );
 }
 
-export function CampusMap({ layers, highlight, reportedZones, complaints, pulse, deviceInfo, onDeviceClick, variant, openRequest }: CampusMapProps) {
+export function CampusMap({
+  layers,
+  highlight,
+  reportedZones,
+  complaints,
+  complaintsAreSample = true,
+  pulse,
+  deviceInfo,
+  onDeviceClick,
+  variant,
+  openRequest,
+}: CampusMapProps) {
+  // In the hero, the map key and lists sit over the top-right corner, above Leaflet's panes:
+  // keep every popover clear of that column so none opens underneath it.
+  const popPan = variant === "hero" ? HERO_POPUP_PAN : undefined;
   const { placed } = useMemo(() => (layers ? placeDevices(layers.devices) : { placed: [] as PlacedDevice[] }), [layers]);
   const placedById = useMemo(() => new Map(placed.map((d) => [d.id, d])), [placed]);
   const byBuilding = useMemo(() => {
@@ -289,8 +322,8 @@ export function CampusMap({ layers, highlight, reportedZones, complaints, pulse,
             pathOptions={{ color: P.accent, opacity: 0, weight: 1.5, fillColor: P.accent, fillOpacity: 0 }}
             eventHandlers={{ add: focusable(f.name) }}
           >
-            <Popup className="map-popup" maxWidth={300} minWidth={220}>
-              <BuildingPopover building={f} devices={byBuilding.get(f.id) ?? []} cluster={clusters.get(f.id)} />
+            <Popup className="map-popup" maxWidth={300} minWidth={220} {...popPan}>
+              <BuildingPopover building={f} devices={byBuilding.get(f.id) ?? []} cluster={clusters.get(f.id)} isSample={complaintsAreSample} />
             </Popup>
           </CircleMarker>
         ))}
@@ -356,7 +389,7 @@ export function CampusMap({ layers, highlight, reportedZones, complaints, pulse,
                 {d.id}{labelled ? "" : ` · ${d.role}`}
               </Tooltip>
               {deviceInfo && (
-                <Popup className="map-popup" maxWidth={300} minWidth={220}>
+                <Popup className="map-popup" maxWidth={300} minWidth={220} {...popPan}>
                   <div className="map-pop">{deviceInfo(d.id)}</div>
                 </Popup>
               )}
@@ -368,16 +401,17 @@ export function CampusMap({ layers, highlight, reportedZones, complaints, pulse,
           const f = featureById.get(c.buildingId);
           if (!f) return [];
           const side = badgeSide(f.id);
+          const tag = complaintsAreSample ? `<span class="cbadge-tag">SAMPLE</span>` : "";
           const icon = divIcon({
             className: "cbadge-icon",
-            html: `<span class="cbadge"><span class="cbadge-tag">SAMPLE</span><span class="cbadge-n">${c.count}</span></span>`,
+            html: `<span class="cbadge">${tag}<span class="cbadge-n">${c.count}</span></span>`,
             iconSize: [BADGE_W, BADGE_H],
             iconAnchor: BADGE_ANCHOR[side],
           });
           return [
-            <Marker key={`c-${c.buildingId}`} position={at(f)} icon={icon} title={`SAMPLE reports at ${f.name}: ${c.count}`} alt="">
-              <Popup className="map-popup" maxWidth={300} minWidth={220}>
-                <BuildingPopover building={f} devices={byBuilding.get(f.id) ?? []} cluster={c} />
+            <Marker key={`c-${c.buildingId}`} position={at(f)} icon={icon} title={`${complaintsAreSample ? "SAMPLE reports" : "Reports"} at ${f.name}: ${c.count}`} alt="">
+              <Popup className="map-popup" maxWidth={300} minWidth={220} {...popPan}>
+                <BuildingPopover building={f} devices={byBuilding.get(f.id) ?? []} cluster={c} isSample={complaintsAreSample} />
               </Popup>
             </Marker>,
           ];

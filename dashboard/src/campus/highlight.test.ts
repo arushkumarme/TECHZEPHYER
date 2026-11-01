@@ -61,6 +61,45 @@ describe("deriveHighlight", () => {
     expect(h.links).toEqual([]);
     expect(h.focus).toEqual(["SW_CAMPUS_7"]);
   });
+  it("insufficient evidence skips non-fault hypotheses (S-03 shape)", () => {
+    const r = report({
+      status: "insufficient_evidence",
+      netcoop_extensions: {
+        hypotheses: [
+          { cause_type: "normal_operation", entities: [], score: 0.71 },
+          { cause_type: "upstream_congestion", entities: ["SW_CAMPUS_5"], score: 0.45 },
+          { cause_type: "interface_fault", entities: ["SW_CAMPUS_6"], score: 0.14 },
+        ],
+      },
+    } as unknown as Partial<Report>);
+    const h = deriveHighlight(r, layers, null);
+    expect(h.devices.SW_CAMPUS_5).toBe("suspect");
+    expect(h.devices.SW_CAMPUS_6).toBe("neutral");
+    expect(h.focus).toEqual(["SW_CAMPUS_5"]);
+  });
+  it("insufficient evidence ignores telemetry_unreliable and empty fault hypotheses", () => {
+    const r = report({
+      status: "insufficient_evidence",
+      netcoop_extensions: {
+        hypotheses: [
+          { cause_type: "telemetry_unreliable", entities: ["SW_CAMPUS_3"], score: 0.5 },
+          { cause_type: "link_congestion", entities: [], score: 0.4 },
+          { cause_type: "normal_operation", entities: ["SW_CAMPUS_2"], score: 0.3 },
+        ],
+      },
+    } as unknown as Partial<Report>);
+    expect(states(deriveHighlight(r, layers, null), "neutral")).toBe(true);
+  });
+  it("insufficient evidence prefers affected_devices over hypotheses", () => {
+    const r = report({
+      status: "insufficient_evidence",
+      affected_devices: ["SW_CAMPUS_8"],
+      netcoop_extensions: { hypotheses: [{ cause_type: "link_congestion", entities: ["SW_CAMPUS_7"], score: 0.4 }] },
+    } as unknown as Partial<Report>);
+    const h = deriveHighlight(r, layers, null);
+    expect(h.devices.SW_CAMPUS_8).toBe("suspect");
+    expect(h.devices.SW_CAMPUS_7).toBe("neutral");
+  });
   it("insufficient evidence with nothing is neutral", () => {
     expect(states(deriveHighlight(report({ status: "insufficient_evidence" }), layers, null), "neutral")).toBe(true);
   });

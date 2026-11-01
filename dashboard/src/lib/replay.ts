@@ -135,10 +135,11 @@ export function useReplay(
     setPos(cursor);
     setPlaying(false);
   }, [cursor]);
+  // From a fully revealed trace, Step starts over at the first row; otherwise it advances one.
   const step = useCallback(() => {
-    setPos(Math.min(cursor + 1, last));
+    setPos(pos === null || cursor >= last ? 0 : Math.min(cursor + 1, last));
     setPlaying(false);
-  }, [cursor, last]);
+  }, [pos, cursor, last]);
   const restart = useCallback(() => start(0), [start]);
 
   return { cursor, playing: playing || autoPending, play, pause, step, restart };

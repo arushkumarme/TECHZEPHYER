@@ -39,6 +39,8 @@ describe("AgentStrip", () => {
     expect(r.play).toHaveBeenCalled();
     fireEvent.click(screen.getByRole("button", { name: "Step" }));
     expect(r.step).toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Restart" }));
+    expect(r.restart).toHaveBeenCalled();
   });
 
   it("shows Pause while playing", () => {

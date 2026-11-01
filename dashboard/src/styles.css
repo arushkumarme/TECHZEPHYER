@@ -190,6 +190,9 @@ p { margin: 0 0 8px; }
 .inc-cause::first-letter { text-transform: uppercase; }
 
 .empty-state { max-width: 640px; }
+.incident-empty .empty-state { max-width: none; }
+.incident-empty .empty-state h2 { margin: 0 0 8px; }
+.empty-hint { margin: 0 0 12px; color: var(--text); }
 
 /* ---- Forms and buttons ---- */
 label { display: block; font-size: 12px; color: var(--muted); margin: 12px 0 4px; }
