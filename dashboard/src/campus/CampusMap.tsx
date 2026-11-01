@@ -15,17 +15,16 @@ export const NETWORK_OFF_NOTICE =
   "Network layer off. Start the backend with NETCOOP_ENABLE=community_signals,geospatial (doc 13).";
 
 // Leaflet writes path colours as SVG attributes, so the palette is repeated here as values.
-// Keep in step with the custom properties in styles.css. Unhighlighted links use muted at
-// reduced opacity: --line (#1d2630) is invisible on the artwork's dark field.
+// Keep in step with the custom properties in styles.css.
 const P = {
-  bg: "#0a0e13",
-  text: "#e6edf3",
-  muted: "#8592a0",
-  accent: "#5b9bff",
-  ok: "#46b98a",
-  warning: "#e0a43c",
-  critical: "#e5605a",
-  corroborated: "#a48bf0",
+  bg: "#faf8f0",
+  text: "#29362d",
+  muted: "#72796c",
+  accent: "#476d50",
+  ok: "#4b815b",
+  warning: "#ac7c2d",
+  critical: "#a74432",
+  corroborated: "#786c83",
 };
 
 const RADIUS: Record<string, number> = { core: 9, distribution: 7, access: 6 };

@@ -102,13 +102,11 @@ export default function App() {
     <div className="shell">
       <header className="masthead">
         <div className="topbar">
-          <h1 className="brand">NetCoop AI</h1>
-          <nav className="tabs" role="tablist" aria-label="Views">
-            {tabs.filter(([, , on]) => on).map(([id, label]) => (
-              <button key={id} role="tab" aria-selected={tab === id} onClick={() => setTab(id)}>{label}</button>
-            ))}
-          </nav>
-          <span className="pill">Simulated data · scenario playback</span>
+          <div className="page-heading">
+            <p className="eyebrow">Campus network operations</p>
+            <h2>Incident diagnosis</h2>
+            <p>Multi-agent network fault analysis</p>
+          </div>
           <div className="run-controls" aria-label="Run a scenario" role="group">
             <label htmlFor="scenario">Scenario</label>
             <select
@@ -151,6 +149,26 @@ export default function App() {
         </div>
       </header>
       <div className="layout">
+        <aside className="view-rail" aria-label="NetCoop navigation">
+          <div className="brand-lockup">
+            <svg className="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+              <path d="M8 16 16 8m0 0 8 8m-8-8v16m0 0 8-8m-8 8-8-8" />
+              <circle cx="8" cy="16" r="3" />
+              <circle cx="16" cy="8" r="3" />
+              <circle cx="24" cy="16" r="3" />
+              <circle cx="16" cy="24" r="3" />
+            </svg>
+            <span>
+              <h1 className="brand">NetCoop AI</h1>
+              <span className="brand-caption">NETWORK DIAGNOSIS</span>
+            </span>
+          </div>
+          <nav className="tabs" role="tablist" aria-label="Views" aria-orientation="vertical">
+            {tabs.filter(([, , on]) => on).map(([id, label]) => (
+              <button key={id} role="tab" aria-selected={tab === id} onClick={() => setTab(id)}>{label}</button>
+            ))}
+          </nav>
+        </aside>
         <aside className="rail" aria-label="Incidents">
           <h2 className="label">Incidents</h2>
           {chosen && <p className="rail-meta">Data: <span className="mono">{chosen.provenance}</span></p>}
@@ -177,7 +195,7 @@ export default function App() {
             </ul>
           )}
         </aside>
-        <main className="main">
+        <main className={tab === "incidents" ? "main main--incident" : "main"}>
           {error && <div className="error-box" role="alert">{error}</div>}
           {tab === "incidents" && (selected ? (
             <IncidentView

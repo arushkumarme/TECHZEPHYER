@@ -126,7 +126,11 @@ class LLMGateway:
             candidate = self.provider.complete(SYSTEM_PROMPT, f"<summary>{text}</summary>").strip()
         except Exception as exc:  # any provider problem -> template (doc 05 §7)
             return RewordResult(
-                text, False, "LLM_UNAVAILABLE", name, f"{type(exc).__name__}: {exc}"
+                text,
+                False,
+                "LLM_UNAVAILABLE",
+                name,
+                f"{type(exc).__name__}: provider request failed",
             )
         problems = grounding_violations(candidate, allowed_terms=allowed_terms)
         if not candidate or problems:
