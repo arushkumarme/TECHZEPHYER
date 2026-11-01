@@ -283,3 +283,10 @@ Newest entry last. Each entry records actual commands and results. See `IMPLEMEN
 - Conformance kit: 15 valid / 17 invalid / 11 conversations (real conflict; compatible disagreement raising no conflict; report from a specialist; response from a non-party). Inspector shows conflicts in table and sequence views.
 - Existing tests changed (version constant only, no logic): `tests/core/test_envelope_v11.py::test_current_version_is_1_1` -> `_1_2`, `tests/orchestrator/test_stamping.py` and `tests/conformance/test_kit.py` expect "1.2". Each change is commented in place.
 - Review fixes on resume: the compatible-disagreement kit conversation built a performance finding with a `compatible` relation but never sent it (it reused the default finding); now sent. Removed an unused `type: ignore` (mypy).
+
+## Campus dashboard redesign (2026-11-01)
+
+- Frontend only (`dashboard/`): Incidents tab is now a hero campus-artwork map with diagnosis panel, agent strip and message replay; User reports restyled to the panel system (classes only, same labels, roles and flow). Decision D-26 (PROVISIONAL) records the zone-to-building placement table; doc 11 notes the refinement of ID-17 (display only); doc 14 demo path updated; screenshots regenerated.
+- Spec deviations (recorded so reviewers do not flag them): limitations and "What could not be assessed" stay expanded (a browser test reads them without a click); not-assessable devices are not drawn hollow (the popover lists their not-assessable metrics instead, so missing data is never shown as healthy); campus features ship as a typed TS module (`src/campus/features.ts`) rather than public JSON. Also: the hero map reuses the switch/building lists (spec section 10), and violet stays as a semantic colour for clarification/corroborated.
+- No backend file changed: `git diff --stat ead6b40 -- src config sample_data` is empty (ead6b40 is the merge-base with `feature/protocol-upgrade`).
+- No existing test changed.

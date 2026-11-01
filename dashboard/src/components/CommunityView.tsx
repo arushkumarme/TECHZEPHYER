@@ -46,7 +46,9 @@ export function CommunityView({ scenarios, onInvestigated }: {
   };
 
   return (
-    <div>
+    <div className="community">
+      <section className="panel">
+      <div className="label">Reporting form</div>
       <h2>Report a network problem</h2>
       <p className="muted small" style={{ maxWidth: "70ch" }}>
         Test submissions only. Reports are unverified: they can start an investigation, but only network telemetry can confirm a fault.
@@ -61,7 +63,10 @@ export function CommunityView({ scenarios, onInvestigated }: {
       </form>
       {ack && <div className="notice" role="status">{ack}</div>}
       {error && <div className="error-box" role="alert">{error}</div>}
+      </section>
 
+      <section className="panel" style={{ marginTop: 16 }}>
+      <div className="label">Unverified reports</div>
       <h2>Candidate incidents</h2>
       {candidates.length === 0 ? (
         <p className="muted">No candidates yet. A candidate needs reports from at least two different people about the same place within an hour.</p>
@@ -76,7 +81,7 @@ export function CommunityView({ scenarios, onInvestigated }: {
             <tbody>
               {candidates.map((c) => (
                 <tr key={c.candidate_id}>
-                  <td className="id">{c.candidate_id}</td><td>{c.zone}</td><td className="id">{c.entities.join(", ")}</td>
+                  <td className="id"><span className="tag neutral">{c.candidate_id}</span></td><td>{c.zone}</td><td className="id">{c.entities.join(", ")}</td>
                   <td>{c.distinct_reporters}</td><td>{c.symptom_categories.join(", ")}</td>
                   <td><button className="secondary" disabled={busy} onClick={() => investigate(c.candidate_id)}>Investigate</button></td>
                 </tr>
@@ -85,6 +90,7 @@ export function CommunityView({ scenarios, onInvestigated }: {
           </table>
         </>
       )}
+      </section>
     </div>
   );
 }
