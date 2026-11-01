@@ -8,17 +8,20 @@ const C = { link: "#1f5fa8", red: "#b42318", amber: "#b7791f", violet: "#6941c6"
 
 // Schematic, non-geographic map (decision ID-17): Leaflet CRS.Simple with x/y units, so no
 // tile server is needed and nothing implies real campus geography.
-export function MapView({ incidents }: { incidents: IncidentSummary[] }) {
-  const [layers, setLayers] = useState<MapLayers | null>(null);
+export function MapView({ incidents, layers: shared }: { incidents: IncidentSummary[]; layers?: MapLayers | null }) {
+  const [fetched, setFetched] = useState<MapLayers | null>(null);
   const [incident, setIncident] = useState<string>("");
   const [overlay, setOverlay] = useState<Overlay | null>(null);
   const [blast, setBlast] = useState<BlastRadius | null>(null);
   const [showBlast, setShowBlast] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Prefer the layers App already fetched; fetch here only if they are not there yet.
   useEffect(() => {
-    api.layers().then(setLayers).catch((e: Error) => setError(e.message));
-  }, []);
+    if (shared) return;
+    api.layers().then(setFetched).catch((e: Error) => setError(e.message));
+  }, [shared]);
+  const layers = shared ?? fetched;
   useEffect(() => {
     if (!incident) return setOverlay(null);
     api.overlay(incident).then(setOverlay).catch((e: Error) => setError(e.message));
