@@ -1,0 +1,516 @@
+{
+  "title": "IIT Bhubaneswar Argul Campus — Research-backed 2D orientation map",
+  "version": "1.0",
+  "created": "2026-11-01",
+  "map_type": "Diagrammatic, not-to-scale campus orientation map",
+  "campus_facts": {
+    "official_name": "Indian Institute of Technology Bhubaneswar",
+    "permanent_campus": "Argul, Khordha district, Odisha, India",
+    "area_acres": 936,
+    "setting": "At the foot of Barunei Hill",
+    "campus_organization": [
+      "Academic area",
+      "Residential area",
+      "Training centres",
+      "Research Park"
+    ],
+    "approaches_from_user_supplied_maps": [
+      "Khordha–IIT Road",
+      "Argul–Jatni Road",
+      "Jatni Main Entrance Gate",
+      "Main Gate"
+    ]
+  },
+  "features": [
+    {
+      "id": "main-gate",
+      "name": "Main Gate",
+      "short": "MAIN GATE",
+      "category": "access",
+      "description": "Main campus gate shown at the southern junction on the supplied Road Map IIT BBS. The official master plan separately labels the Jatni main entrance gate.",
+      "position_source": "Supplied Road Map IIT BBS; cross-reference: official 2025 campus master plan",
+      "position_confidence": "diagrammatic",
+      "status": "existing / shown on supplied map",
+      "acronym": "",
+      "position_xy": {
+        "x": 620,
+        "y": 1015,
+        "coordinate_system": "SVG viewBox pixels; schematic only"
+      }
+    },
+    {
+      "id": "admin",
+      "name": "Administrative Building",
+      "short": "ADMIN BUILDING",
+      "category": "administration",
+      "description": "Administrative Building, identified on the supplied road map and shown in the institute's official About Campus gallery.",
+      "position_source": "Supplied Road Map IIT BBS; official About Campus page",
+      "position_confidence": "diagrammatic",
+      "status": "officially documented",
+      "acronym": "",
+      "position_xy": {
+        "x": 650,
+        "y": 620,
+        "coordinate_system": "SVG viewBox pixels; schematic only"
+      }
+    },
+    {
+      "id": "sbs",
+      "name": "School of Basic Sciences",
+      "short": "SBS",
+      "category": "academic",
+      "description": "Current official school name: School of Basic Sciences. The supplied road map labels this building SBS.",
+      "position_source": "Supplied Road Map IIT BBS; current school list on official IIT BBS website",
+      "position_confidence": "diagrammatic",
+      "status": "officially documented",
+      "acronym": "SBS",
+      "position_xy": {
+        "x": 400,
+        "y": 900,
+        "coordinate_system": "SVG viewBox pixels; schematic only"
+      }
+    },
+    {
+      "id": "seocs",
+      "name": "School of Earth, Ocean and Climate Sciences",
+      "short": "SEOCS",
+      "category": "academic",
+      "description": "Current official school name and acronym SEOCS. The supplied road-map graphic has a small label that appears as SEOCS, while its legend has a variant typo.",
+      "position_source": "Supplied Road Map IIT BBS; official SEOCS website",
+      "position_confidence": "diagrammatic",
+      "status": "officially documented",
+      "acronym": "SEOCS",
+      "position_xy": {
+        "x": 245,
+        "y": 650,
+        "coordinate_system": "SVG viewBox pixels; schematic only"
+      }
+    },
+    {
+      "id": "secs",
+      "name": "School of Electrical and Computer Sciences",
+      "short": "SECS",
+      "category": "academic",
+      "description": "Current official name is School of Electrical and Computer Sciences, covering Electrical Engineering, Electronics and Communication Engineering, and Computer Science and Engineering. The older road map calls it SES / School of Electrical Sciences.",
+      "position_source": "Supplied Road Map IIT BBS (older SES label); current official SECS website",
+      "position_confidence": "diagrammatic",
+      "status": "officially documented; name updated",
+      "acronym": "SECS",
+      "position_xy": {
+        "x": 535,
+        "y": 865,
+        "coordinate_system": "SVG viewBox pixels; schematic only"
+      }
+    },
+    {
+      "id": "shssm",
+      "name": "School of Humanities, Social Sciences and Management",
+      "short": "SHSSM",
+      "category": "academic",
+      "description": "Current official school name includes Management. The supplied road map abbreviates it SHSS.",
+      "position_source": "Supplied Road Map IIT BBS; current official school list",
+      "position_confidence": "diagrammatic",
+      "status": "officially documented; name updated",
+      "acronym": "SHSSM",
+      "position_xy": {
+        "x": 245,
+        "y": 515,
+        "coordinate_system": "SVG viewBox pixels; schematic only"
+      }
+    },
+    {
+      "id": "sif",
+      "name": "School of Infrastructure",
+      "short": "SIF",
+      "category": "academic",
+      "description": "School of Infrastructure, labelled SIF on the supplied road map and included in the current official school list.",
+      "position_source": "Supplied Road Map IIT BBS; current official school list",
+      "position_confidence": "diagrammatic",
+      "status": "officially documented",
+      "acronym": "SIF",
+      "position_xy": {
+        "x": 465,
+        "y": 385,
+        "coordinate_system": "SVG viewBox pixels; schematic only"
+      }
+    },
+    {
+      "id": "sms",
+      "name": "School of Mechanical Sciences",
+      "short": "SMS",
+      "category": "academic",
+      "description": "School of Mechanical Sciences, labelled SMS on the supplied road map and included in the current official school list.",
+      "position_source": "Supplied Road Map IIT BBS; current official school list",
+      "position_confidence": "diagrammatic",
+      "status": "officially documented",
+      "acronym": "SMS",
+      "position_xy": {
+        "x": 465,
+        "y": 220,
+        "coordinate_system": "SVG viewBox pixels; schematic only"
+      }
+    },
+    {
+      "id": "smmme",
+      "name": "School of Minerals, Metallurgical and Materials Engineering",
+      "short": "SMMME",
+      "category": "academic",
+      "description": "Current official school name: School of Minerals, Metallurgical and Materials Engineering. The supplied road map uses the same abbreviation.",
+      "position_source": "Supplied Road Map IIT BBS; current official school list",
+      "position_confidence": "diagrammatic",
+      "status": "officially documented",
+      "acronym": "SMMME",
+      "position_xy": {
+        "x": 420,
+        "y": 515,
+        "coordinate_system": "SVG viewBox pixels; schematic only"
+      }
+    },
+    {
+      "id": "lhc",
+      "name": "Lecture Hall Complex",
+      "short": "LHC",
+      "category": "academic",
+      "description": "Lecture Hall Complex, shown as LBC (Lecture Block Complex) in the supplied road-map legend. The official campus site calls it Lecture Hall Complex.",
+      "position_source": "Supplied Road Map IIT BBS; official About Campus page",
+      "position_confidence": "diagrammatic",
+      "status": "officially documented; name normalized",
+      "acronym": "LHC",
+      "position_xy": {
+        "x": 285,
+        "y": 805,
+        "coordinate_system": "SVG viewBox pixels; schematic only"
+      }
+    },
+    {
+      "id": "mhr",
+      "name": "Mahanadi Hall of Residence",
+      "short": "MHR",
+      "category": "residential",
+      "description": "Mahanadi Hall of Residence (boys' hostel). The supplied road map shows MHR in the residential cluster.",
+      "position_source": "Supplied Road Map IIT BBS; official Hall of Residence page",
+      "position_confidence": "diagrammatic",
+      "status": "officially documented",
+      "acronym": "MHR",
+      "position_xy": {
+        "x": 1010,
+        "y": 485,
+        "coordinate_system": "SVG viewBox pixels; schematic only"
+      }
+    },
+    {
+      "id": "bhr",
+      "name": "Brahmaputra Hall of Residence",
+      "short": "BHR",
+      "category": "residential",
+      "description": "Brahmaputra Hall of Residence (boys' hostel). The supplied road map shows BHR in the residential cluster.",
+      "position_source": "Supplied Road Map IIT BBS; official Hall of Residence page",
+      "position_confidence": "diagrammatic",
+      "status": "officially documented",
+      "acronym": "BHR",
+      "position_xy": {
+        "x": 1105,
+        "y": 485,
+        "coordinate_system": "SVG viewBox pixels; schematic only"
+      }
+    },
+    {
+      "id": "rhr",
+      "name": "Rushikulya Hall of Residence",
+      "short": "RHR",
+      "category": "residential",
+      "description": "Rushikulya Hall of Residence. It is listed with a hall contact on the official Hall of Residence page and is shown on the supplied road map.",
+      "position_source": "Supplied Road Map IIT BBS; official Hall of Residence page",
+      "position_confidence": "diagrammatic",
+      "status": "officially documented",
+      "acronym": "RHR",
+      "position_xy": {
+        "x": 1105,
+        "y": 355,
+        "coordinate_system": "SVG viewBox pixels; schematic only"
+      }
+    },
+    {
+      "id": "sac",
+      "name": "Student Activity Centre",
+      "short": "SAC",
+      "category": "student-life",
+      "description": "Student Activity Centre. The official campus site lists the centre and sports facilities; the supplied road map shows SAC beside the sports-court area.",
+      "position_source": "Supplied Road Map IIT BBS; official About Campus page",
+      "position_confidence": "diagrammatic",
+      "status": "officially documented",
+      "acronym": "SAC",
+      "position_xy": {
+        "x": 1035,
+        "y": 950,
+        "coordinate_system": "SVG viewBox pixels; schematic only"
+      }
+    },
+    {
+      "id": "community",
+      "name": "Community Centre",
+      "short": "COMMUNITY CENTRE",
+      "category": "student-life",
+      "description": "Community Centre is labelled on the supplied road map and appears as a facility in the 2023 master-plan document. Its exact current operational status should be confirmed with the institute before treating it as an active service point.",
+      "position_source": "Supplied Road Map IIT BBS; 2023 IIT BBS infrastructure planning document",
+      "position_confidence": "diagrammatic",
+      "status": "shown in planning/map sources; current status not independently verified",
+      "acronym": "CC",
+      "position_xy": {
+        "x": 1180,
+        "y": 995,
+        "coordinate_system": "SVG viewBox pixels; schematic only"
+      }
+    },
+    {
+      "id": "sports",
+      "name": "Sports facilities / courts",
+      "short": "SPORTS COURTS",
+      "category": "sports",
+      "description": "The official campus page lists table tennis, squash, volleyball, indoor badminton, hockey, cricket, basketball, athletics, football and related facilities. The supplied road map depicts courts near SAC; individual sport-facility positions are not verified here.",
+      "position_source": "Supplied Road Map IIT BBS; official About Campus page",
+      "position_confidence": "cluster-level only",
+      "status": "official facilities documented; individual positions approximate",
+      "acronym": "",
+      "position_xy": {
+        "x": 1020,
+        "y": 825,
+        "coordinate_system": "SVG viewBox pixels; schematic only"
+      }
+    },
+    {
+      "id": "nescafe",
+      "name": "Nescafé (label on supplied road map)",
+      "short": "CAFÉ",
+      "category": "amenity",
+      "description": "Nescafé is labelled on the supplied road map near the central crossing. Current outlet name and operating status were not independently confirmed from an official source.",
+      "position_source": "Supplied Road Map IIT BBS only",
+      "position_confidence": "diagrammatic",
+      "status": "source-map label; current status unverified",
+      "acronym": "",
+      "position_xy": {
+        "x": 900,
+        "y": 620,
+        "coordinate_system": "SVG viewBox pixels; schematic only"
+      }
+    },
+    {
+      "id": "overbridge",
+      "name": "Over Bridge",
+      "short": "OVER BRIDGE",
+      "category": "access",
+      "description": "Over Bridge is labelled as a route feature on the supplied road map. It is not a building or a verified network link.",
+      "position_source": "Supplied Road Map IIT BBS only",
+      "position_confidence": "diagrammatic",
+      "status": "shown on supplied route map",
+      "acronym": "",
+      "position_xy": {
+        "x": 800,
+        "y": 705,
+        "coordinate_system": "SVG viewBox pixels; schematic only"
+      }
+    },
+    {
+      "id": "jatni-gate",
+      "name": "Jatni Main Entrance Gate",
+      "short": "JATNI ENTRANCE",
+      "category": "access",
+      "description": "The official 2025 master plan labels a Jatni Main Entrance Gate. It is kept distinct from the Main Gate label on the supplied road map because the drawings do not establish whether they refer to precisely the same access point.",
+      "position_source": "Official 2025 campus master plan",
+      "position_confidence": "broad location only",
+      "status": "official master-plan label",
+      "acronym": "",
+      "position_xy": {
+        "x": 1020,
+        "y": 270,
+        "coordinate_system": "SVG viewBox pixels; schematic only"
+      }
+    }
+  ],
+  "coordinate_reference": "SVG viewBox x/y pixels (1920 x 1240), not geographic coordinates.",
+  "halls_of_residence": {
+    "published_names": [
+      "Mahanadi Hall of Residence (MHR)",
+      "Brahmaputra Hall of Residence (BHR)",
+      "Rushikulya Hall of Residence (RHR)",
+      "Ganga Hall of Residence (GHR)",
+      "Subarnarekha Hall of Residence (SHR)",
+      "Sangam Hall of Residence"
+    ],
+    "source_consistency_note": "The official Hall of Residence overview says there are four halls (Ganga, Mahanadi, Brahmaputra, Subarnarekha) with capacity about 2,000; the same page's contact list also names Rushikulya and Sangam HR. The Students Life page has a different/older count and mentions A.N. Khosla Hall outside the permanent campus. Because public pages are internally inconsistent, this map lists the names but only pins MHR, BHR and RHR where they appear on the supplied campus road map. Verify any exact operational roster with the institute."
+  },
+  "officially_documented_but_not_individually_pinned": [
+    {
+      "name": "Central Research and Instrumentation Facility (CRIF)",
+      "category": "academic infrastructure",
+      "detail": "Official campus site lists CRIF as other academic infrastructure; exact pin not confirmed from supplied route map."
+    },
+    {
+      "name": "Central Workshop",
+      "category": "academic infrastructure",
+      "detail": "Official campus site lists Central Workshop; exact pin not confirmed."
+    },
+    {
+      "name": "First Year Laboratory Complex",
+      "category": "academic infrastructure",
+      "detail": "Official campus site lists First Year Laboratory Complex; exact pin not confirmed."
+    },
+    {
+      "name": "Workshop Complex",
+      "category": "academic infrastructure",
+      "detail": "Official campus site lists Workshop Complex; exact pin not confirmed."
+    },
+    {
+      "name": "Central Library",
+      "category": "academic / student service",
+      "detail": "Official IIT BBS website links to the Central Library; exact pin not confirmed from the supplied route map."
+    },
+    {
+      "name": "Guest House",
+      "category": "visitor facility",
+      "detail": "Official campus page lists a Guest House; exact pin not confirmed from the supplied route map."
+    },
+    {
+      "name": "Health Centre / Sanjeevan Health Centre",
+      "category": "health",
+      "detail": "Official IIT BBS site links to the Sanjeevan Health Centre; exact pin not confirmed from the supplied route map."
+    },
+    {
+      "name": "Gymkhana",
+      "category": "student life",
+      "detail": "Official campus page lists Gymkhana; exact pin not confirmed from supplied route map."
+    },
+    {
+      "name": "Auditorium",
+      "category": "event facility",
+      "detail": "Appears in official campus infrastructure/planning material. Exact current operating status and pin not independently verified."
+    },
+    {
+      "name": "Research and Entrepreneurship Park (REP)",
+      "category": "research",
+      "detail": "Shown in official campus master-plan / infrastructure planning material. Distinguish planned phases from completed facilities."
+    },
+    {
+      "name": "Faculty and staff quarters",
+      "category": "residential",
+      "detail": "Official campus page and planning material list residential quarters; individual blocks are not pinned here."
+    },
+    {
+      "name": "Commercial Complex",
+      "category": "amenity",
+      "detail": "Official campus page lists Commercial Complex; academic and residential commercial areas appear in planning material."
+    }
+  ],
+  "master_plan_legend": [
+    {
+      "category": "Existing building blocks",
+      "color": "#b994d9",
+      "status": "Existing label in the published master-plan legend"
+    },
+    {
+      "category": "Phase III proposed building blocks",
+      "color": "#aab7c1",
+      "status": "Proposed"
+    },
+    {
+      "category": "Future academic building blocks",
+      "color": "#df9b49",
+      "status": "Future / proposed"
+    },
+    {
+      "category": "Future residential building blocks (academics and hostels)",
+      "color": "#e7d34f",
+      "status": "Future / proposed"
+    },
+    {
+      "category": "Services",
+      "color": "#e18f8e",
+      "status": "Master-plan category; individual project state not inferred"
+    }
+  ],
+  "sports_facilities_documented": [
+    "Table tennis",
+    "Squash courts",
+    "Volleyball courts",
+    "Indoor badminton courts",
+    "Hockey field",
+    "Cricket field",
+    "Basketball courts",
+    "Athletics track",
+    "Football field",
+    "Football stand building",
+    "Student Activity Centre"
+  ],
+  "sustainability_themes_in_2025_master_plan": [
+    "Net-zero energy",
+    "Green infrastructure",
+    "Rainwater harvesting",
+    "Zero discharge",
+    "Zero waste"
+  ],
+  "limitations": [
+    "Map positions are schematic translations of the supplied Road Map IIT BBS image, not surveyed coordinates.",
+    "The broad 2025 master-plan development categories are represented in the legend, not as georeferenced polygons.",
+    "The 2023 infrastructure plan distinguishes existing and proposed works; proposed projects are not represented as completed.",
+    "No network switch positions, cable routes, IP addressing, or production network relationships are known from these campus maps.",
+    "Nescafé and Community Centre labels are retained from the supplied road map; their current operating status was not independently verified.",
+    "The 2023 plan lists several additional areas and future projects, but exact current building status/position requires institute confirmation."
+  ],
+  "sources": [
+    {
+      "title": "IIT Bhubaneswar — About Campus",
+      "url": "https://www.iitbbs.ac.in/index.php/home/about-campus/",
+      "supports": "936-acre campus, Barunei Hill setting, campus organization, gate, Administrative Building, academic schools, Lecture Hall Complex, hostels, guest house, academic infrastructure, sports, commercial complex, Gymkhana, Health Centre."
+    },
+    {
+      "title": "IIT Bhubaneswar — Engineering Section / Campus Master Plan",
+      "url": "https://www.iitbbs.ac.in/index.php/home/engineering-section/",
+      "supports": "Official Engineering Section context."
+    },
+    {
+      "title": "IIT Bhubaneswar — Official 2025 Master Plan image",
+      "url": "https://www.iitbbs.ac.in/wp-content/uploads/2025/07/Master-Plan-IITBBS-scaled.jpg",
+      "supports": "Published land-use classes, road corridors and sustainability themes."
+    },
+    {
+      "title": "IIT Bhubaneswar — How to Reach",
+      "url": "https://www.iitbbs.ac.in/index.php/home/how-to-reach/",
+      "supports": "Argul, Khordha district location and distances to Bhubaneswar, airport and Khurda Road Junction."
+    },
+    {
+      "title": "IIT Bhubaneswar — Hall of Residence",
+      "url": "https://www.iitbbs.ac.in/index.php/students-life-iitbbs/hall-of-residence/",
+      "supports": "Hall names and the internal inconsistency in the overview versus contact list."
+    },
+    {
+      "title": "IIT Bhubaneswar — School of Electrical and Computer Sciences",
+      "url": "https://secs.iitbbs.ac.in/",
+      "supports": "Current official SECS name and its three departments."
+    },
+    {
+      "title": "IIT Bhubaneswar — School of Earth, Ocean and Climate Sciences",
+      "url": "https://seocs.iitbbs.ac.in/",
+      "supports": "Current official SEOCS name."
+    },
+    {
+      "title": "IIT Bhubaneswar — PMC RFP / Revised EOI (2023), Annexure XII",
+      "url": "https://www.iitbbs.ac.in/wp-content/uploads/2023/12/Corrigendum_22122023.pdf",
+      "supports": "Dated 11-09-2023 indicative master-plan labels, existing/proposed categories, future project descriptions and tentative infrastructure works."
+    },
+    {
+      "title": "IIT Bhubaneswar Annual Report 2021–22",
+      "url": "https://www.iitbbs.ac.in/documents/IITBBSR_AR_2022_English.pdf",
+      "supports": "Earlier campus infrastructure descriptions and historical facility capacity/status; not used to imply current capacity."
+    },
+    {
+      "title": "User-supplied image: ROAD MAP IIT BBS",
+      "url": "user-upload://image-20261101-021447.png",
+      "supports": "Relative arrangement and labels for named buildings, gate, roads, overbridge, Nescafé, hostels, SAC, sports courts and community centre."
+    },
+    {
+      "title": "User-supplied image: Master Plan IIT Bhubaneswar",
+      "url": "user-upload://image-20261101-021437.png",
+      "supports": "Broad campus layout, road corridors, green spaces and existing / proposed / future land-use legend."
+    }
+  ]
+}
