@@ -1,5 +1,5 @@
 {
-  "protocol_version": "1.1",
+  "protocol_version": "1.2",
   "note": "All values are ILLUSTRATIVE (simulated); they are not measurements of any real network. Field names follow doc 06, terms the vocabularies.",
   "examples": [
     {
@@ -76,6 +76,27 @@
       "path": "examples/valid/community_candidate.json",
       "kind": "message",
       "description": "Extension A: a community candidate (reported, unverified)",
+      "expected_verdict": "accepted",
+      "expected_code": null
+    },
+    {
+      "path": "examples/valid/conflict_report.json",
+      "kind": "message",
+      "description": "Protocol 1.2: the correlation agent raises a real conflict and asks the party to re-check",
+      "expected_verdict": "accepted",
+      "expected_code": null
+    },
+    {
+      "path": "examples/valid/conflict_response.json",
+      "kind": "message",
+      "description": "Protocol 1.2: the party revises its reading with new evidence",
+      "expected_verdict": "accepted",
+      "expected_code": null
+    },
+    {
+      "path": "examples/valid/decision_with_conflict_trail.json",
+      "kind": "message",
+      "description": "Protocol 1.2: a decision whose unresolved conflict is preserved, not dropped",
       "expected_verdict": "accepted",
       "expected_code": null
     },
@@ -179,6 +200,27 @@
       "expected_code": "RECOMMENDATION_SAFETY_VIOLATION"
     },
     {
+      "path": "examples/invalid/conflict_compatible_relation.json",
+      "kind": "message",
+      "description": "a 'conflict' between compatible hypotheses is not a conflict",
+      "expected_verdict": "rejected",
+      "expected_code": "CONFLICT_RELATION_NOT_CONFLICTING"
+    },
+    {
+      "path": "examples/invalid/conflict_target_not_party.json",
+      "kind": "message",
+      "description": "the agent asked to respond is not a party",
+      "expected_verdict": "rejected",
+      "expected_code": "CONFLICT_TARGET_NOT_PARTY"
+    },
+    {
+      "path": "examples/invalid/conflict_unknown_stance.json",
+      "kind": "message",
+      "description": "stance 'ignore' is not a conflict_stance term",
+      "expected_verdict": "rejected",
+      "expected_code": "UNKNOWN_TERM"
+    },
+    {
       "path": "examples/invalid/abstention_missing.json",
       "kind": "message",
       "description": "insufficient_evidence with abstention null",
@@ -232,6 +274,38 @@
       "expected_verdict": "rejected",
       "expected_code": "INCIDENT_CLOSED",
       "failing_index": 14
+    },
+    {
+      "path": "examples/conversations/valid_real_conflict.json",
+      "kind": "conversation",
+      "description": "Protocol 1.2: a real conflict raised, relayed to the party, answered, and preserved in the decision's conflict trail",
+      "expected_verdict": "accepted",
+      "expected_code": null,
+      "failing_index": null
+    },
+    {
+      "path": "examples/conversations/compatible_disagreement_raises_no_conflict.json",
+      "kind": "conversation",
+      "description": "Two agents describe the same problem differently (compatible / refines): no conflict, accepted",
+      "expected_verdict": "accepted",
+      "expected_code": null,
+      "failing_index": null
+    },
+    {
+      "path": "examples/conversations/conflict_response_from_non_party.json",
+      "kind": "conversation",
+      "description": "an agent that was not asked answers the conflict",
+      "expected_verdict": "rejected",
+      "expected_code": "REPLY_MISMATCH",
+      "failing_index": 5
+    },
+    {
+      "path": "examples/conversations/conflict_report_from_specialist.json",
+      "kind": "conversation",
+      "description": "a specialist tries to raise a conflict itself",
+      "expected_verdict": "rejected",
+      "expected_code": "SENDER_NOT_AUTHORIZED",
+      "failing_index": 1
     },
     {
       "path": "examples/conversations/community_with_extension_off.json",

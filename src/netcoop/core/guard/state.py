@@ -61,19 +61,25 @@ class ConversationState(BaseModel):
         t, irt, p = msg.message_type, msg.in_reply_to, msg.payload
         if t == "task_request":
             tasks[msg.message_id] = OpenRequest(recipient=msg.recipient, kind=p.get("task_kind"))
-        elif t == "clarification_request" and msg.sender == hub:
+        elif t in ("clarification_request", "conflict_report") and msg.sender == hub:
             if irt is not None:
                 pending.pop(irt, None)
             relayed[msg.message_id] = msg.recipient
-        elif t in ("finding", "decision", "report_ready", "clarification_request"):
+        elif t in (
+            "finding",
+            "decision",
+            "report_ready",
+            "clarification_request",
+            "conflict_report",
+        ):
             if irt is not None:
                 tasks.pop(irt, None)
-            if t == "clarification_request":
+            if t in ("clarification_request", "conflict_report"):  # one shared round counter
                 pending[msg.message_id] = str(p.get("target"))
                 update["clarification_rounds"] = self.clarification_rounds + 1
             update["decision_sent"] = self.decision_sent or t == "decision"
             update["report_sent"] = self.report_sent or t == "report_ready"
-        elif t == "clarification_response" and irt is not None:
+        elif t in ("clarification_response", "conflict_response") and irt is not None:
             relayed.pop(irt, None)
         elif t == "agent_error" and irt is not None:
             for open_map in (tasks, pending, relayed):

@@ -1,0 +1,244 @@
+{
+  "$defs": {
+    "ConflictParty": {
+      "properties": {
+        "agent": {
+          "enum": [
+            "orchestrator",
+            "performance_agent",
+            "infrastructure_agent",
+            "connectivity_agent",
+            "correlation_agent",
+            "reporting_agent",
+            "community_module"
+          ],
+          "title": "Agent",
+          "type": "string"
+        },
+        "hypothesis_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Hypothesis Ids",
+          "type": "array"
+        },
+        "observation_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Observation Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "agent"
+      ],
+      "title": "ConflictParty",
+      "type": "object"
+    },
+    "ConflictSide": {
+      "properties": {
+        "agent": {
+          "enum": [
+            "orchestrator",
+            "performance_agent",
+            "infrastructure_agent",
+            "connectivity_agent",
+            "correlation_agent",
+            "reporting_agent",
+            "community_module"
+          ],
+          "title": "Agent",
+          "type": "string"
+        },
+        "claim": {
+          "minLength": 1,
+          "title": "Claim",
+          "type": "string"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/EvidenceRef"
+          },
+          "minItems": 1,
+          "title": "Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "agent",
+        "claim",
+        "evidence"
+      ],
+      "title": "ConflictSide",
+      "type": "object"
+    },
+    "EvidenceRef": {
+      "description": "A typed pointer to evidence (never a copy of it).",
+      "properties": {
+        "evidence_id": {
+          "minLength": 1,
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "evidence_type": {
+          "title": "Evidence Type",
+          "type": "string"
+        },
+        "note": {
+          "default": "",
+          "title": "Note",
+          "type": "string"
+        },
+        "stance": {
+          "title": "Stance",
+          "type": "string"
+        },
+        "strength": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Strength"
+        }
+      },
+      "required": [
+        "evidence_type",
+        "evidence_id",
+        "stance"
+      ],
+      "title": "EvidenceRef",
+      "type": "object"
+    }
+  },
+  "description": "The correlation agent states a REAL conflict and asks one party to respond\n(protocol 1.2, doc 05 \u00a719). Agents merely describing the same problem differently\n(relation compatible/refines) never make a conflict.",
+  "properties": {
+    "clarification_id": {
+      "anyOf": [
+        {
+          "pattern": "^CLR-\\d{4,}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Clarification Id"
+    },
+    "conflict_id": {
+      "pattern": "^CONF-\\d{3,}$",
+      "title": "Conflict Id",
+      "type": "string"
+    },
+    "conflict_type": {
+      "title": "Conflict Type",
+      "type": "string"
+    },
+    "effect_on_confidence": {
+      "title": "Effect On Confidence",
+      "type": "string"
+    },
+    "parties": {
+      "items": {
+        "$ref": "#/$defs/ConflictParty"
+      },
+      "minItems": 1,
+      "title": "Parties",
+      "type": "array"
+    },
+    "proposed_rule": {
+      "enum": [
+        "evidence_class",
+        "freshness",
+        "topology_consistency",
+        "unresolved"
+      ],
+      "title": "Proposed Rule",
+      "type": "string"
+    },
+    "reason_code": {
+      "pattern": "^[A-Z][A-Z0-9_]+$",
+      "title": "Reason Code",
+      "type": "string"
+    },
+    "reason_text": {
+      "title": "Reason Text",
+      "type": "string"
+    },
+    "recheck": {
+      "additionalProperties": true,
+      "description": "What the target should re-check (entity, metric)",
+      "title": "Recheck",
+      "type": "object"
+    },
+    "relation": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Relation"
+    },
+    "round": {
+      "description": "Counts toward the clarification round limit",
+      "minimum": 1,
+      "title": "Round",
+      "type": "integer"
+    },
+    "sides": {
+      "items": {
+        "$ref": "#/$defs/ConflictSide"
+      },
+      "minItems": 2,
+      "title": "Sides",
+      "type": "array"
+    },
+    "status": {
+      "default": "open",
+      "title": "Status",
+      "type": "string"
+    },
+    "target": {
+      "description": "The party asked to respond",
+      "enum": [
+        "orchestrator",
+        "performance_agent",
+        "infrastructure_agent",
+        "connectivity_agent",
+        "correlation_agent",
+        "reporting_agent",
+        "community_module"
+      ],
+      "title": "Target",
+      "type": "string"
+    }
+  },
+  "required": [
+    "conflict_id",
+    "conflict_type",
+    "parties",
+    "sides",
+    "reason_code",
+    "reason_text",
+    "proposed_rule",
+    "effect_on_confidence",
+    "target",
+    "round"
+  ],
+  "title": "ConflictReport",
+  "type": "object",
+  "x-netcoop-payload-schema-version": "1.0",
+  "x-netcoop-protocol-version": "1.2"
+}

@@ -1,0 +1,51 @@
+{
+  "protocol_version": "1.2",
+  "message_id": "INC-0001-MSG-000005.R",
+  "incident_id": "INC-0001",
+  "in_reply_to": "INC-0001-MSG-000005",
+  "sender": "performance_agent",
+  "recipient": "orchestrator",
+  "message_type": "conflict_response",
+  "sent_at": "2026-11-01T09:00:00Z",
+  "payload_schema_version": "1.0",
+  "status": "ok",
+  "snapshot_id": "SNAP-0123456789ab",
+  "mode": "simulation",
+  "data_provenance": "synthetic-generator",
+  "payload": {
+    "conflict_id": "CONF-001",
+    "stance": "revise",
+    "evidence": [
+      {
+        "evidence_type": "observation",
+        "evidence_id": "OBS-PERF-000005-001",
+        "stance": "supports"
+      }
+    ],
+    "observations": [
+      {
+        "observation_id": "OBS-PERF-000005-001",
+        "entity": "SW_CAMPUS_4",
+        "metric": "latency_ms",
+        "metric_category": "Latency",
+        "value": 180.0,
+        "unit": "millisecond",
+        "window": {
+          "start": "2026-11-01T09:00:00Z",
+          "end": "2026-11-01T09:15:00Z"
+        },
+        "severity": "critical",
+        "assessability": "assessed",
+        "agent": "performance_agent",
+        "aggregation": "worst_by_severity",
+        "sample_count": 3,
+        "source_ref": [
+          "REC-0001"
+        ]
+      }
+    ],
+    "note": "re-checked reading: critical",
+    "source": "performance_agent",
+    "clarification_id": "CLR-0001"
+  }
+}

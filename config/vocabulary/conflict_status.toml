@@ -1,0 +1,27 @@
+# Controlled vocabulary 'conflict_status'. Source of truth for its metadata (registry-only).
+name = "conflict_status"
+version = "1.0"
+extensible = false
+id_style = "snake"
+description = "Lifecycle of a conflict (protocol 1.2)."
+
+[[terms]]
+id = "open"
+label = "Open"
+definition = "Raised and waiting for the parties' responses."
+status = "active"
+source = "doc 05 §19 (protocol 1.2, P8)"
+
+[[terms]]
+id = "resolved"
+label = "Resolved"
+definition = "Settled by a conflict rule of doc 08 §5."
+status = "active"
+source = "doc 05 §19 (protocol 1.2, P8)"
+
+[[terms]]
+id = "unresolved_preserved"
+label = "Unresolved, preserved"
+definition = "No rule settles it; both sides are kept as alternatives and stated as a limitation, never silently dropped."
+status = "active"
+source = "doc 05 §19 (protocol 1.2, P8)"

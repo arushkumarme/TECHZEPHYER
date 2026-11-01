@@ -76,6 +76,8 @@ Each incident state allows only certain messages. The conversation guard (doc 05
 
 Authority: A-CORR applies the rules; the orchestrator only ensures every conflict is recorded. Rules and precedence are in [doc 08 §5](08-diagnosis-and-confidence.md). Summary: direct measurement beats inference beats user report; fresher beats staler within a tolerance; topology-consistent beats inconsistent; unresolved conflicts keep both explanations, lower confidence, and drop nothing.
 
+**Conflict exchange (protocol 1.2, `IMPLEMENTED`):** when A-CORR answers a `correlate` task with a `conflict_report`, the orchestrator moves to `CLARIFYING`, relays the report unchanged to the party it names, and records the party's `conflict_response` in the same context slot as a clarification answer; A-CORR's resolution logic is unchanged. The guard enforces sender, recipient, reply and round limit (doc 05 §15, §19). The decision's `conflict_trail` records every conflict and its rule.
+
 ## 7. Replay and reproducibility
 
 - The log contains enough to replay an incident without re-running agents: task messages, tool-call records with results, findings, clarifications, decision.

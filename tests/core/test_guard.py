@@ -426,9 +426,72 @@ def test_every_rule_has_an_accepted_case() -> None:
     for msg in extra:
         assert guard.check(msg, state).allowed, msg.message_id
         accepted.add((msg.message_type, msg.sender == "orchestrator"))
+    # protocol 1.2 rows (Prompt 8): conflict report, relay and response (setup only)
+    for kind, mtype in CONFLICT_FLOW_TYPES:
+        accepted.add((mtype, kind))
+    conflict_state = run_until(3)
+    for incident_state, msg in CONFLICT_FLOW:
+        conflict_state = conflict_state.with_incident_state(incident_state)
+        assert GUARD.check(msg, conflict_state).allowed, msg.message_id
+        conflict_state = conflict_state.apply(msg)
     rules = load_rules()
     for row in rules.rows:
         assert (row.message_type, row.senders == ("orchestrator",)) in accepted, row
+
+
+def _report() -> Any:
+    from netcoop.core.blocks import EvidenceRef
+    from netcoop.core.messages import ConflictParty, ConflictReport, ConflictSide
+
+    ref = EvidenceRef(
+        evidence_type="observation", evidence_id="OBS-PERF-000001-001", stance="supports"
+    )
+    return ConflictReport(
+        conflict_id="CONF-001",
+        conflict_type="observation_contradiction",
+        parties=[ConflictParty(agent="performance_agent")],
+        sides=[
+            ConflictSide(agent="performance_agent", claim="a", evidence=[ref]),
+            ConflictSide(agent="performance_agent", claim="b", evidence=[ref]),
+        ],
+        reason_code="CONFLICTING_READINGS",
+        reason_text="readings disagree",
+        proposed_rule="unresolved",
+        effect_on_confidence="capped",
+        target="performance_agent",
+        recheck={"entity": "SW_1", "metric": "latency_ms"},
+        round=1,
+    )
+
+
+def _conflict_flow() -> list[tuple[str, Envelope]]:
+    from netcoop.core.messages import ConflictResponse
+
+    return [
+        (
+            "CORRELATING",
+            m("C1", "correlation_agent", "orchestrator", "conflict_report", _report(), "M2"),
+        ),
+        (
+            "CLARIFYING",
+            m("C2", "orchestrator", "performance_agent", "conflict_report", _report(), "C1"),
+        ),
+        (
+            "CLARIFYING",
+            m(
+                "C2.R",
+                "performance_agent",
+                "orchestrator",
+                "conflict_response",
+                ConflictResponse(conflict_id="CONF-001", stance="maintain"),
+                "C2",
+            ),
+        ),
+    ]
+
+
+CONFLICT_FLOW = _conflict_flow()
+CONFLICT_FLOW_TYPES = [(msg.sender == "orchestrator", msg.message_type) for _, msg in CONFLICT_FLOW]
 
 
 def test_clarification_round_limit() -> None:

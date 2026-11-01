@@ -97,6 +97,8 @@ def summarize(message_type: str | None, payload: dict[str, Any]) -> str:
         text += f" ({p.get('score_method', 'heuristic')})"
         if p.get("abstention"):
             text += f", abstains: {', '.join(p['abstention'].get('reasons', []))}"
+        for c in p.get("conflict_trail", []):
+            text += f", conflict {c.get('conflict_id')} {c.get('status')}"
         return text
     if message_type == "report_ready":
         rep = p.get("report", {})
@@ -104,6 +106,17 @@ def summarize(message_type: str | None, payload: dict[str, Any]) -> str:
         return f"report {rep.get('status')}, {_n(n, 'recommendation')}"
     if message_type == "agent_error":
         return f"{p.get('code')}: {p.get('message')}"
+    if message_type == "conflict_report":
+        return (
+            f"CONFLICT {p.get('conflict_id')} {p.get('conflict_type')}: {p.get('reason_text')}"
+            f" -> {p.get('target')} (proposed rule {p.get('proposed_rule')}, round "
+            f"{p.get('round')})"
+        )
+    if message_type == "conflict_response":
+        return (
+            f"CONFLICT {p.get('conflict_id')} stance {p.get('stance')}, "
+            f"{_n(len(p.get('observations', [])), 'observation')}: {p.get('note')}"
+        )
     if message_type == "community_candidate":
         return (
             f"{p.get('candidate_id')} in {p.get('zone')}, {p.get('distinct_reporters')} "
@@ -232,6 +245,11 @@ def render_sequence(
         cells[xb] = (">" if xb > xa else "<") if r.valid else "X"
         cells[xa] = "o"
         label = r.message_type or "?"
+        if r.valid and r.message_type in ("conflict_report", "conflict_response"):
+            p = _payload(r)
+            label += f" !! {p.get('conflict_id')}" + (
+                f" stance {p['stance']}" if p.get("stance") else ""
+            )
         label += "" if r.valid else f"  REJECTED {r.error_code}: {_reason(r)}"
         line = f"{r.attempt_seq:>4}  {''.join(cells)}  {label}"
         lines.append(_paint(line, _RED, color) if not r.valid else line)

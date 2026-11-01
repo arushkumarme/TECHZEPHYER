@@ -18,7 +18,7 @@
 #   counts_round          counts toward the clarification round limit
 #   extension             feature flag that must be on
 
-version = "1.1"
+version = "1.2"
 hub = "orchestrator"
 closed_states = ["REJECTED", "COMPLETE", "FAILED"]
 
@@ -90,6 +90,32 @@ senders = ["@specialists"]
 recipients = ["orchestrator"]
 states = ["CLARIFYING"]
 reply = "relayed_question"
+
+[[rows]]
+message_type = "conflict_report"
+senders = ["correlation_agent"]
+recipients = ["orchestrator"]
+states = ["CORRELATING"]
+reply = "task_request"
+task_kind = "correlate"
+counts_round = true
+note = "Protocol 1.2: only the correlation agent raises a conflict (owner decision, D-25); it counts toward the round limit."
+
+[[rows]]
+message_type = "conflict_report"
+senders = ["orchestrator"]
+recipients = ["@specialists"]
+states = ["CLARIFYING"]
+reply = "question"
+note = "Relayed to the party the report names as target (the report itself must name a real conflict and a party: the orchestrator's pre-check)."
+
+[[rows]]
+message_type = "conflict_response"
+senders = ["@specialists"]
+recipients = ["orchestrator"]
+states = ["CLARIFYING"]
+reply = "relayed_question"
+note = "Only the named party responds: maintain, revise, withdraw or cannot_assess."
 
 [[rows]]
 message_type = "decision"

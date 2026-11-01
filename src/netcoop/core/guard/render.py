@@ -10,8 +10,9 @@ AUTHORITY_END = "<!-- END GENERATED: authority -->"
 _REPLY_TEXT = {
     "none": "starts a conversation (no `in_reply_to`)",
     "task_request": "answers an open `task_request` addressed to the sender",
-    "question": "relays the correlation agent's open question to the target it names",
-    "relayed_question": "answers the question relayed to the sender",
+    "question": "relays the correlation agent's open question (or conflict report) to the "
+    "target it names",
+    "relayed_question": "answers the question (or conflict report) relayed to the sender",
     "optional": "may reply to any earlier message of the incident",
 }
 
@@ -72,9 +73,14 @@ def render_authority(rules: AuthorityRules | None = None) -> str:
         "7. **Replies** — a reply must answer an open request addressed to its sender; a "
         "relayed question must name the target of the correlation agent's question "
         "(`REPLY_MISMATCH`).",
-        "8. **Round limit** — the correlation agent's questions count toward "
-        "`max_clarification_rounds` (default 2) per incident "
+        "8. **Round limit** — the correlation agent's questions and conflict reports share "
+        "one counter, `max_clarification_rounds` (default 2) per incident "
         "(`CLARIFICATION_LIMIT_EXCEEDED`).",
+        "9. **Conflicts** (1.2) — only `correlation_agent` raises a `conflict_report`; it is "
+        "relayed to the party it names, and only that party answers with a "
+        "`conflict_response`. A report must name a real conflict (relation `competes` or "
+        "`contradicts`) and its target must be a party (`CONFLICT_RELATION_NOT_CONFLICTING`, "
+        "`CONFLICT_TARGET_NOT_PARTY`, checked when the report is parsed).",
         "",
         AUTHORITY_END,
     ]

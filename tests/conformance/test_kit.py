@@ -53,7 +53,7 @@ def test_schemas_are_current_and_state_their_version(tmp_path: Path) -> None:
         assert committed.exists(), fresh.name
         data = json.loads(committed.read_text("utf-8"))
         assert data == json.loads(fresh.read_text("utf-8")), f"{fresh.name} is stale"
-        assert data["x-netcoop-protocol-version"] == "1.1"
+        assert data["x-netcoop-protocol-version"] == "1.2"  # was "1.1" before Prompt 8
     report = json.loads((KIT_DIR / "schemas" / "official_report.schema.json").read_text("utf-8"))
     assert len(report["properties"]) == 10 and report["additionalProperties"] is False
 

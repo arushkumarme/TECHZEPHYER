@@ -119,6 +119,50 @@
       "title": "ConflictRecord",
       "type": "object"
     },
+    "ConflictTrailEntry": {
+      "description": "One conflict in a decision's trail (protocol 1.2).",
+      "properties": {
+        "conflict_id": {
+          "title": "Conflict Id",
+          "type": "string"
+        },
+        "preserved_observation_ids": {
+          "description": "Kept on both sides when unresolved",
+          "items": {
+            "type": "string"
+          },
+          "title": "Preserved Observation Ids",
+          "type": "array"
+        },
+        "raised": {
+          "default": false,
+          "description": "A conflict_report was exchanged for it",
+          "title": "Raised",
+          "type": "boolean"
+        },
+        "rule": {
+          "enum": [
+            "evidence_class",
+            "freshness",
+            "topology_consistency",
+            "unresolved"
+          ],
+          "title": "Rule",
+          "type": "string"
+        },
+        "status": {
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "conflict_id",
+        "rule",
+        "status"
+      ],
+      "title": "ConflictTrailEntry",
+      "type": "object"
+    },
     "Limitation": {
       "properties": {
         "code": {
@@ -324,6 +368,14 @@
       "title": "Confidence Category",
       "type": "string"
     },
+    "conflict_trail": {
+      "description": "Every conflict with the rule applied; unresolved ones are preserved",
+      "items": {
+        "$ref": "#/$defs/ConflictTrailEntry"
+      },
+      "title": "Conflict Trail",
+      "type": "array"
+    },
     "conflicts": {
       "items": {
         "$ref": "#/$defs/ConflictRecord"
@@ -399,5 +451,5 @@
   "title": "Decision",
   "type": "object",
   "x-netcoop-payload-schema-version": "1.0",
-  "x-netcoop-protocol-version": "1.1"
+  "x-netcoop-protocol-version": "1.2"
 }

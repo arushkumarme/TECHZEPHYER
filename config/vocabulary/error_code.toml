@@ -635,3 +635,23 @@ source = "doc 05 §15 (P4)"
 [terms.attributes]
 severity = "error"
 kind = "conversation"
+
+[[terms]]
+id = "CONFLICT_RELATION_NOT_CONFLICTING"
+label = "Not a conflict"
+definition = "A conflict_report names a relation that is not a conflict (compatible or refines), or a hypothesis_competition without competes/contradicts."
+status = "active"
+source = "doc 05 §19 (P8)"
+[terms.attributes]
+severity = "error"
+kind = "protocol"
+
+[[terms]]
+id = "CONFLICT_TARGET_NOT_PARTY"
+label = "Conflict target not a party"
+definition = "A conflict_report asks an agent to respond that is not a party to the conflict."
+status = "active"
+source = "doc 05 §19 (P8)"
+[terms.attributes]
+severity = "error"
+kind = "protocol"

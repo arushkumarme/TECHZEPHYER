@@ -18,9 +18,12 @@ from typing import Annotated, Any, Literal, Self
 from pydantic import AwareDatetime, BaseModel, Field, model_validator
 
 from netcoop.core.blocks import (
+    CONFLICTING_RELATIONS,
     Abstention,
     ClarificationRecord,
     ConflictRecord,
+    ConflictTrailEntry,
+    EvidenceRef,
     IncidentContext,
     Limitation,
     NotAssessableItem,
@@ -43,6 +46,7 @@ from netcoop.core.vocab import (
     AgentId,
     ClarificationReason,
     ConfidenceCategory,
+    ConflictRule,
     DecisionKind,
     MessageStatus,
     MessageType,
@@ -167,6 +171,11 @@ class Decision(ProtocolModel):
     decision_id: str | None = Field(default=None, pattern=r"^DEC-\d{4,}$")
     score_method: Annotated[str, VocabTerm("score_method")] = "heuristic"
     abstention: Abstention | None = None
+    # ---- protocol 1.2 ----
+    conflict_trail: list[ConflictTrailEntry] = Field(
+        default_factory=list,
+        description="Every conflict with the rule applied; unresolved ones are preserved",
+    )
 
     @model_validator(mode="before")
     @classmethod
@@ -234,6 +243,71 @@ class CommunityCandidate(ProtocolModel):
     complaint_ids: list[str] = Field(default_factory=list)
 
 
+class ConflictParty(ProtocolModel):
+    agent: AgentId
+    hypothesis_ids: list[str] = Field(default_factory=list)
+    observation_ids: list[str] = Field(default_factory=list)
+
+
+class ConflictSide(ProtocolModel):
+    agent: AgentId
+    claim: str = Field(min_length=1)
+    evidence: list[EvidenceRef] = Field(min_length=1)
+
+
+class ConflictReport(ProtocolModel):
+    """The correlation agent states a REAL conflict and asks one party to respond
+    (protocol 1.2, doc 05 §19). Agents merely describing the same problem differently
+    (relation compatible/refines) never make a conflict."""
+
+    conflict_id: str = Field(pattern=r"^CONF-\d{3,}$")
+    conflict_type: Annotated[str, VocabTerm("conflict_type")]
+    parties: list[ConflictParty] = Field(min_length=1)
+    sides: list[ConflictSide] = Field(min_length=2)
+    relation: Annotated[str, VocabTerm("hypothesis_relation")] | None = None
+    reason_code: str = Field(pattern=r"^[A-Z][A-Z0-9_]+$")
+    reason_text: str
+    proposed_rule: ConflictRule
+    status: Annotated[str, VocabTerm("conflict_status")] = "open"
+    effect_on_confidence: str
+    target: AgentId = Field(description="The party asked to respond")
+    recheck: dict[str, Any] = Field(
+        default_factory=dict, description="What the target should re-check (entity, metric)"
+    )
+    round: int = Field(ge=1, description="Counts toward the clarification round limit")
+    clarification_id: str | None = Field(default=None, pattern=r"^CLR-\d{4,}$")
+
+    @model_validator(mode="after")
+    def _a_real_conflict(self) -> Self:
+        if self.relation is not None and self.relation not in CONFLICTING_RELATIONS:
+            raise rule_error(
+                "CONFLICT_RELATION_NOT_CONFLICTING",
+                f"relation {self.relation!r} is not a conflict; only competes or contradicts "
+                "can raise one",
+            )
+        if self.conflict_type == "hypothesis_competition" and self.relation is None:
+            raise rule_error(
+                "CONFLICT_RELATION_NOT_CONFLICTING",
+                "a hypothesis_competition conflict must state relation competes or contradicts",
+            )
+        if self.target not in {p.agent for p in self.parties}:
+            raise rule_error(
+                "CONFLICT_TARGET_NOT_PARTY",
+                f"{self.target} is asked to respond but is not a party to {self.conflict_id}",
+            )
+        return self
+
+
+class ConflictResponse(ProtocolModel):
+    conflict_id: str = Field(pattern=r"^CONF-\d{3,}$")
+    stance: Annotated[str, VocabTerm("conflict_stance")]
+    evidence: list[EvidenceRef] = Field(default_factory=list, description="New evidence refs")
+    observations: list[Observation] = Field(default_factory=list)
+    note: str = ""
+    source: AgentId | None = None
+    clarification_id: str | None = Field(default=None, pattern=r"^CLR-\d{4,}$")
+
+
 PAYLOAD_TYPES: dict[str, type[ProtocolModel]] = {
     "task_request": TaskRequest,
     "finding": Finding,
@@ -243,6 +317,8 @@ PAYLOAD_TYPES: dict[str, type[ProtocolModel]] = {
     "report_ready": ReportReady,
     "agent_error": AgentError,
     "community_candidate": CommunityCandidate,
+    "conflict_report": ConflictReport,
+    "conflict_response": ConflictResponse,
 }
 
 # --------------------------------------------------------------------------- envelope

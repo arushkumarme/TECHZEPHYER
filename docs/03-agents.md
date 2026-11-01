@@ -92,6 +92,8 @@ All communication is **hub-and-spoke through the orchestrator**; agents never me
 | `finding` | Agent → Orchestrator | Independent observations, hypotheses, limitations |
 | `clarification_request` | A-CORR (or a specialist) → Orchestrator → target agent | Typed question, with reason |
 | `clarification_response` | Target agent → Orchestrator → requester | Answer or "cannot answer" |
+| `conflict_report` (1.2) | A-CORR → Orchestrator → one party | A real conflict: parties, evidence on each side, proposed rule (doc 05 §19) |
+| `conflict_response` (1.2) | That party → Orchestrator | Stance after a re-check: maintain, revise, withdraw or cannot assess |
 | `agent_error` | Agent or Orchestrator | Failure, timeout or invalid message |
 | `community_candidate` | Community module → Orchestrator (extension) | Unverified candidate incident |
 
@@ -100,6 +102,8 @@ All communication is **hub-and-spoke through the orchestrator**; agents never me
 - Maximum rounds per incident and maximum tool calls per agent per task are configuration values (initial default: 2 rounds; values set at implementation).
 - A request must state a reason (conflict, narrow margin, missing expected evidence). Free-form questions are not part of the protocol.
 - The loop always terminates: when the round limit is reached, A-CORR decides on what it has and records the unanswered question as a limitation.
+
+**Conflicts** (protocol 1.2, `IMPLEMENTED`, D-25 PROVISIONAL): only A-CORR raises a conflict, and only for relations `competes`/`contradicts` or disagreeing readings; hypotheses that are `compatible` or `refine` each other never do. A specialist answers a conflict addressed to it by re-checking and reporting a stance derived from the result (`SpecialistAgent.respond_to_conflict`). Conflict reports count toward the same round limit.
 
 **What the demo shows** (doc 14): the ordered trace of task → tool calls → finding → clarification → decision, which is the visible evidence of items 1–8 in §1.
 

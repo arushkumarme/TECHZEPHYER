@@ -25,10 +25,10 @@
 | S-06 | Interoperability failure (incompatible field names, units, schema versions, missing message information) | Generator variant, or **team-authored incompatibility** (doc 05 §6.4) | Handled per policy: aliases applied with warnings, or affected metrics not assessable; broken data is **not** misdiagnosed as a network fault |
 | S-07 | Partially missing metric (some devices) | Team-authored | `READY_WITH_WARNINGS`; missing items listed; confidence ceiling lowered; missing never treated as healthy |
 | S-08 | Insufficient evidence (key evidence removed) | Team-authored | `insufficient_evidence`; no single cause asserted; leading candidates named |
-| S-09 | Ambiguous (two near-equal explanations) | Team-authored | Clarification attempted; if unresolved, `insufficient_evidence` with both candidates |
+| S-09 | Ambiguous (two near-equal explanations) | Team-authored | Clarification attempted; if unresolved, `insufficient_evidence` with both candidates. A narrow margin is not a conflict: plain clarification messages, no `conflict_report` (protocol 1.2) |
 | S-10 | Specialist agent fails or times out (fault injection) | Team-authored | Degraded run; missing agent in limitations; ceiling lowered |
 | S-11 | Topology missing | Team-authored | Scope `unknown`; no blast radius claim; diagnosis continues on telemetry |
-| S-12 | Conflicting or stale measurements | Team-authored | Conflict rules applied and recorded; both explanations kept if unresolved |
+| S-12 | Conflicting or stale measurements | Team-authored | Conflict rules applied and recorded; both explanations kept if unresolved. Protocol 1.2: the disagreement is exchanged as `conflict_report` → `conflict_response` and kept in the decision's `conflict_trail` (`tests/core/test_conflicts.py`) |
 | S-13 | Complaints only, telemetry normal (ext A) | Synthetic complaints + S-01 | "Reported, not technically verified"; never `diagnosed` |
 | S-14 | Complaints + matching telemetry fault (ext A) | Synthetic complaints + S-02/S-04 | Trust label `corroborated`; reports shown separately from telemetry evidence |
 | S-15 | Duplicate, spam and injection-style complaints (ext A) | Synthetic | Duplicates merged, spam ignored, injection text treated as data |

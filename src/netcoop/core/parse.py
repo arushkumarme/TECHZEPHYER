@@ -20,7 +20,9 @@ from netcoop.core.versioning import (
     PROTOCOL_VERSION,
     SUPPORTED_PAYLOAD_MAJORS,
     SUPPORTED_PROTOCOL_MAJORS,
+    VERSION_ADDITIONS,
     check_version,
+    parse_version,
 )
 
 #: PROVISIONAL (D-23): ~20x the largest message of the scenario suite (about 47 KB).
@@ -85,7 +87,71 @@ def _fail(code: str, reason: str, path: str = "") -> ParseResult:
     return ParseResult(None, [ParseIssue(code, reason, path)])
 
 
-def try_parse(raw: object, *, max_bytes: int = DEFAULT_MAX_MESSAGE_BYTES) -> ParseResult:
+def _newer_than(reader: str) -> list[dict[str, tuple[str, ...]]]:
+    mine = parse_version(reader)
+    assert mine is not None
+    return [
+        added
+        for version, added in VERSION_ADDITIONS.items()
+        if (parse_version(version) or (0, 0)) > mine
+    ]
+
+
+def _as_reader(
+    data: dict[str, Any], reader: str
+) -> tuple[dict[str, Any], list[ParseIssue], ParseIssue | None]:
+    """Emulate a reader pinned to an older minor: drop the fields it does not know (reported
+    as FIELD_IGNORED) and refuse message types it does not know."""
+    data = json.loads(json.dumps(data))
+    ignored: list[ParseIssue] = []
+    for added in _newer_than(reader):
+        if data.get("message_type") in added["message_types"]:
+            return (
+                data,
+                ignored,
+                ParseIssue(
+                    "UNKNOWN_TERM",
+                    f"message_type {data['message_type']!r} is not known to a {reader} reader",
+                    "message_type",
+                ),
+            )
+        for key in added["envelope"]:
+            if key in data:
+                data.pop(key)
+                ignored.append(ParseIssue("FIELD_IGNORED", f"not known to a {reader} reader", key))
+        payload = data.get("payload")
+        for path in added["payload"]:
+            mtype, _, rest = path.partition(".")
+            if data.get("message_type") != mtype or not isinstance(payload, dict):
+                continue
+            if "[]." in rest:
+                lst, _, key = rest.partition("[].")
+                for i, item in enumerate(payload.get(lst) or []):
+                    if isinstance(item, dict) and key in item:
+                        item.pop(key)
+                        ignored.append(
+                            ParseIssue(
+                                "FIELD_IGNORED",
+                                f"not known to a {reader} reader",
+                                f"payload.{lst}.{i}.{key}",
+                            )
+                        )
+            elif rest in payload:
+                payload.pop(rest)
+                ignored.append(
+                    ParseIssue(
+                        "FIELD_IGNORED", f"not known to a {reader} reader", f"payload.{rest}"
+                    )
+                )
+    return data, ignored, None
+
+
+def try_parse(
+    raw: object,
+    *,
+    max_bytes: int = DEFAULT_MAX_MESSAGE_BYTES,
+    reader_version: str = PROTOCOL_VERSION,
+) -> ParseResult:
     if not isinstance(raw, str | bytes | dict):
         return _fail(
             "MESSAGE_INVALID", f"a message must be JSON text or an object, got {type(raw).__name__}"
@@ -103,10 +169,15 @@ def try_parse(raw: object, *, max_bytes: int = DEFAULT_MAX_MESSAGE_BYTES) -> Par
         return _fail("MESSAGE_INVALID", "a message must be a JSON object")
 
     warnings: list[ParseIssue] = []
+    if reader_version != PROTOCOL_VERSION:
+        data, pinned_ignored, refused = _as_reader(data, reader_version)
+        if refused is not None:
+            return ParseResult(None, [refused])
+        warnings += pinned_ignored
     for value, ours, majors, what, code in (
         (
             data.get("protocol_version"),
-            PROTOCOL_VERSION,
+            reader_version,
             SUPPORTED_PROTOCOL_MAJORS,
             "protocol_version",
             "PROTOCOL_VERSION_UNSUPPORTED",

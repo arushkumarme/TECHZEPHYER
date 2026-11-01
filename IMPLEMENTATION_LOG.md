@@ -273,3 +273,13 @@ Newest entry last. Each entry records actual commands and results. See `IMPLEMEN
 - `core/inspector/` pure renderers: table, sequence lanes, json, evidence chain (with explicit UNRESOLVED), explain (vocabulary definitions, metric units/categories), banner `SIMULATED DATA - scenario playback`, footer counts.
 - CLI `python -m netcoop.cli.trace` and the same flags on `netcoop trace` (its default output is unchanged, so the existing trace tests are untouched). ANSI colour off by default.
 - Golden files for the three formats from a fixture log built through the real bus (kit conversation + one rejected message); golden review caught and fixed a time-format slip and a plural. No existing test changed.
+
+## Protocol upgrade P8 — conflict messages, protocol 1.2 (2026-11-01)
+
+- `PROTOCOL_VERSION` 1.1 -> 1.2 (owner ruling: stay on 1.x). New message types `conflict_report` / `conflict_response`; optional `Hypothesis.relations`; `Decision.conflict_trail`. `VERSION_ADDITIONS` lets a reader pinned to 1.1 accept 1.2 messages with unknown-field warnings.
+- Vocabularies `conflict_type`, `hypothesis_relation`, `conflict_status`, `conflict_stance`; codes `CONFLICT_RELATION_NOT_CONFLICTING`, `CONFLICT_TARGET_NOT_PARTY`; rationale `CONFLICTING_READINGS`.
+- Authority (`authority.toml` 1.2): only `correlation_agent` raises a conflict; the orchestrator relays it to the named party; only that party responds; conflict reports share the clarification round counter. Decision D-25 (PROVISIONAL, prompt-pack default).
+- Detection and resolution are unchanged: the existing unresolved-conflict re-check (S-12) is now stated as a conflict exchange. S-09 (narrow margin) correctly raises none.
+- Conformance kit: 15 valid / 17 invalid / 11 conversations (real conflict; compatible disagreement raising no conflict; report from a specialist; response from a non-party). Inspector shows conflicts in table and sequence views.
+- Existing tests changed (version constant only, no logic): `tests/core/test_envelope_v11.py::test_current_version_is_1_1` -> `_1_2`, `tests/orchestrator/test_stamping.py` and `tests/conformance/test_kit.py` expect "1.2". Each change is commented in place.
+- Review fixes on resume: the compatible-disagreement kit conversation built a performance finding with a `compatible` relation but never sent it (it reused the default finding); now sent. Removed an unused `type: ignore` (mypy).

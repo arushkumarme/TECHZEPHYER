@@ -27,7 +27,7 @@ def test_every_message_is_stamped(tmp_path: Path) -> None:
     envs = _envelopes(o.store, r.incident_id)
     assert len(envs) > 10
     for e in envs:
-        assert e["protocol_version"] == "1.1"
+        assert e["protocol_version"] == "1.2"  # was "1.1" before Prompt 8
         assert e["snapshot_id"] == snap["snapshot_id"]
         assert e["mode"] == "simulation"
         assert e["data_provenance"] == "team-authored"

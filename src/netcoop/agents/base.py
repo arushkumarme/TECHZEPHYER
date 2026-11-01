@@ -26,6 +26,7 @@ from typing import Any, ClassVar
 
 from netcoop.config.fields import FieldDictionary, load_field_dictionary
 from netcoop.core.blocks import (
+    EvidenceRef,
     Hypothesis,
     Limitation,
     NotAssessableItem,
@@ -38,6 +39,8 @@ from netcoop.core.messages import (
     AgentError,
     ClarificationRequest,
     ClarificationResponse,
+    ConflictReport,
+    ConflictResponse,
     Envelope,
     Finding,
     ParsedMessage,
@@ -114,6 +117,12 @@ class SpecialistAgent:
                             "source": self.agent_id,
                         }
                     ),
+                )
+            if isinstance(msg.payload, ConflictReport):
+                return self.bus.reply(
+                    msg,
+                    message_type="conflict_response",
+                    payload=self.respond_to_conflict(msg.payload, msg),
                 )
             raise ValueError(f"{self.agent_id} cannot handle {msg.envelope.message_type}")
         except Exception as exc:  # an agent never crashes the bus; it reports
@@ -347,6 +356,46 @@ class SpecialistAgent:
         self, observations: list[Observation], inv: Investigation
     ) -> list[Hypothesis]:
         return []
+
+    # ------------------------------------------------------------------ conflicts (1.2)
+    def respond_to_conflict(self, report: ConflictReport, msg: ParsedMessage) -> ConflictResponse:
+        """Re-check what the report asks and state a stance derived from the result:
+        cannot_assess (no answer), withdraw (the data is not usable), maintain (the readings
+        still disagree), revise (one consistent reading, sent as new evidence)."""
+        recheck = {k: v for k, v in report.recheck.items() if k != "question_type"}
+        answer = self.clarify(
+            ClarificationRequest(
+                question_type=report.recheck.get("question_type", "recheck_metric"),
+                target=self.agent_id,
+                parameters=recheck,
+                reason="conflict",
+                round=report.round,
+            ),
+            msg,
+        )
+        obs = answer.observations
+        if not answer.answered or not obs:
+            stance, note = "cannot_assess", answer.reason or "no data to re-check"
+        elif all(o.assessability == "not_assessable" for o in obs):
+            stance, note = "withdraw", "the re-checked data is not usable"
+        elif len({o.severity for o in obs}) > 1:
+            stance, note = "maintain", "the re-check still shows disagreeing readings"
+        else:
+            stance, note = "revise", f"re-checked reading: {obs[0].severity}"
+        return ConflictResponse(
+            conflict_id=report.conflict_id,
+            stance=stance,
+            evidence=[
+                EvidenceRef(
+                    evidence_type="observation", evidence_id=o.observation_id, stance="supports"
+                )
+                for o in obs
+            ],
+            observations=obs,
+            note=note,
+            source=self.agent_id,
+            clarification_id=report.clarification_id,
+        )
 
     # ------------------------------------------------------------------ clarification
     def clarify(self, req: ClarificationRequest, msg: ParsedMessage) -> ClarificationResponse:

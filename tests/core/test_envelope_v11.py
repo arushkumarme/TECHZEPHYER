@@ -57,8 +57,9 @@ V11 = {
 # ------------------------------------------------------------------ versions and compatibility
 
 
-def test_current_version_is_1_1() -> None:
-    assert PROTOCOL_VERSION == "1.1"
+def test_current_version_is_1_2() -> None:
+    # Was "1.1" (Prompt 2); Prompt 8 bumps the minor for the conflict messages.
+    assert PROTOCOL_VERSION == "1.2"
 
 
 def test_a_1_0_message_without_new_fields_still_parses() -> None:

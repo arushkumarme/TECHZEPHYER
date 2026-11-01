@@ -140,6 +140,15 @@ class EvidenceRef(ProtocolModel):
         return self
 
 
+class HypothesisRelation(ProtocolModel):
+    hypothesis_id: str = Field(pattern=r"^HYP-")
+    relation: Annotated[str, VocabTerm("hypothesis_relation")]
+
+
+#: Relations that make two hypotheses a real conflict (the others never do).
+CONFLICTING_RELATIONS = frozenset({"competes", "contradicts"})
+
+
 def _refs(ids: list[str], stance: str) -> list[dict[str, Any]]:
     return [{"evidence_type": "observation", "evidence_id": i, "stance": stance} for i in ids]
 
@@ -163,6 +172,12 @@ class Hypothesis(ProtocolModel):
     supporting: list[EvidenceRef] = Field(default_factory=list)
     contradicting: list[EvidenceRef] = Field(default_factory=list)
     score_method: Annotated[str, VocabTerm("score_method")] = "agent_local_heuristic"
+    # ---- protocol 1.2 ----
+    relations: list[HypothesisRelation] = Field(
+        default_factory=list,
+        description="How this hypothesis relates to others; only competes/contradicts can "
+        "raise a conflict",
+    )
 
     @model_validator(mode="before")
     @classmethod
@@ -299,6 +314,18 @@ class Recommendation(ProtocolModel):
                 "rule 6: recommendations are always simulated and always need human approval",
             )
         return v
+
+
+class ConflictTrailEntry(ProtocolModel):
+    """One conflict in a decision's trail (protocol 1.2)."""
+
+    conflict_id: str
+    rule: ConflictRule
+    status: Annotated[str, VocabTerm("conflict_status")]
+    raised: bool = Field(default=False, description="A conflict_report was exchanged for it")
+    preserved_observation_ids: list[str] = Field(
+        default_factory=list, description="Kept on both sides when unresolved"
+    )
 
 
 class ConflictRecord(ProtocolModel):

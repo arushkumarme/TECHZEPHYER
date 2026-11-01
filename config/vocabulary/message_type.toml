@@ -62,3 +62,17 @@ label = "Community candidate"
 definition = "An unverified candidate incident built from user complaints (Extension A)."
 status = "active"
 source = "doc 05 §3; doc 10"
+
+[[terms]]
+id = "conflict_report"
+label = "Conflict report"
+definition = "The correlation agent states a real conflict (parties, evidence on each side, proposed rule) and asks a party to respond, through the orchestrator (protocol 1.2)."
+status = "active"
+source = "doc 05 §19"
+
+[[terms]]
+id = "conflict_response"
+label = "Conflict response"
+definition = "A party's stance on a conflict report (maintain, revise, withdraw, cannot_assess) with any new evidence (protocol 1.2)."
+status = "active"
+source = "doc 05 §19"

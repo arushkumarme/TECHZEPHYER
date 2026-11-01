@@ -61,3 +61,10 @@ label = "Service probes fail"
 definition = "Team-authored DNS/DHCP probes from the device fail or time out."
 status = "active"
 source = "agents/connectivity.py"
+
+[[terms]]
+id = "CONFLICTING_READINGS"
+label = "Conflicting readings"
+definition = "Observations of the same entity, metric and time disagree and no conflict rule settles them (reason code of a conflict_report, protocol 1.2)."
+status = "active"
+source = "doc 08 §5; doc 05 §19"

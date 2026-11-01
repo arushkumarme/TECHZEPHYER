@@ -104,6 +104,14 @@
           "title": "Rationale Code",
           "type": "string"
         },
+        "relations": {
+          "description": "How this hypothesis relates to others; only competes/contradicts can raise a conflict",
+          "items": {
+            "$ref": "#/$defs/HypothesisRelation"
+          },
+          "title": "Relations",
+          "type": "array"
+        },
         "score_method": {
           "default": "agent_local_heuristic",
           "title": "Score Method",
@@ -132,6 +140,25 @@
         "rationale_code"
       ],
       "title": "Hypothesis",
+      "type": "object"
+    },
+    "HypothesisRelation": {
+      "properties": {
+        "hypothesis_id": {
+          "pattern": "^HYP-",
+          "title": "Hypothesis Id",
+          "type": "string"
+        },
+        "relation": {
+          "title": "Relation",
+          "type": "string"
+        }
+      },
+      "required": [
+        "hypothesis_id",
+        "relation"
+      ],
+      "title": "HypothesisRelation",
       "type": "object"
     },
     "Limitation": {
@@ -505,5 +532,5 @@
   "title": "Finding",
   "type": "object",
   "x-netcoop-payload-schema-version": "1.0",
-  "x-netcoop-protocol-version": "1.1"
+  "x-netcoop-protocol-version": "1.2"
 }

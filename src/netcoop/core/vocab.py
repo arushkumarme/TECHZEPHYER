@@ -33,11 +33,13 @@ MessageType = Literal[
     "report_ready",
     "agent_error",
     "community_candidate",
+    "conflict_report",
+    "conflict_response",
 ]
 
 #: Message types that answer an earlier message and therefore need ``in_reply_to``.
 RESPONSE_TYPES: frozenset[str] = frozenset(
-    {"finding", "clarification_response", "decision", "report_ready"}
+    {"finding", "clarification_response", "decision", "report_ready", "conflict_response"}
 )
 
 MessageStatus = Literal["ok", "partial", "error"]

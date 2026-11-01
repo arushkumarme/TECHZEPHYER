@@ -480,6 +480,123 @@
     ],
     "version": "1.0"
   },
+  "conflict_stance": {
+    "description": "A party's answer to a conflict report (protocol 1.2).",
+    "extensible": false,
+    "terms": [
+      {
+        "attributes": {},
+        "definition": "The re-check confirms the party's reading as it was.",
+        "id": "maintain",
+        "label": "Maintain",
+        "source": "doc 05 \u00a719 (protocol 1.2, P8)",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "The re-check gives a revised reading, sent as new evidence.",
+        "id": "revise",
+        "label": "Revise",
+        "source": "doc 05 \u00a719 (protocol 1.2, P8)",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "The party withdraws its reading (the data is not usable).",
+        "id": "withdraw",
+        "label": "Withdraw",
+        "source": "doc 05 \u00a719 (protocol 1.2, P8)",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "The party could not re-check (no data or budget).",
+        "id": "cannot_assess",
+        "label": "Cannot assess",
+        "source": "doc 05 \u00a719 (protocol 1.2, P8)",
+        "status": "active"
+      }
+    ],
+    "version": "1.0"
+  },
+  "conflict_status": {
+    "description": "Lifecycle of a conflict (protocol 1.2).",
+    "extensible": false,
+    "terms": [
+      {
+        "attributes": {},
+        "definition": "Raised and waiting for the parties' responses.",
+        "id": "open",
+        "label": "Open",
+        "source": "doc 05 \u00a719 (protocol 1.2, P8)",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Settled by a conflict rule of doc 08 \u00a75.",
+        "id": "resolved",
+        "label": "Resolved",
+        "source": "doc 05 \u00a719 (protocol 1.2, P8)",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "No rule settles it; both sides are kept as alternatives and stated as a limitation, never silently dropped.",
+        "id": "unresolved_preserved",
+        "label": "Unresolved, preserved",
+        "source": "doc 05 \u00a719 (protocol 1.2, P8)",
+        "status": "active"
+      }
+    ],
+    "version": "1.0"
+  },
+  "conflict_type": {
+    "description": "Kinds of conflict the correlation agent can raise (protocol 1.2).",
+    "extensible": false,
+    "terms": [
+      {
+        "attributes": {},
+        "definition": "Two hypotheses that cannot both be the explanation (relation competes or contradicts).",
+        "id": "hypothesis_competition",
+        "label": "Hypothesis competition",
+        "source": "doc 05 \u00a719 (protocol 1.2, P8)",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Observations of the same entity, metric and time disagree (doc 08 \u00a75).",
+        "id": "observation_contradiction",
+        "label": "Observation contradiction",
+        "source": "doc 05 \u00a719 (protocol 1.2, P8)",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Agents grade the same evidence with different severities.",
+        "id": "severity_disagreement",
+        "label": "Severity disagreement",
+        "source": "doc 05 \u00a719 (protocol 1.2, P8)",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Agents disagree on which entities are affected.",
+        "id": "scope_disagreement",
+        "label": "Scope disagreement",
+        "source": "doc 05 \u00a719 (protocol 1.2, P8)",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Agents disagree on whether the data for an item is usable.",
+        "id": "data_quality_disagreement",
+        "label": "Data-quality disagreement",
+        "source": "doc 05 \u00a719 (protocol 1.2, P8)",
+        "status": "active"
+      }
+    ],
+    "version": "1.0"
+  },
   "data_provenance": {
     "description": "Where a telemetry bundle came from (values as used in scenario files).",
     "extensible": false,
@@ -1352,6 +1469,28 @@
         "label": "Extension disabled",
         "source": "doc 05 \u00a715 (P4)",
         "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "protocol",
+          "severity": "error"
+        },
+        "definition": "A conflict_report names a relation that is not a conflict (compatible or refines), or a hypothesis_competition without competes/contradicts.",
+        "id": "CONFLICT_RELATION_NOT_CONFLICTING",
+        "label": "Not a conflict",
+        "source": "doc 05 \u00a719 (P8)",
+        "status": "active"
+      },
+      {
+        "attributes": {
+          "kind": "protocol",
+          "severity": "error"
+        },
+        "definition": "A conflict_report asks an agent to respond that is not a party to the conflict.",
+        "id": "CONFLICT_TARGET_NOT_PARTY",
+        "label": "Conflict target not a party",
+        "source": "doc 05 \u00a719 (P8)",
+        "status": "active"
       }
     ],
     "version": "1.0"
@@ -1480,6 +1619,45 @@
         "id": "topology_element",
         "label": "Topology element",
         "source": "doc 11",
+        "status": "active"
+      }
+    ],
+    "version": "1.0"
+  },
+  "hypothesis_relation": {
+    "description": "How one hypothesis relates to another (protocol 1.2). Only competes and contradicts can raise a conflict.",
+    "extensible": false,
+    "terms": [
+      {
+        "attributes": {},
+        "definition": "Both can be true at once; never a conflict (e.g. congestion on a link and on its upstream link may be the same issue).",
+        "id": "compatible",
+        "label": "Compatible",
+        "source": "doc 05 \u00a719 (protocol 1.2, P8)",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Narrows the other hypothesis to a more specific cause; never a conflict.",
+        "id": "refines",
+        "label": "Refines",
+        "source": "doc 05 \u00a719 (protocol 1.2, P8)",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Alternative explanations of the same symptoms; at most one is the cause.",
+        "id": "competes",
+        "label": "Competes",
+        "source": "doc 05 \u00a719 (protocol 1.2, P8)",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "The evidence for one argues against the other (e.g. normal CPU argues against device overload).",
+        "id": "contradicts",
+        "label": "Contradicts",
+        "source": "doc 05 \u00a719 (protocol 1.2, P8)",
         "status": "active"
       }
     ],
@@ -1701,6 +1879,22 @@
         "id": "community_candidate",
         "label": "Community candidate",
         "source": "doc 05 \u00a73; doc 10",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "The correlation agent states a real conflict (parties, evidence on each side, proposed rule) and asks a party to respond, through the orchestrator (protocol 1.2).",
+        "id": "conflict_report",
+        "label": "Conflict report",
+        "source": "doc 05 \u00a719",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "A party's stance on a conflict report (maintain, revise, withdraw, cannot_assess) with any new evidence (protocol 1.2).",
+        "id": "conflict_response",
+        "label": "Conflict response",
+        "source": "doc 05 \u00a719",
         "status": "active"
       }
     ],
@@ -2199,6 +2393,14 @@
         "id": "SERVICE_PROBES_FAIL",
         "label": "Service probes fail",
         "source": "agents/connectivity.py",
+        "status": "active"
+      },
+      {
+        "attributes": {},
+        "definition": "Observations of the same entity, metric and time disagree and no conflict rule settles them (reason code of a conflict_report, protocol 1.2).",
+        "id": "CONFLICTING_READINGS",
+        "label": "Conflicting readings",
+        "source": "doc 08 \u00a75; doc 05 \u00a719",
         "status": "active"
       }
     ],

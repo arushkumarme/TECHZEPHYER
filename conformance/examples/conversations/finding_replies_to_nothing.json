@@ -6,7 +6,7 @@
     {
       "incident_state": "READY",
       "message": {
-        "protocol_version": "1.1",
+        "protocol_version": "1.2",
         "message_id": "INC-0001-MSG-000001",
         "incident_id": "INC-0001",
         "in_reply_to": null,
@@ -44,7 +44,7 @@
     {
       "incident_state": "COLLECTING",
       "message": {
-        "protocol_version": "1.1",
+        "protocol_version": "1.2",
         "message_id": "INC-0001-MSG-000001.R",
         "incident_id": "INC-0001",
         "in_reply_to": "INC-0001-MSG-000099",

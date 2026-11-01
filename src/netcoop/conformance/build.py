@@ -256,6 +256,71 @@ CANDIDATE = {
     "complaint_ids": ["CMP-0001", "CMP-0002", "CMP-0003"],
 }
 
+CONFLICT_REPORT = {
+    "conflict_id": "CONF-001",
+    "conflict_type": "observation_contradiction",
+    "parties": [
+        {
+            "agent": "performance_agent",
+            "hypothesis_ids": [],
+            "observation_ids": ["OBS-PERF-000001-001", "OBS-PERF-000001-003"],
+        }
+    ],
+    "sides": [
+        {
+            "agent": "performance_agent",
+            "claim": "SW_CAMPUS_4 latency_ms = 180.0 (critical)",
+            "evidence": [
+                {
+                    "evidence_type": "observation",
+                    "evidence_id": "OBS-PERF-000001-001",
+                    "stance": "supports",
+                }
+            ],
+        },
+        {
+            "agent": "performance_agent",
+            "claim": "SW_CAMPUS_4 latency_ms = 15.0 (normal)",
+            "evidence": [
+                {
+                    "evidence_type": "observation",
+                    "evidence_id": "OBS-PERF-000001-003",
+                    "stance": "supports",
+                }
+            ],
+        },
+    ],
+    "reason_code": "CONFLICTING_READINGS",
+    "reason_text": "SW_CAMPUS_4 latency_ms: records for the same time disagree",
+    "proposed_rule": "unresolved",
+    "status": "open",
+    "effect_on_confidence": "Both readings are kept; confidence is capped until re-checked.",
+    "target": "performance_agent",
+    "recheck": {"question_type": "recheck_metric", "entity": "SW_CAMPUS_4", "metric": "latency_ms"},
+    "round": 1,
+    "clarification_id": "CLR-0001",
+}
+CONFLICT_RESPONSE = {
+    "conflict_id": "CONF-001",
+    "stance": "revise",
+    "evidence": [
+        {"evidence_type": "observation", "evidence_id": "OBS-PERF-000005-001", "stance": "supports"}
+    ],
+    "observations": [observation(observation_id="OBS-PERF-000005-001")],
+    "note": "re-checked reading: critical",
+    "source": "performance_agent",
+    "clarification_id": "CLR-0001",
+}
+TRAIL = [
+    {
+        "conflict_id": "CONF-001",
+        "rule": "unresolved",
+        "status": "unresolved_preserved",
+        "raised": True,
+        "preserved_observation_ids": ["OBS-PERF-000001-001", "OBS-PERF-000001-003"],
+    }
+]
+
 # ------------------------------------------------------------------ valid single messages
 
 VALID: dict[str, tuple[str, dict[str, Any]]] = {
@@ -359,6 +424,39 @@ VALID: dict[str, tuple[str, dict[str, Any]]] = {
     "community_candidate": (
         "Extension A: a community candidate (reported, unverified)",
         env(mid(9), "community_module", "orchestrator", "community_candidate", CANDIDATE),
+    ),
+    "conflict_report": (
+        "Protocol 1.2: the correlation agent raises a real conflict and asks the party to re-check",
+        env(
+            mid(4, True),
+            "correlation_agent",
+            "orchestrator",
+            "conflict_report",
+            CONFLICT_REPORT,
+            mid(4),
+        ),
+    ),
+    "conflict_response": (
+        "Protocol 1.2: the party revises its reading with new evidence",
+        env(
+            mid(5, True),
+            "performance_agent",
+            "orchestrator",
+            "conflict_response",
+            CONFLICT_RESPONSE,
+            mid(5),
+        ),
+    ),
+    "decision_with_conflict_trail": (
+        "Protocol 1.2: a decision whose unresolved conflict is preserved, not dropped",
+        env(
+            mid(6, True),
+            "correlation_agent",
+            "orchestrator",
+            "decision",
+            decision("insufficient_evidence", conflict_trail=TRAIL),
+            mid(6),
+        ),
     ),
     "protocol_1_0_message": (
         "A protocol 1.0 message (no snapshot/mode/provenance/seq) still parses",
@@ -493,6 +591,31 @@ INVALID: dict[str, tuple[str, str, dict[str, Any], int | None]] = {
             "report_ready_with_recommendation",
             lambda m: m["payload"]["recommendations"][0].__setitem__("simulated", False),
         ),
+        None,
+    ),
+    "conflict_compatible_relation": (
+        "a 'conflict' between compatible hypotheses is not a conflict",
+        "CONFLICT_RELATION_NOT_CONFLICTING",
+        mutate(
+            "conflict_report",
+            lambda m: m["payload"].update(
+                conflict_type="hypothesis_competition", relation="compatible"
+            ),
+        ),
+        None,
+    ),
+    "conflict_target_not_party": (
+        "the agent asked to respond is not a party",
+        "CONFLICT_TARGET_NOT_PARTY",
+        mutate(
+            "conflict_report", lambda m: m["payload"].__setitem__("target", "infrastructure_agent")
+        ),
+        None,
+    ),
+    "conflict_unknown_stance": (
+        "stance 'ignore' is not a conflict_stance term",
+        "UNKNOWN_TERM",
+        mutate("conflict_response", lambda m: m["payload"].__setitem__("stance", "ignore")),
         None,
     ),
     "abstention_missing": (
@@ -659,6 +782,124 @@ def happy() -> list[dict[str, Any]]:
 
 
 H = happy()
+
+
+def conflict_flow() -> list[dict[str, Any]]:
+    """task, finding, correlate -> conflict_report -> relay -> conflict_response ->
+    correlate -> decision with its conflict trail -> report (protocol 1.2)."""
+    return [
+        *H[:3],
+        step(
+            "CORRELATING",
+            env(
+                mid(2, True),
+                "correlation_agent",
+                "orchestrator",
+                "conflict_report",
+                CONFLICT_REPORT,
+                mid(2),
+            ),
+        ),
+        step(
+            "CLARIFYING",
+            env(
+                mid(3),
+                "orchestrator",
+                "performance_agent",
+                "conflict_report",
+                CONFLICT_REPORT,
+                mid(2, True),
+            ),
+        ),
+        step(
+            "CLARIFYING",
+            env(
+                mid(3, True),
+                "performance_agent",
+                "orchestrator",
+                "conflict_response",
+                CONFLICT_RESPONSE,
+                mid(3),
+            ),
+        ),
+        step(
+            "CORRELATING",
+            env(
+                mid(4),
+                "orchestrator",
+                "correlation_agent",
+                "task_request",
+                task("correlate", 3, [mid(1, True)]),
+            ),
+        ),
+        step(
+            "CORRELATING",
+            env(
+                mid(4, True),
+                "correlation_agent",
+                "orchestrator",
+                "decision",
+                decision("insufficient_evidence", conflict_trail=TRAIL),
+                mid(4),
+            ),
+        ),
+    ]
+
+
+def compatible_flow() -> list[dict[str, Any]]:
+    """Two specialists describe the same problem differently (relation compatible /
+    refines): no conflict is raised, the decision follows directly."""
+    perf = finding(
+        hypotheses=[
+            hypothesis(
+                relations=[{"hypothesis_id": "HYP-INFRA-000002-001", "relation": "compatible"}]
+            )
+        ]
+    )
+    infra_hyp = hypothesis(
+        hypothesis_id="HYP-INFRA-000002-001",
+        cause_type="upstream_congestion",
+        relations=[{"hypothesis_id": "HYP-PERF-000001-001", "relation": "refines"}],
+    )
+    infra = finding(task_id="TASK-0002", hypotheses=[infra_hyp])
+    return [
+        H[0],
+        step(
+            "READY",
+            env(
+                mid(2),
+                "orchestrator",
+                "infrastructure_agent",
+                "task_request",
+                task("investigate", 2),
+            ),
+        ),
+        step(
+            "COLLECTING",
+            env(mid(1, True), "performance_agent", "orchestrator", "finding", perf, mid(1)),
+        ),
+        step(
+            "COLLECTING",
+            env(mid(2, True), "infrastructure_agent", "orchestrator", "finding", infra, mid(2)),
+        ),
+        step(
+            "CORRELATING",
+            env(
+                mid(3),
+                "orchestrator",
+                "correlation_agent",
+                "task_request",
+                task("correlate", 3, [mid(1, True), mid(2, True)]),
+            ),
+        ),
+        step(
+            "CORRELATING",
+            env(mid(3, True), "correlation_agent", "orchestrator", "decision", decision(), mid(3)),
+        ),
+    ]
+
+
+C = conflict_flow()
 Q3 = QUESTION | {"round": 3, "clarification_id": "CLR-0003"}
 CONVERSATIONS: dict[str, tuple[str, str | None, list[dict[str, Any]], int | None]] = {
     "valid_full_incident": (
@@ -757,6 +998,58 @@ CONVERSATIONS: dict[str, tuple[str, str | None, list[dict[str, Any]], int | None
             ),
         ],
         len(H),
+    ),
+    "valid_real_conflict": (
+        "Protocol 1.2: a real conflict raised, relayed to the party, "
+        "answered, and preserved in the decision's conflict trail",
+        None,
+        C,
+        None,
+    ),
+    "compatible_disagreement_raises_no_conflict": (
+        "Two agents describe the same problem "
+        "differently (compatible / refines): no conflict, accepted",
+        None,
+        compatible_flow(),
+        None,
+    ),
+    "conflict_response_from_non_party": (
+        "an agent that was not asked answers the conflict",
+        "REPLY_MISMATCH",
+        [
+            *C[:5],
+            step(
+                "CLARIFYING",
+                env(
+                    mid(3, True),
+                    "infrastructure_agent",
+                    "orchestrator",
+                    "conflict_response",
+                    CONFLICT_RESPONSE | {"source": "infrastructure_agent"},
+                    mid(3),
+                ),
+            ),
+        ],
+        5,
+    ),
+    "conflict_report_from_specialist": (
+        "a specialist tries to raise a conflict itself",
+        "SENDER_NOT_AUTHORIZED",
+        [
+            H[0],
+            step(
+                "COLLECTING",
+                env(
+                    mid(1, True),
+                    "performance_agent",
+                    "orchestrator",
+                    "conflict_report",
+                    CONFLICT_REPORT,
+                    mid(1),
+                ),
+            ),
+        ],
+        1,
     ),
     "community_with_extension_off": (
         "a community candidate while community_signals is off",

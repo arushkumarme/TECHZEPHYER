@@ -120,5 +120,5 @@
   "title": "OfficialReport",
   "type": "object",
   "x-netcoop-payload-schema-version": "1.0",
-  "x-netcoop-protocol-version": "1.1"
+  "x-netcoop-protocol-version": "1.2"
 }

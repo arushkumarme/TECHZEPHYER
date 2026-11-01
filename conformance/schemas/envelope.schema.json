@@ -50,7 +50,9 @@
         "decision",
         "report_ready",
         "agent_error",
-        "community_candidate"
+        "community_candidate",
+        "conflict_report",
+        "conflict_response"
       ],
       "title": "Message Type",
       "type": "string"
@@ -165,5 +167,5 @@
   "title": "Envelope",
   "type": "object",
   "x-netcoop-payload-schema-version": "1.0",
-  "x-netcoop-protocol-version": "1.1"
+  "x-netcoop-protocol-version": "1.2"
 }

@@ -249,7 +249,7 @@ A rulebook enforced by code: **who** may send **which** message, **to whom**, an
 
 ### Authority matrix
 
-Specialists = `performance_agent`, `infrastructure_agent`, `connectivity_agent`. Source: `config/protocol/authority.toml` (version 1.1).
+Specialists = `performance_agent`, `infrastructure_agent`, `connectivity_agent`. Source: `config/protocol/authority.toml` (version 1.2).
 
 | Message type | Sender | Recipient | Incident states | Reply rule | Other |
 |---|---|---|---|---|---|
@@ -258,8 +258,11 @@ Specialists = `performance_agent`, `infrastructure_agent`, `connectivity_agent`.
 | `task_request` | `orchestrator` | `reporting_agent` | `REPORTING` | starts a conversation (no `in_reply_to`) | task kind `report` |
 | `finding` | specialists | `orchestrator` | `DISPATCHED`, `COLLECTING` | answers an open `task_request` addressed to the sender | task kind `investigate` |
 | `clarification_request` | `correlation_agent` | `orchestrator` | `CORRELATING` | answers an open `task_request` addressed to the sender | task kind `correlate`; counts toward the round limit |
-| `clarification_request` | `orchestrator` | specialists | `CLARIFYING` | relays the correlation agent's open question to the target it names | - |
-| `clarification_response` | specialists | `orchestrator` | `CLARIFYING` | answers the question relayed to the sender | - |
+| `clarification_request` | `orchestrator` | specialists | `CLARIFYING` | relays the correlation agent's open question (or conflict report) to the target it names | - |
+| `clarification_response` | specialists | `orchestrator` | `CLARIFYING` | answers the question (or conflict report) relayed to the sender | - |
+| `conflict_report` | `correlation_agent` | `orchestrator` | `CORRELATING` | answers an open `task_request` addressed to the sender | task kind `correlate`; counts toward the round limit |
+| `conflict_report` | `orchestrator` | specialists | `CLARIFYING` | relays the correlation agent's open question (or conflict report) to the target it names | - |
+| `conflict_response` | specialists | `orchestrator` | `CLARIFYING` | answers the question (or conflict report) relayed to the sender | - |
 | `decision` | `correlation_agent` | `orchestrator` | `CORRELATING` | answers an open `task_request` addressed to the sender | task kind `correlate`; once per incident |
 | `report_ready` | `reporting_agent` | `orchestrator` | `REPORTING` | answers an open `task_request` addressed to the sender | task kind `report`; once per incident; after a decision |
 | `agent_error` | `performance_agent`, `infrastructure_agent`, `connectivity_agent`, `correlation_agent`, `reporting_agent` | `orchestrator` | any open state | may reply to any earlier message of the incident | - |
@@ -277,7 +280,8 @@ Checked in this order; every rejection is logged with its code and a plain-Engli
 5. **Extensions** — extension messages need their feature flag (`EXTENSION_DISABLED`).
 6. **Sequence** — a type is legal only in its incident states, `decision` and `report_ready` at most once, `report_ready` only after a decision (`MESSAGE_OUT_OF_SEQUENCE`).
 7. **Replies** — a reply must answer an open request addressed to its sender; a relayed question must name the target of the correlation agent's question (`REPLY_MISMATCH`).
-8. **Round limit** — the correlation agent's questions count toward `max_clarification_rounds` (default 2) per incident (`CLARIFICATION_LIMIT_EXCEEDED`).
+8. **Round limit** — the correlation agent's questions and conflict reports share one counter, `max_clarification_rounds` (default 2) per incident (`CLARIFICATION_LIMIT_EXCEEDED`).
+9. **Conflicts** (1.2) — only `correlation_agent` raises a `conflict_report`; it is relayed to the party it names, and only that party answers with a `conflict_response`. A report must name a real conflict (relation `competes` or `contradicts`) and its target must be a party (`CONFLICT_RELATION_NOT_CONFLICTING`, `CONFLICT_TARGET_NOT_PARTY`, checked when the report is parsed).
 
 <!-- END GENERATED: authority -->
 
@@ -295,7 +299,7 @@ Checked in this order; every rejection is logged with its code and a plain-Engli
 Proof that the protocol is real: **[`conformance/README.md`](../conformance/README.md)** (one page). `uv run netcoop conformance` (or `python -m netcoop.cli.conformance`) runs every example through the real parser and conversation guard. It prints how many valid examples were accepted, how many invalid examples were rejected **with the expected code**, how many conversations behaved as expected, and each rejection's plain-English reason, and exits 1 on any difference from `conformance/manifest.json`. `uv run netcoop validate FILE` checks one message or conversation.
 
 - **Schemas:** `conformance/schemas/` holds the envelope, one schema per payload type and `official_report`. Each states `x-netcoop-protocol-version`. They are written by `scripts/export_schemas.py`, and a test fails if they are stale. Vocabularies are in `conformance/vocabularies.json`.
-- **Examples:** 12 valid messages (every type plus variants, including a 1.0 message), 14 invalid messages (each with its expected code: missing field, wrong type, unknown term, unit not fitting the metric, not-assessable with a value, mode `deployment`, naive timestamp, major version 2, hypothesis without evidence, wrong evidence prefix, oversize, `calibrated`, recommendation not simulated, missing abstention), and 7 conversations (one fully valid incident; plus a decision from `performance_agent`, a finding replying to nothing, a third clarification round, a direct agent-to-agent message, a message after closing, and community input with the extension off). All values are illustrative. They are built deterministically by `python -m netcoop.conformance.build` (`--check` for freshness). The expected verdicts are written by hand, never derived from running the code.
+- **Examples:** 15 valid messages (every type plus variants, including a 1.0 message; 1.2 adds a conflict report, a conflict response and a decision with a conflict trail), 17 invalid messages (each with its expected code: missing field, wrong type, unknown term, unit not fitting the metric, not-assessable with a value, mode `deployment`, naive timestamp, major version 2, hypothesis without evidence, wrong evidence prefix, oversize, `calibrated`, recommendation not simulated, missing abstention; 1.2 adds a conflict with a `compatible` relation, a target that is not a party, and an unknown stance), and 11 conversations (one fully valid incident; plus a decision from `performance_agent`, a finding replying to nothing, a third clarification round, a direct agent-to-agent message, a message after closing, and community input with the extension off; 1.2 adds a valid real conflict, a compatible disagreement that raises no conflict, a conflict report from a specialist, and a conflict response from a non-party). All values are illustrative. They are built deterministically by `python -m netcoop.conformance.build` (`--check` for freshness). The expected verdicts are written by hand, never derived from running the code.
 - **Third-party agents:** `netcoop.conformance.assert_agent_conforms(agent, recorded_task_request)` feeds a recorded task to any callable and checks that its reply parses and passes the guard. It is proven with a stub agent written only from the kit README; non-conforming variants are caught.
 - **Evidence:** `tests/conformance/test_kit.py`. The manifest matches reality; examples and schemas are current; **breaking a rule or a model makes the kit fail** (exact mismatches asserted); the CLI commands work; and the stub agent conforms.
 
@@ -310,7 +314,22 @@ Proof that the protocol is real: **[`conformance/README.md`](../conformance/READ
 - **`--evidence HYP-…`:** the evidence chain: hypothesis → supporting and contradicting refs → observations (entity, metric, value, unit, severity) → source records (`REC-…`) → data snapshot. A reference that does not resolve is printed as `UNRESOLVED: …`.
 - **`--explain MSG-…`:** the full message, then each vocabulary-controlled field with its definition. Metrics also show their unit and problem-statement category, which is how "field meanings and units" can be read off any message.
 - **ANSI colour** is off by default (`--color` to switch it on). Raw telemetry is never displayed, only the observations agents derived from it.
+- **Conflicts (1.2):** `conflict_report` / `conflict_response` lines are summarised as `CONFLICT CONF-… <type>: <reason> -> <target> (proposed rule …, round n)` and `CONFLICT CONF-… stance <stance>`; the sequence view adds `!! CONF-…` (and the stance) to the arrow; a decision line lists each trail entry and its status.
 - **Evidence:** `tests/inspector/test_inspector.py`. Golden files (`tests/inspector/golden/`) cover the table, sequence and json views of a fixture log built through the real bus: the kit's valid conversation plus one rejected message. Further tests cover the rejected toggle, filters, footer counts, evidence resolved and unresolved, explain definitions, the banner being always present, the absence of the words "live"/"real-time", and the CLI.
+
+## 19. Conflict messages (protocol 1.2, Prompt 8) — `IMPLEMENTED`, `TESTED`
+
+**In plain English:** before 1.2, when two agents' readings disagreed the correlation agent quietly asked for a re-check with an ordinary clarification. Now the disagreement is a named, logged exchange: the correlation agent says *who* disagrees, *what* each side's evidence is and *which rule* it proposes; the party asked answers with a stance. Agents that merely describe the same problem differently do **not** create a conflict.
+
+- **Version:** `PROTOCOL_VERSION = "1.2"` (minor bump, backward compatible; the owner ruled the pack's `0.2.0` becomes 1.2). A 1.0/1.1 message still parses. A reader pinned to 1.1 (`try_parse(..., reader_version="1.1")`) accepts a 1.2 message and reports the newer fields as unknown-field warnings; 1.2 message types are unknown to it. The table of what each minor added is `VERSION_ADDITIONS` in `core/versioning.py`.
+- **Who raises a conflict (D-25, PROVISIONAL):** only `correlation_agent` sends a `conflict_report`; the orchestrator relays it unchanged to the one party it names (`target`), and only that party answers with a `conflict_response`. Specialists stay independent: they never raise conflicts or talk to each other.
+- **Hypothesis relations:** `Hypothesis.relations` (optional) lists `{hypothesis_id, relation}` with `hypothesis_relation` ∈ `compatible`, `refines`, `competes`, `contradicts`. Only `competes` and `contradicts` can be a conflict. Example: congestion on a link and on its upstream link may be the same issue (`compatible`); normal CPU argues against device overload (`contradicts`).
+- **`conflict_report` payload:** `conflict_id` (`CONF-NNN`), `conflict_type` (`hypothesis_competition`, `observation_contradiction`, `severity_disagreement`, `scope_disagreement`, `data_quality_disagreement`), `parties` (agent + hypothesis and observation ids), `sides` (≥ 2, each a claim with `EvidenceRef`s), optional `relation`, `reason_code` + `reason_text`, `proposed_rule` (doc 08 §5), `status` (`open`), `effect_on_confidence`, `target`, `recheck`, `round`, `clarification_id`. Parse-time rules: `CONFLICT_RELATION_NOT_CONFLICTING` (relation `compatible`/`refines`, or a `hypothesis_competition` without a relation) and `CONFLICT_TARGET_NOT_PARTY`.
+- **`conflict_response` payload:** `conflict_id`, `stance` (`maintain`, `revise`, `withdraw`, `cannot_assess`), new `evidence` refs and `observations`, `note`. The stance is derived from the re-check result, not chosen freely.
+- **Round limit:** conflict reports share the clarification counter (`max_clarification_rounds`, default 2).
+- **Decision:** `Decision.conflict_trail` lists every conflict with the rule applied, its `conflict_status` (`resolved` or `unresolved_preserved`), whether a report was exchanged (`raised`), and, when unresolved, the observation ids kept on both sides. No finding is dropped.
+- **What is not changed:** conflict *detection* and *resolution* are the existing correlation logic (doc 08 §5). The exchange that used to be a plain conflict re-check is now stated as `conflict_report` / `conflict_response`; S-12 is the scenario that exercises it.
+- **Evidence:** `tests/core/test_conflicts.py` (relations, report shape rules, version compatibility both ways, shared round limit, the real correlation agent raising the S-12 conflict, the decision trail, visibility in traces, determinism), `tests/conformance/test_kit.py`, `tests/core/test_guard.py`, `tests/core/test_envelope_v11.py`.
 
 ## Appendix A: Controlled vocabularies
 
@@ -329,23 +348,27 @@ _Generated by `scripts/generate_docs.py` from `config/vocabulary/*.toml`; do not
 | [`clarification_reason`](#vocabulary-clarification-reason) | 3 | closed | `netcoop.core.vocab:ClarificationReason` |
 | [`confidence_category`](#vocabulary-confidence-category) | 4 | closed | `netcoop.core.vocab:ConfidenceCategory` |
 | [`conflict_rule`](#vocabulary-conflict-rule) | 4 | closed | `netcoop.core.vocab:ConflictRule` |
+| [`conflict_stance`](#vocabulary-conflict-stance) | 4 | closed | registry only |
+| [`conflict_status`](#vocabulary-conflict-status) | 3 | closed | registry only |
+| [`conflict_type`](#vocabulary-conflict-type) | 5 | closed | registry only |
 | [`data_provenance`](#vocabulary-data-provenance) | 6 | closed | registry only |
 | [`decision_kind`](#vocabulary-decision-kind) | 3 | closed | `netcoop.core.vocab:DecisionKind` |
 | [`dimension`](#vocabulary-dimension) | 6 | closed | registry only |
 | [`entity_type`](#vocabulary-entity-type) | 3 | closed | registry only |
-| [`error_code`](#vocabulary-error-code) | 63 | closed | registry only |
+| [`error_code`](#vocabulary-error-code) | 65 | closed | registry only |
 | [`evidence_class`](#vocabulary-evidence-class) | 3 | closed | `netcoop.core.vocab:EvidenceClass` |
 | [`evidence_stance`](#vocabulary-evidence-stance) | 3 | closed | registry only |
 | [`evidence_type`](#vocabulary-evidence-type) | 6 | closed | registry only |
+| [`hypothesis_relation`](#vocabulary-hypothesis-relation) | 4 | closed | registry only |
 | [`incident_state`](#vocabulary-incident-state) | 14 | closed | `netcoop.orchestrator.states:State` |
 | [`message_status`](#vocabulary-message-status) | 3 | closed | `netcoop.core.vocab:MessageStatus` |
-| [`message_type`](#vocabulary-message-type) | 8 | closed | `netcoop.core.vocab:MessageType` |
+| [`message_type`](#vocabulary-message-type) | 10 | closed | `netcoop.core.vocab:MessageType` |
 | [`metric`](#vocabulary-metric) | 11 | closed | registry only |
 | [`metric_category`](#vocabulary-metric-category) | 12 | closed | registry only |
 | [`mode`](#vocabulary-mode) | 2 | closed | `netcoop.config.settings:Settings.mode` |
 | [`not_assessable_reason`](#vocabulary-not-assessable-reason) | 9 | closed | `netcoop.core.vocab:NotAssessableReason` |
 | [`question_type`](#vocabulary-question-type) | 4 | closed | `netcoop.core.vocab:QuestionType` |
-| [`rationale_code`](#vocabulary-rationale-code) | 8 | extensible (`x-` ids) | registry only |
+| [`rationale_code`](#vocabulary-rationale-code) | 9 | extensible (`x-` ids) | registry only |
 | [`recommendation_mode`](#vocabulary-recommendation-mode) | 4 | closed | registry only |
 | [`recommendation_priority`](#vocabulary-recommendation-priority) | 3 | closed | registry only |
 | [`report_status`](#vocabulary-report-status) | 4 | closed | `netcoop.report.validate:STATUSES` |
@@ -465,6 +488,39 @@ Rule that settled a conflict between observations.
 | `topology_consistency` | Topology consistency | An explanation consistent with the dependency structure beats one that is not. | active | doc 08 §5 rule 3 |  |
 | `unresolved` | Unresolved | No rule decides: both are kept, the weaker evidence is used and the conflict is stated. | active | doc 08 §5 rule 4 |  |
 
+### Vocabulary: conflict_stance
+
+A party's answer to a conflict report (protocol 1.2).
+
+| Id | Label | Definition | Status | Source | Attributes |
+|---|---|---|---|---|---|
+| `maintain` | Maintain | The re-check confirms the party's reading as it was. | active | doc 05 §19 (protocol 1.2, P8) |  |
+| `revise` | Revise | The re-check gives a revised reading, sent as new evidence. | active | doc 05 §19 (protocol 1.2, P8) |  |
+| `withdraw` | Withdraw | The party withdraws its reading (the data is not usable). | active | doc 05 §19 (protocol 1.2, P8) |  |
+| `cannot_assess` | Cannot assess | The party could not re-check (no data or budget). | active | doc 05 §19 (protocol 1.2, P8) |  |
+
+### Vocabulary: conflict_status
+
+Lifecycle of a conflict (protocol 1.2).
+
+| Id | Label | Definition | Status | Source | Attributes |
+|---|---|---|---|---|---|
+| `open` | Open | Raised and waiting for the parties' responses. | active | doc 05 §19 (protocol 1.2, P8) |  |
+| `resolved` | Resolved | Settled by a conflict rule of doc 08 §5. | active | doc 05 §19 (protocol 1.2, P8) |  |
+| `unresolved_preserved` | Unresolved, preserved | No rule settles it; both sides are kept as alternatives and stated as a limitation, never silently dropped. | active | doc 05 §19 (protocol 1.2, P8) |  |
+
+### Vocabulary: conflict_type
+
+Kinds of conflict the correlation agent can raise (protocol 1.2).
+
+| Id | Label | Definition | Status | Source | Attributes |
+|---|---|---|---|---|---|
+| `hypothesis_competition` | Hypothesis competition | Two hypotheses that cannot both be the explanation (relation competes or contradicts). | active | doc 05 §19 (protocol 1.2, P8) |  |
+| `observation_contradiction` | Observation contradiction | Observations of the same entity, metric and time disagree (doc 08 §5). | active | doc 05 §19 (protocol 1.2, P8) |  |
+| `severity_disagreement` | Severity disagreement | Agents grade the same evidence with different severities. | active | doc 05 §19 (protocol 1.2, P8) |  |
+| `scope_disagreement` | Scope disagreement | Agents disagree on which entities are affected. | active | doc 05 §19 (protocol 1.2, P8) |  |
+| `data_quality_disagreement` | Data-quality disagreement | Agents disagree on whether the data for an item is usable. | active | doc 05 §19 (protocol 1.2, P8) |  |
+
 ### Vocabulary: data_provenance
 
 Where a telemetry bundle came from (values as used in scenario files).
@@ -580,6 +636,8 @@ Every error, warning and limitation code the system emits. Severity: fatal stops
 | `CLARIFICATION_LIMIT_EXCEEDED` | Clarification limit exceeded | A clarification question beyond the configured rounds per incident (default 2). | active | doc 05 §15 (P4) | severity=error, kind=conversation |
 | `DIRECT_AGENT_MESSAGE_FORBIDDEN` | Direct agent message forbidden | Hub and spoke: every message is to or from the orchestrator; agents never message each other directly. | active | doc 05 §15 (P4) | severity=error, kind=conversation |
 | `EXTENSION_DISABLED` | Extension disabled | The message belongs to an extension whose feature flag is off (e.g. community_candidate without community_signals). | active | doc 05 §15 (P4) | severity=error, kind=conversation |
+| `CONFLICT_RELATION_NOT_CONFLICTING` | Not a conflict | A conflict_report names a relation that is not a conflict (compatible or refines), or a hypothesis_competition without competes/contradicts. | active | doc 05 §19 (P8) | severity=error, kind=protocol |
+| `CONFLICT_TARGET_NOT_PARTY` | Conflict target not a party | A conflict_report asks an agent to respond that is not a party to the conflict. | active | doc 05 §19 (P8) | severity=error, kind=protocol |
 
 ### Vocabulary: evidence_class
 
@@ -613,6 +671,17 @@ What an evidence reference points at (PROVISIONAL, D-19).
 | `community_report` | Community report | An unverified candidate built from complaints. | active | doc 10 | id_prefix=CAND- |
 | `tool_result` | Tool result | The recorded result of a tool call. | active | doc 03 §1 | id_prefix= |
 | `topology_element` | Topology element | A device or link in the SIMULATED topology. | active | doc 11 | id_prefix= |
+
+### Vocabulary: hypothesis_relation
+
+How one hypothesis relates to another (protocol 1.2). Only competes and contradicts can raise a conflict.
+
+| Id | Label | Definition | Status | Source | Attributes |
+|---|---|---|---|---|---|
+| `compatible` | Compatible | Both can be true at once; never a conflict (e.g. congestion on a link and on its upstream link may be the same issue). | active | doc 05 §19 (protocol 1.2, P8) |  |
+| `refines` | Refines | Narrows the other hypothesis to a more specific cause; never a conflict. | active | doc 05 §19 (protocol 1.2, P8) |  |
+| `competes` | Competes | Alternative explanations of the same symptoms; at most one is the cause. | active | doc 05 §19 (protocol 1.2, P8) |  |
+| `contradicts` | Contradicts | The evidence for one argues against the other (e.g. normal CPU argues against device overload). | active | doc 05 §19 (protocol 1.2, P8) |  |
 
 ### Vocabulary: incident_state
 
@@ -659,6 +728,8 @@ Kinds of protocol message.
 | `report_ready` | Report ready | The reporting agent delivers the validated report and its Markdown rendering. | active | doc 05 §3 |  |
 | `agent_error` | Agent error | A failure, timeout or invalid message, with a code and whether it is recoverable. | active | doc 05 §3 |  |
 | `community_candidate` | Community candidate | An unverified candidate incident built from user complaints (Extension A). | active | doc 05 §3; doc 10 |  |
+| `conflict_report` | Conflict report | The correlation agent states a real conflict (parties, evidence on each side, proposed rule) and asks a party to respond, through the orchestrator (protocol 1.2). | active | doc 05 §19 |  |
+| `conflict_response` | Conflict response | A party's stance on a conflict report (maintain, revise, withdraw, cannot_assess) with any new evidence (protocol 1.2). | active | doc 05 §19 |  |
 
 ### Vocabulary: metric
 
@@ -747,6 +818,7 @@ Why a specialist attached a local hypothesis. Extensible with 'x-' ids for site-
 | `INTERFACE_ERRORS` | Interface errors | Interface error counts are abnormal. | active | agents/infrastructure.py |  |
 | `QUEUE_DROPS` | Queue drops | Egress queue drops are abnormal. | active | agents/infrastructure.py |  |
 | `SERVICE_PROBES_FAIL` | Service probes fail | Team-authored DNS/DHCP probes from the device fail or time out. | active | agents/connectivity.py |  |
+| `CONFLICTING_READINGS` | Conflicting readings | Observations of the same entity, metric and time disagree and no conflict rule settles them (reason code of a conflict_report, protocol 1.2). | active | doc 08 §5; doc 05 §19 |  |
 
 ### Vocabulary: recommendation_mode
 

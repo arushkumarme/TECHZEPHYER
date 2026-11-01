@@ -11,7 +11,24 @@ import re
 from dataclasses import dataclass
 
 #: 1.1 adds the optional envelope fields snapshot_id, mode, data_provenance, seq.
-PROTOCOL_VERSION = "1.1"
+#: 1.2 adds conflict_report / conflict_response, Hypothesis.relations, Decision.conflict_trail.
+PROTOCOL_VERSION = "1.2"
+
+#: What each minor version added, so a reader PINNED to an older minor can be emulated
+#: (``try_parse(..., reader_version="1.1")``): newer fields are ignored and reported, newer
+#: message types are unknown to it. Payload paths: "<type>.<field>" or "<type>.<list>[].<field>".
+VERSION_ADDITIONS: dict[str, dict[str, tuple[str, ...]]] = {
+    "1.1": {
+        "envelope": ("snapshot_id", "mode", "data_provenance", "seq"),
+        "message_types": (),
+        "payload": (),
+    },
+    "1.2": {
+        "envelope": (),
+        "message_types": ("conflict_report", "conflict_response"),
+        "payload": ("decision.conflict_trail", "finding.hypotheses[].relations"),
+    },
+}
 PAYLOAD_SCHEMA_VERSION = "1.0"
 SUPPORTED_PROTOCOL_MAJORS = frozenset({1})
 SUPPORTED_PAYLOAD_MAJORS = frozenset({1})

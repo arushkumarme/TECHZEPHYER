@@ -45,6 +45,8 @@ from netcoop.core.messages import (
     AgentError,
     ClarificationRequest,
     CommunityCandidate,
+    ConflictReport,
+    ConflictResponse,
     Decision,
     Finding,
     MessageValidationError,
@@ -741,6 +743,9 @@ class Orchestrator:
                 return None
             if isinstance(reply.payload, Decision):
                 return reply.payload
+            if isinstance(reply.payload, ConflictReport):
+                self._relay_conflict(run, reply)
+                continue
             if not isinstance(reply.payload, ClarificationRequest):
                 return None
             q = reply.payload
@@ -770,6 +775,62 @@ class Orchestrator:
             self._checkpoint(run, "clarification", entry)
             self._go(incident, "CORRELATING", trigger="clarification_answered")
         return None
+
+    def _relay_conflict(self, run: _Run, reply: ParsedMessage) -> None:
+        """Protocol 1.2: relay the correlation agent's conflict_report to the party it names
+        and record the exchange exactly like a clarification round (same context entry), so
+        the correlation agent's resolution logic is unchanged."""
+        assert run.bus is not None and isinstance(reply.payload, ConflictReport)
+        report, incident = reply.payload, run.incident
+        self._go(
+            incident,
+            "CLARIFYING",
+            trigger="conflict_report",
+            message_id=reply.envelope.message_id,
+            detail={
+                "conflict_id": report.conflict_id,
+                "target": report.target,
+                "round": report.round,
+            },
+        )
+        response: dict[str, Any]
+        try:
+            answer = run.bus.request(
+                sender="orchestrator",
+                recipient=report.target,
+                message_type="conflict_report",
+                payload=report,
+                incident_id=incident,
+                in_reply_to=reply.envelope.message_id,
+            )
+            if isinstance(answer.payload, ConflictResponse):
+                r = answer.payload
+                response = {
+                    "answered": r.stance != "cannot_assess" and bool(r.observations),
+                    "observations": [o.model_dump(mode="json") for o in r.observations],
+                    "reason": r.note,
+                    "stance": r.stance,
+                    "conflict_id": r.conflict_id,
+                }
+            else:
+                response = {"answered": False, "reason": "target replied with an error"}
+        except Exception as exc:  # unanswered conflicts are recorded, never fatal
+            response = {"answered": False, "reason": f"{type(exc).__name__}: {exc}"}
+        params = {k: v for k, v in report.recheck.items() if k != "question_type"}
+        entry = {
+            "request": {
+                "question_type": report.recheck.get("question_type", "recheck_metric"),
+                "target": report.target,
+                "parameters": params,
+                "reason": "conflict",
+                "round": report.round,
+                "conflict_id": report.conflict_id,
+            },
+            "response": response,
+        }
+        run.clarifications.append(entry)
+        self._checkpoint(run, "clarification", entry)
+        self._go(incident, "CORRELATING", trigger="conflict_answered")
 
     def _report(self, run: _Run) -> tuple[dict[str, Any], str, bool]:
         assert run.bundle is not None and run.decision is not None
