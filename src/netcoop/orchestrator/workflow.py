@@ -148,6 +148,9 @@ class Orchestrator:
         self.llm = llm
         self._state: dict[str, str | None] = {}
         self._pause_after: str | None = None
+        #: The incident this orchestrator registered last, readable even when ``run``
+        #: ends in a SimulatedCrash (the API reports the interrupted incident).
+        self.last_incident: str | None = None
 
     # ------------------------------------------------------------------ state machine
     def _go(
@@ -204,6 +207,7 @@ class Orchestrator:
             at=self.clock.now(),
             prefix=self.settings.protocol.incident_prefix,
         )
+        self.last_incident = incident
         run = _Run(
             incident=incident, raw=data, community=list(community or []), label=label or source
         )

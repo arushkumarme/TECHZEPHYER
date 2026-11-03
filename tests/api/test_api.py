@@ -114,6 +114,33 @@ def test_fault_injection_is_validated(client: TestClient) -> None:
     assert bad.status_code == 422
 
 
+def test_default_database_path(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """Locally the log lives in var/; on Vercel (read-only code, VERCEL=1) it goes to /tmp.
+    An explicit NETCOOP_DB always wins."""
+    from netcoop.api.app import default_db_path
+
+    monkeypatch.delenv("NETCOOP_DB", raising=False)
+    monkeypatch.delenv("VERCEL", raising=False)
+    assert default_db_path().parts[-2:] == ("var", "netcoop.sqlite3")
+    monkeypatch.setenv("VERCEL", "1")
+    assert default_db_path() == Path("/tmp/netcoop.sqlite3")
+    monkeypatch.setenv("NETCOOP_DB", str(tmp_path / "x.sqlite3"))
+    assert default_db_path() == tmp_path / "x.sqlite3"
+
+
+def test_simulated_crash_over_api_leaves_a_resumable_incident(client: TestClient) -> None:
+    """A simulated process crash must not surface as a bare HTTP 500: the API reports the
+    interrupted incident, which the resume endpoint then finishes (component 10)."""
+    crashed = client.post(
+        "/api/scenarios/S-02/run", json={"fault_injection": {"performance_agent": "crash"}}
+    )
+    assert crashed.status_code == 201
+    body = crashed.json()
+    assert body["incident_id"] == "INC-0001" and body["resumable"] is True
+    resumed = client.post("/api/incidents/INC-0001/resume")
+    assert resumed.status_code == 200 and resumed.json()["status"] == "diagnosed"
+
+
 def test_topology_and_fields(client: TestClient) -> None:
     topo = client.get("/api/topology/campus_v1").json()
     assert topo["provenance"] == "SIMULATED" and len(topo["nodes"]) == 10

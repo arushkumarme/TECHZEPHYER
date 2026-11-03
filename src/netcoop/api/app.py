@@ -39,6 +39,7 @@ from netcoop.api.models import (
 from netcoop.config.fields import load_field_dictionary
 from netcoop.config.settings import Settings, load_settings
 from netcoop.core.log_store import LogStore
+from netcoop.orchestrator.faults import SimulatedCrash
 from netcoop.orchestrator.review import ReviewError, ReviewService
 from netcoop.orchestrator.states import RESUMABLE
 from netcoop.orchestrator.trace import summarize_message
@@ -161,12 +162,20 @@ def scenario_detail(scenario_id: str) -> dict[str, Any]:
 def run_scenario(scenario_id: str, options: RunRequest, backend: BackendDep) -> IncidentSummary:
     sc = _scenario_or_404(scenario_id)
     faults = {**sc.meta.get("run", {}).get("fault_injection", {}), **options.fault_injection}
-    result = backend.orchestrator(faults).run(
-        sc.input_bytes,
-        source=f"api:scenario:{scenario_id}",
-        label=scenario_id,
-        pause_after=options.pause_after,
-    )
+    orchestrator = backend.orchestrator(faults)
+    try:
+        result = orchestrator.run(
+            sc.input_bytes,
+            source=f"api:scenario:{scenario_id}",
+            label=scenario_id,
+            pause_after=options.pause_after,
+        )
+    except SimulatedCrash:
+        # The injected "crash" models the process dying mid-incident. The server itself
+        # survives, so report the interrupted (resumable) incident instead of a bare 500.
+        if orchestrator.last_incident is None:
+            raise
+        return backend.summary(orchestrator.last_incident)
     return backend.summary(result.incident_id)
 
 
@@ -339,9 +348,20 @@ Extension = Callable[[FastAPI, Backend], None]
 EXTENSIONS: list[Extension] = []  # feature-flagged routers register here (docs 10, 11)
 
 
+def default_db_path() -> Path:
+    """``NETCOOP_DB`` if set; else ``var/`` in the repo. On Vercel (``VERCEL`` set) the code
+    is read-only, so the log goes to the writable ``/tmp`` - which is per instance and
+    temporary: incidents do not survive a cold start there."""
+    if explicit := os.environ.get("NETCOOP_DB"):
+        return Path(explicit)
+    if os.environ.get("VERCEL"):
+        return Path("/tmp/netcoop.sqlite3")
+    return REPO_ROOT / "var" / "netcoop.sqlite3"
+
+
 def create_app(*, db_path: Path | str | None = None, settings: Settings | None = None) -> FastAPI:
     settings = settings or load_settings()
-    path = Path(db_path or os.environ.get("NETCOOP_DB") or REPO_ROOT / "var" / "netcoop.sqlite3")
+    path = Path(db_path) if db_path else default_db_path()
     app = FastAPI(
         title="NetCoop AI",
         version=netcoop.__version__,
