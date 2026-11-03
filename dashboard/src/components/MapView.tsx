@@ -16,23 +16,23 @@ export function Swatch({ kind }: { kind: "reported" | "corroborated" | "critical
   const box = { width: 24, height: 14, viewBox: "0 0 24 14", className: "swatch", "aria-hidden": true } as const;
   switch (kind) {
     case "reported":
-      return <svg {...box}><circle cx="12" cy="7" r="5.5" fill="var(--warning)" fillOpacity=".08" stroke="var(--warning)" strokeWidth="1.5" strokeDasharray="3 2" /></svg>;
+      return <svg {...box}><circle cx="12" cy="7" r="5.5" fill="var(--map-warn)" fillOpacity=".08" stroke="var(--map-warn)" strokeWidth="1.5" strokeDasharray="3 2" /></svg>;
     case "corroborated":
-      return <svg {...box}><circle cx="12" cy="7" r="5.5" fill="#a48bf0" fillOpacity=".08" stroke="#a48bf0" strokeWidth="1.5" /></svg>;
+      return <svg {...box}><circle cx="12" cy="7" r="5.5" fill="var(--tan)" fillOpacity=".08" stroke="var(--tan)" strokeWidth="1.5" /></svg>;
     case "critical":
-      return <svg {...box}><circle cx="12" cy="7" r="5" fill="var(--critical)" /></svg>;
+      return <svg {...box}><circle cx="12" cy="7" r="5" fill="var(--map-crit-fill)" stroke="var(--map-crit)" strokeWidth="1.5" /></svg>;
     case "isolated":
-      return <svg {...box}><circle cx="12" cy="7" r="4.5" fill="var(--bg)" stroke="var(--critical)" strokeWidth="2" /></svg>;
+      return <svg {...box}><circle cx="12" cy="7" r="4.5" fill="var(--map-node)" stroke="var(--map-crit)" strokeWidth="2" /></svg>;
     case "warning":
-      return <svg {...box}><circle cx="12" cy="7" r="4.5" fill="var(--bg)" stroke="var(--warning)" strokeWidth="2" /></svg>;
+      return <svg {...box}><circle cx="12" cy="7" r="4.5" fill="var(--map-node)" stroke="var(--map-warn)" strokeWidth="2" /></svg>;
     case "ok":
-      return <svg {...box}><circle cx="12" cy="7" r="5" fill="var(--ok)" /></svg>;
+      return <svg {...box}><circle cx="12" cy="7" r="5" fill="var(--map-ok)" /></svg>;
     case "suspect":
-      return <svg {...box}><circle cx="12" cy="7" r="4.5" fill="var(--bg)" stroke="var(--warning)" strokeWidth="2" strokeDasharray="3 2" /></svg>;
+      return <svg {...box}><circle cx="12" cy="7" r="4.5" fill="var(--map-node)" stroke="var(--map-warn)" strokeWidth="2" strokeDasharray="3 2" /></svg>;
     case "neutral":
-      return <svg {...box}><circle cx="12" cy="7" r="4.5" fill="var(--bg)" stroke="var(--text)" strokeWidth="1.5" /></svg>;
+      return <svg {...box}><circle cx="12" cy="7" r="4.5" fill="var(--map-node)" stroke="var(--map-core)" strokeWidth="2" /></svg>;
     case "path":
-      return <svg {...box}><path d="M2 10 Q12 2 22 10" fill="none" stroke="var(--critical)" strokeWidth="2.5" strokeLinecap="round" /></svg>;
+      return <svg {...box}><path d="M2 10 Q12 2 22 10" fill="none" stroke="var(--map-crit)" strokeWidth="5" strokeLinecap="round" /><path d="M2 10 Q12 2 22 10" fill="none" stroke="var(--map-crit-fill)" strokeWidth="2.5" strokeLinecap="round" /></svg>;
     case "sample":
       return <svg {...box}><rect x="1" y="2" width="22" height="10" rx="3" fill="none" stroke="var(--muted)" strokeDasharray="2 2" /></svg>;
   }

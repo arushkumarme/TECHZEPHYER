@@ -102,12 +102,28 @@ export default function App() {
     <div className="shell">
       <header className="masthead">
         <div className="topbar">
-          <div className="page-heading">
-            <p className="eyebrow">Campus network operations</p>
-            <h2>Incident diagnosis</h2>
-            <p>Multi-agent network fault analysis</p>
+          <div className="brand-lockup">
+            <svg className="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+              <path d="M8 16 16 8m0 0 8 8m-8-8v16m0 0 8-8m-8 8-8-8" />
+              <circle cx="8" cy="16" r="3" />
+              <circle cx="16" cy="8" r="3" />
+              <circle cx="24" cy="16" r="3" />
+              <circle cx="16" cy="24" r="3" />
+            </svg>
+            <span>
+              <h1 className="brand">NetCoop AI</h1>
+              <span className="brand-caption">Campus network diagnosis</span>
+            </span>
           </div>
+          <nav className="tabs" role="tablist" aria-label="Views">
+            {tabs.filter(([, , on]) => on).map(([id, label]) => (
+              <button key={id} role="tab" aria-selected={tab === id} onClick={() => setTab(id)}>{label}</button>
+            ))}
+          </nav>
           <div className="run-controls" aria-label="Run a scenario" role="group">
+            <span className="mode-pill" title="Every input is synthetic and every action is simulated">
+              {health?.mode === "simulation" || !health ? "Simulation" : health.mode}
+            </span>
             <label htmlFor="scenario">Scenario</label>
             <select
               id="scenario"
@@ -149,28 +165,11 @@ export default function App() {
         </div>
       </header>
       <div className="layout">
-        <aside className="view-rail" aria-label="NetCoop navigation">
-          <div className="brand-lockup">
-            <svg className="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
-              <path d="M8 16 16 8m0 0 8 8m-8-8v16m0 0 8-8m-8 8-8-8" />
-              <circle cx="8" cy="16" r="3" />
-              <circle cx="16" cy="8" r="3" />
-              <circle cx="24" cy="16" r="3" />
-              <circle cx="16" cy="24" r="3" />
-            </svg>
-            <span>
-              <h1 className="brand">NetCoop AI</h1>
-              <span className="brand-caption">NETWORK DIAGNOSIS</span>
-            </span>
-          </div>
-          <nav className="tabs" role="tablist" aria-label="Views" aria-orientation="vertical">
-            {tabs.filter(([, , on]) => on).map(([id, label]) => (
-              <button key={id} role="tab" aria-selected={tab === id} onClick={() => setTab(id)}>{label}</button>
-            ))}
-          </nav>
-        </aside>
         <aside className="rail" aria-label="Incidents">
-          <h2 className="label">Incidents</h2>
+          <div className="rail-head">
+            <h2 className="label">Incidents</h2>
+            <span className="rail-count mono">{incidents.length}</span>
+          </div>
           {chosen && <p className="rail-meta">Data: <span className="mono">{chosen.provenance}</span></p>}
           {incidents.length === 0 ? (
             <p className="rail-empty">No incidents yet. Run a scenario to start one.</p>
@@ -213,11 +212,23 @@ export default function App() {
                 <CampusMap variant="hero" layers={layers} highlight={null} />
               </section>
               <div className="diagnosis panel empty-state">
+                <p className="label">Overview</p>
                 <h2>Choose an incident</h2>
-                <p className="empty-hint">No incident selected. Pick a scenario in the top bar and press Run diagnosis.</p>
-                <p className="muted">
-                  Three specialist agents examine the telemetry in parallel, a correlation agent weighs their findings, and a reporting agent writes one report. You can follow every message between them, and the affected switches light up on the map.
-                </p>
+                <p className="empty-hint">No incident selected. Pick a scenario in the top bar and press Run diagnosis, or open an incident from the list.</p>
+                {chosen && (
+                  <dl className="overview-dl">
+                    <dt>Selected scenario</dt><dd><span className="mono">{chosen.id}</span> {chosen.title}</dd>
+                    <dt>Data</dt><dd className="mono">{chosen.provenance}</dd>
+                    <dt>Scenarios available</dt><dd className="mono">{scenarios.length}</dd>
+                    <dt>Incidents this session</dt><dd className="mono">{incidents.length}</dd>
+                  </dl>
+                )}
+                <ol className="steps">
+                  <li><strong>Specialists</strong> Performance, infrastructure and connectivity agents examine the telemetry in parallel.</li>
+                  <li><strong>Correlation</strong> A correlation agent weighs their findings against the topology.</li>
+                  <li><strong>Reporting</strong> A reporting agent writes one report; the affected switches light up on the map.</li>
+                </ol>
+                <p className="muted small">Every message between the agents can be replayed below the map once an incident exists.</p>
               </div>
             </div>
           ))}

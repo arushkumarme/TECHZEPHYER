@@ -191,7 +191,7 @@ export function IncidentView({
         />
         <div id="message-panel" className="message-panel" hidden={!messagesOpen}>
           <p className="muted small">
-            Solid arrows are requests, dashed arrows are replies, violet is a clarification question, red is a rejected message or agent error.
+            Solid arrows are requests, dashed arrows are replies, dotted is a clarification question, red is a rejected message or agent error.
           </p>
           {/* Mark progress only while a replay is under way; a finished trace shows plainly. */}
           <Swimlane events={trace} cursor={playing || cursor < trace.length - 1 ? cursor : undefined} />
