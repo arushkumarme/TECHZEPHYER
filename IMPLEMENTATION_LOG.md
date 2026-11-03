@@ -302,3 +302,28 @@ Newest entry last. Each entry records actual commands and results. See `IMPLEMEN
 
 - Pre-deployment review found provider exception text was included in LLM fallback metadata, which could expose a credential echoed by an upstream error. The gateway now reports only the exception type and a generic failure reason; added a regression test with a dummy sensitive value.
 - No real Grok provider or root `.env`/`XAI_API_KEY` is configured in this workspace; external Grok calls were not made. Mocked success, invalid-key-like error, API failure and timeout paths all fall back as designed.
+
+## Pre-deployment QA pass (2026-11-01)
+
+- Bug fixed: `POST /api/scenarios/{id}/run` with fault `crash` returned a bare HTTP 500 (the deliberate `SimulatedCrash` escaped the endpoint). The orchestrator now records `last_incident` when it registers an incident; the API catches `SimulatedCrash` and returns the interrupted incident's summary (`resumable: true`), which `/resume` then finishes. Pause/resume behaviour is unchanged. New test `tests/api/test_api.py::test_simulated_crash_over_api_leaves_a_resumable_incident`; no existing test changed.
+- Checked: API error paths (404/409/422), SQL-injection-style ids (parameterised, 404), CORS (dev origins only; other origins get no ACAO header), secrets (no `.env` tracked, none in history or `dashboard/dist`), `npm audit` and `pip-audit` (0 known vulnerabilities), browser QA at 1366x768, 1920x1080, 1024x640, 390x844 (no horizontal overflow, no console errors).
+- Grok/xAI: not implemented (KI-05 / D-07 still open); no `XAI_API_KEY` anywhere.
+
+## Interactive campus map (2026-11-01)
+
+- Frontend only (`dashboard/src/campus/CampusMap.tsx`, `styles.css`, swatches in `components/MapView.tsx`). No backend, data, topology or dependency change; switch positions and links are the existing simulated topology and placement (D-26). The placement disclaimer stays.
+- Vivid network palette (status hues keep their meaning; no-finding switches use a blue family by role), glow and pulse on faults, amber on degraded links and switches, springy hover, spinning selection ring.
+- Illustrative link animation (dashes moving along simulated links), labelled in the Layers panel as "not measured traffic", with its own toggle.
+- Map toolbar: Fit campus, Focus incident (animated fly-to framing the suspects and their fault path; also automatic when an incident opens), Layers panel with status filters and live counts (Healthy / Degraded / Faulty / No finding - missing data never counts as healthy) and toggles for switches, links, animation, all labels and buildings.
+- Every link is clickable (popover with both ends); every switch popover lists its linked switches as chips that open that switch.
+- Reduced-motion preference stops every map animation and makes camera moves instant.
+- Bug found and fixed while testing: putting the selection into a marker's React key remounted the Leaflet layer and closed the popover the same click had opened; selection classes are now toggled on the live SVG elements.
+- New Vitest file `src/campus/CampusMap.test.tsx` (9 tests). No existing test changed. Verified in Chromium at 1366x768 and 390x844 (19 scripted interaction checks).
+
+## Vercel services routing (2026-11-01)
+
+- `vercel.json` now uses the owner's layout: FastAPI service `app` at `/`, Vite service `dashboard` at `/dashboard/`. `/` itself returns the API's 404, and `/dashboard` needs the trailing slash, because the rewrite source is `/dashboard/(.*)`.
+- On Vercel builds only, `dashboard/vite.config.ts` sets base `/dashboard/` and output `dist/dashboard` (services receive the full request path). Other builds still serve from `/`. The campus artwork URL now follows Vite's base.
+- New root `main.py` re-exports the app, and `tool.vercel.entrypoint` is `main:app`. `netcoop.api.app:app` fails the build (`PYTHON_ENTRYPOINT_NOT_FOUND`, the code is under `src/`); a `src.`-qualified entrypoint loads a second copy of the module, splitting the `EXTENSIONS` list.
+- Verified: `vercel build` (CLI 65.9.0) on a scratch copy; the bundle's `netcoop` and data files served health, geo, community, scenario run and incident read with `VERCEL=1` (local compiled dependencies, as the bundle's are Linux builds). Not verified: serving `/dashboard/` on Vercel, as `vercel dev --local` stopped with `NOT_AUTHORIZED` and nothing was deployed.
+- Gates: `uv run pytest -q` (505 passed), `uv run pytest -m ui -q` (7 passed), Ruff check and format, mypy, dashboard build, `npm --prefix dashboard test` (77 passed), `uv run netcoop scenarios run-all`.

@@ -60,3 +60,7 @@ plugins = ["pydantic.mypy"]
 
 [tool.fastapi]
 entrypoint = "netcoop.api.app:app"
+
+# Vercel "app" service (vercel.json): main.py re-exports the same FastAPI app.
+[tool.vercel]
+entrypoint = "main:app"
